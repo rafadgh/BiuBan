@@ -4,7 +4,7 @@ from save_to_supabase import upsert_products
 
 def scrape():
 
-    url = "https://api.nike.com/cic/browse/v2?queryid=products&anonymousId=123&country=mx&language=es-419"
+    url = "https://api.nike.com/cic/browse/v2?queryid=products&country=mx&language=es-419"
 
     response = requests.get(url)
     data = response.json()
@@ -15,7 +15,9 @@ def scrape():
 
         name = item.get("title")
         price = item.get("price", {}).get("currentPrice", 0)
-        image = item.get("images", {}).get("portraitURL")
+
+        images = item.get("images", {})
+        image = images.get("portraitURL") or images.get("squarishURL")
 
         product = {
             "name": name,
