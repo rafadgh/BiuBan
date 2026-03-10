@@ -1,146 +1,122 @@
-import { Suspense } from 'react'
-import { Header } from '@/components/Header'
-import { Footer } from '@/components/Footer'
-import { SearchBar } from '@/components/SearchBar'
-import { FiltersSidebar } from '@/components/FiltersSidebar'
-import { MobileFilters } from '@/components/MobileFilters'
-import { SortBar } from '@/components/SortBar'
-import { ProductCard } from '@/components/ProductCard'
-import { searchProducts, products } from '@/lib/products'
-import { Product } from '@/types/product'
+"use client";
 
-interface SearchPageProps {
-  searchParams: Promise<{
-    q?: string
-    marca?: string
-    tienda?: string
-    precioMax?: string
-    ordenar?: string
-  }>
-}
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
-function filterAndSortProducts(
-  allProducts: Product[],
-  query: string,
-  marca?: string,
-  tienda?: string,
-  precioMax?: string,
-  ordenar?: string
-): Product[] {
-  let filtered = query ? searchProducts(query) : allProducts
+type Producto = {
+  id: string;
+  name: string;
+  brand: string;
+  category: string;
+  color: string;
+  price: number;
+  store: string;
+  image: string;
+  url: string;
+  product_group: string;
+  discount: number;
+  available: boolean;
+};
 
-  if (marca) {
-    filtered = filtered.filter(p => p.marca.toLowerCase() === marca.toLowerCase())
-  }
+export default function BuscarPage() {
+  const searchParams = useSearchParams();
+  const query = searchParams.get("q") || "";
 
-  if (tienda) {
-    filtered = filtered.filter(p => p.tienda.toLowerCase() === tienda.toLowerCase())
-  }
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  if (precioMax) {
-    const maxPrice = parseInt(precioMax)
-    filtered = filtered.filter(p => p.precio <= maxPrice)
-  }
+  useEffect(() => {
+    async function fetchProductos() {
+      setLoading(true);
 
-  if (ordenar === 'precio-asc') {
-    filtered.sort((a, b) => a.precio - b.precio)
-  } else if (ordenar === 'precio-desc') {
-    filtered.sort((a, b) => b.precio - a.precio)
-  }
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .or(`name.ilike.%${query}%,brand.ilike.%${query}%,store.ilike.%${query}%`)
+        .order("price", { ascending: true });
 
-  return filtered
-}
+      if (error) {
+        console.error("Error cargando productos:", error);
+        setProductos([]);
+      } else {
+        setProductos((data as Producto[]) || []);
+      }
 
-async function SearchResults({ searchParams }: SearchPageProps) {
-  const params = await searchParams
-  const query = params.q || ''
-  const filteredProducts = filterAndSortProducts(
-    products,
-    query,
-    params.marca,
-    params.tienda,
-    params.precioMax,
-    params.ordenar
-  )
+      setLoading(false);
+    }
+
+    if (query.trim()) {
+      fetchProductos();
+    } else {
+      setProductos([]);
+      setLoading(false);
+    }
+  }, [query]);
 
   return (
-    <>
-      {/* Sort Bar */}
-      <SortBar resultCount={filteredProducts.length} query={query || 'todo'} />
+    <main className="min-h-screen bg-white px-6 py-10 text-black">
+      <div className="mx-auto max-w-6xl">
+        <h1 className="mb-2 text-4xl font-bold">Resultados de búsqueda</h1>
+        <p className="mb-8 text-gray-600">
+          {query ? `Mostrando resultados para "${query}"` : "Escribe algo para buscar"}
+        </p>
 
-      {/* Results Grid */}
-      {filteredProducts.length > 0 ? (
-        <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      ) : (
-        <div className="mt-16 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-            <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-          <p className="text-lg font-semibold text-foreground">
-            No encontramos resultados
-          </p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Intenta con otras palabras o ajusta los filtros
-          </p>
-        </div>
-      )}
-    </>
-  )
-}
+        {loading ? (
+          <p className="text-gray-500">Cargando productos...</p>
+        ) : productos.length === 0 ? (
+          <p className="text-gray-500">No encontramos productos.</p>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {productos.map((producto) => (
+              <article
+                key={producto.id}
+                className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+              >
+                <img
+                  src={producto.image}
+                  alt={producto.name}
+                  className="h-72 w-full object-cover"
+                />
 
-export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const params = await searchParams
-  const query = params.q || ''
+                <div className="p-5">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                      {producto.brand}
+                    </p>
+                    <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
+                      {producto.store}
+                    </span>
+                  </div>
 
-  return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <Header />
-      <main className="flex-1">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-          {/* Page Header */}
-          <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex-1">
-              <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                Buscar productos
-              </h1>
-              <div className="mt-3 max-w-lg">
-                <SearchBar initialQuery={query} />
-              </div>
-            </div>
-            <Suspense fallback={null}>
-              <MobileFilters />
-            </Suspense>
-          </div>
+                  <h2 className="text-xl font-semibold">{producto.name}</h2>
 
-          {/* Main Content */}
-          <div className="flex gap-8">
-            {/* Filters Sidebar - Desktop */}
-            <Suspense fallback={<div className="hidden w-64 shrink-0 lg:block" />}>
-              <FiltersSidebar className="sticky top-24 hidden h-fit w-64 shrink-0 lg:block" />
-            </Suspense>
+                  <div className="mt-4 flex items-center gap-3">
+                    <span className="text-2xl font-bold">
+                      ${Number(producto.price).toLocaleString("es-MX")}
+                    </span>
 
-            {/* Results */}
-            <div className="min-w-0 flex-1">
-              <Suspense fallback={
-                <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className="aspect-[3/4] animate-pulse rounded-2xl bg-muted" />
-                  ))}
+                    {Number(producto.discount) > 0 && (
+                      <span className="rounded-full bg-black px-2 py-1 text-xs text-white">
+                        -{producto.discount}%
+                      </span>
+                    )}
+                  </div>
+
+                  <a
+                    href={producto.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-5 block rounded-xl bg-black px-4 py-3 text-center text-white transition hover:bg-gray-800"
+                  >
+                    Ver tienda
+                  </a>
                 </div>
-              }>
-                <SearchResults searchParams={searchParams} />
-              </Suspense>
-            </div>
+              </article>
+            ))}
           </div>
-        </div>
-      </main>
-      <Footer />
-    </div>
-  )
+        )}
+      </div>
+    </main>
+  );
 }
