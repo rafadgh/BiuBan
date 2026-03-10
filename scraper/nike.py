@@ -1,6 +1,5 @@
 import requests
 from utils import make_product_group
-from save_to_supabase import upsert_products
 
 def scrape():
 
@@ -35,7 +34,4 @@ def scrape():
 
         products.append(product)
 
-    upsert_products(products)
-
-if __name__ == "__main__":
-    scrape()
+    return products
