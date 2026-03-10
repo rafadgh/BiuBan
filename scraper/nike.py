@@ -1,32 +1,39 @@
-import random
+import requests
 from utils import make_product_group
 from save_to_supabase import upsert_products
 
 def scrape():
+
+    url = "https://api.nike.com/cic/browse/v2?queryid=products&anonymousId=123&country=mx&language=es-419"
+
+    response = requests.get(url)
+    data = response.json()
+
     products = []
 
-    for i in range(1000):
-        price = random.randint(1800, 3500)
+    for item in data.get("data", {}).get("products", []):
+
+        name = item.get("title")
+        price = item.get("price", {}).get("currentPrice", 0)
+        image = item.get("images", {}).get("portraitURL")
 
         product = {
-            "name": f"Nike Air Force {i}",
+            "name": name,
             "brand": "Nike",
             "category": "sneakers",
-            "color": "white",
+            "color": "",
             "price": price,
             "store": "Nike",
-            "image": "https://static.nike.com/a/images/t_default/air-force-1.png",
-            "url": "https://www.nike.com/mx/",
-            "product_group": make_product_group("Nike", f"Air Force {i}"),
+            "image": image,
+            "url": "https://nike.com",
+            "product_group": make_product_group("Nike", name),
             "discount": 0,
             "available": True
         }
 
         products.append(product)
 
-    return products
-
+    upsert_products(products)
 
 if __name__ == "__main__":
-    products = scrape()
-    upsert_products(products)
+    scrape()
