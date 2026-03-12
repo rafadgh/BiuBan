@@ -12,12 +12,6 @@ export const metadata: Metadata = {
   title: 'BiuBan - Encuentra la mejor opción de moda',
   description:
     'Busca ropa, tenis y accesorios en un solo lugar. Compara precios entre Nike, Adidas, Zara, Liverpool, Amazon México y más tiendas.',
-
-  icons: {
-    icon: '/favicon.png',
-    shortcut: '/favicon.png',
-    apple: '/favicon.png',
-  },
 }
 
 export default function RootLayout({
