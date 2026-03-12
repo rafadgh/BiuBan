@@ -3,14 +3,22 @@ import { Footer } from '@/components/Footer'
 import { SearchBar } from '@/components/SearchBar'
 import ProductGrid from '@/components/ProductGrid'
 
-export default function BuscarPage() {
+interface BuscarPageProps {
+  searchParams: {
+    q?: string
+  }
+}
+
+export default function BuscarPage({ searchParams }: BuscarPageProps) {
+  const query = searchParams.q || ""
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-10">
         <div className="mb-8">
-          <SearchBar size="large" />
+          <SearchBar size="large" initialQuery={query} />
         </div>
 
         <section>
@@ -18,7 +26,7 @@ export default function BuscarPage() {
             Resultados de búsqueda
           </h1>
 
-          <ProductGrid />
+          <ProductGrid query={query} />
         </section>
       </main>
 

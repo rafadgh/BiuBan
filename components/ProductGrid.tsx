@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 
 type Product = {
@@ -16,12 +15,15 @@ type Product = {
   url: string
 }
 
-export default function ProductGrid() {
+interface ProductGridProps {
+  query?: string
+}
+
+export default function ProductGrid({ query = "" }: ProductGridProps) {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const searchParams = useSearchParams()
 
-  const query = (searchParams.get("q") || "").trim()
+  const cleanQuery = query.trim()
 
   useEffect(() => {
     async function loadProducts() {
@@ -31,9 +33,9 @@ export default function ProductGrid() {
         .from("products")
         .select("*")
 
-      if (query) {
+      if (cleanQuery) {
         request = request.or(
-          `name.ilike.%${query}%,brand.ilike.%${query}%`
+          `name.ilike.%${cleanQuery}%,brand.ilike.%${cleanQuery}%`
         )
       }
 
@@ -51,7 +53,7 @@ export default function ProductGrid() {
     }
 
     loadProducts()
-  }, [query])
+  }, [cleanQuery])
 
   if (loading) {
     return <p className="text-center">Cargando productos...</p>
