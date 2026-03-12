@@ -41,7 +41,7 @@ export default function ProductGrid({ query = "" }: ProductGridProps) {
         )
       }
 
-      const { data, error } = await request.limit(24)
+      const { data, error } = await request.limit(40)
 
       if (error) {
         console.error(error)
@@ -66,7 +66,8 @@ export default function ProductGrid({ query = "" }: ProductGridProps) {
   }
 
   return (
-    <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="mx-auto grid max-w-7xl grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5">
+
       {products.map((product) => {
         const originalPrice = product.discount
           ? product.price / (1 - product.discount / 100)
@@ -75,63 +76,76 @@ export default function ProductGrid({ query = "" }: ProductGridProps) {
         return (
           <div
             key={product.id}
-            className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition hover:shadow-md"
+            className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm transition hover:shadow-md"
           >
-            <div className="relative aspect-[4/5] overflow-hidden bg-muted">
+            {/* IMAGE */}
+            <div className="relative aspect-[3/4] overflow-hidden bg-muted">
+
               <img
                 src={product.image}
                 alt={product.name}
                 className="h-full w-full object-cover"
               />
 
-              <div className="absolute left-3 top-3 rounded-full bg-yellow-400 px-3 py-1 text-xs font-semibold text-black">
+              <div className="absolute left-2 top-2 rounded-full bg-yellow-400 px-2 py-1 text-[10px] font-semibold text-black">
                 Mejor opción
               </div>
 
               {product.discount ? (
-                <div className="absolute right-3 top-3 rounded-full bg-black px-3 py-1 text-xs font-semibold text-white">
+                <div className="absolute right-2 top-2 rounded-full bg-black px-2 py-1 text-[10px] font-semibold text-white">
                   -{product.discount}%
                 </div>
               ) : null}
+
             </div>
 
-            <div className="space-y-3 p-4">
-              <div className="flex items-start justify-between gap-3">
+            {/* INFO */}
+            <div className="space-y-2 p-3">
+
+              <div className="flex items-start justify-between gap-2">
+
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <p className="text-[10px] font-semibold uppercase text-muted-foreground">
                     {product.brand}
                   </p>
-                  <h3 className="line-clamp-2 text-lg font-semibold text-foreground">
+
+                  <h3 className="line-clamp-2 text-sm font-semibold">
                     {product.name}
                   </h3>
                 </div>
 
-                <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+                <span className="rounded-full bg-muted px-2 py-1 text-[10px]">
                   {product.store}
                 </span>
+
               </div>
 
-              <div className="flex items-end gap-2">
-                <p className="text-3xl font-bold tracking-tight text-foreground">
+              {/* PRICE */}
+              <div className="flex items-end gap-1">
+
+                <p className="text-xl font-bold">
                   ${Math.round(product.price).toLocaleString("es-MX")}
                 </p>
 
-                {originalPrice ? (
-                  <p className="text-base text-muted-foreground line-through">
+                {originalPrice && (
+                  <p className="text-xs text-muted-foreground line-through">
                     ${Math.round(originalPrice).toLocaleString("es-MX")}
                   </p>
-                ) : null}
+                )}
+
               </div>
 
+              {/* BUTTON */}
               <a
                 href={product.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-yellow-400 px-4 py-3 font-medium text-black transition hover:brightness-95"
+                className="flex w-full items-center justify-center gap-1 rounded-full bg-yellow-400 px-2 py-2 text-xs font-medium text-black hover:brightness-95"
               >
                 Ver tienda
-                <ExternalLink className="h-4 w-4" />
+                <ExternalLink className="h-3 w-3" />
               </a>
+
             </div>
           </div>
         )
