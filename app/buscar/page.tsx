@@ -3,14 +3,13 @@ import { Footer } from '@/components/Footer'
 import { SearchBar } from '@/components/SearchBar'
 import ProductGrid from '@/components/ProductGrid'
 
-interface BuscarPageProps {
-  searchParams: {
-    q?: string
-  }
-}
-
-export default function BuscarPage({ searchParams }: BuscarPageProps) {
-  const query = searchParams.q || ""
+export default async function BuscarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>
+}) {
+  const params = await searchParams
+  const query = params.q || ""
 
   return (
     <div className="flex min-h-screen flex-col">

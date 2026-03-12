@@ -80,11 +80,8 @@ export default function ProductGrid({ query = "" }: ProductGridProps) {
           />
 
           <h3 className="text-sm font-semibold">{product.name}</h3>
-
           <p className="text-gray-500 text-sm">{product.store}</p>
-
           <p className="text-xs text-gray-400">{product.brand}</p>
-
           <p className="font-bold mt-2">${product.price}</p>
         </a>
       ))}
