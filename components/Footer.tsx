@@ -9,7 +9,7 @@ const footerLinks = {
   ],
   empresa: [
     { href: '/sobre-nosotros', label: 'Sobre nosotros' },
-    { href: '#', label: 'Contacto' },
+    { href: '/contacto', label: 'Contacto' }, // ✅ CORREGIDO
   ],
   legal: [
     { href: '#', label: 'Términos de uso' },
@@ -22,11 +22,15 @@ export function Footer() {
     <footer className="border-t border-border/50 bg-card">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
             <Link href="/" className="inline-block">
-              <span className="text-lg font-bold tracking-tight text-foreground">BiuBan</span>
+              <span className="text-lg font-bold tracking-tight text-foreground">
+                BiuBan
+              </span>
             </Link>
+
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">
               Compara precios de moda en México. Encuentra la mejor opción entre todas las tiendas.
             </p>
@@ -37,6 +41,7 @@ export function Footer() {
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-foreground">
               Navegación
             </h3>
+
             <ul className="space-y-2">
               {footerLinks.navegacion.map((link) => (
                 <li key={link.href}>
@@ -56,6 +61,7 @@ export function Footer() {
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-foreground">
               Empresa
             </h3>
+
             <ul className="space-y-2">
               {footerLinks.empresa.map((link) => (
                 <li key={link.label}>
@@ -75,6 +81,7 @@ export function Footer() {
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-foreground">
               Legal
             </h3>
+
             <ul className="space-y-2">
               {footerLinks.legal.map((link) => (
                 <li key={link.label}>
@@ -88,6 +95,7 @@ export function Footer() {
               ))}
             </ul>
           </div>
+
         </div>
 
         {/* Bottom */}
@@ -96,6 +104,7 @@ export function Footer() {
             © {new Date().getFullYear()} BiuBan. No vendemos productos directamente.
           </p>
         </div>
+
       </div>
     </footer>
   )
