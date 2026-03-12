@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
+import { ExternalLink } from "lucide-react"
 
 type Product = {
   id: string
@@ -13,6 +14,7 @@ type Product = {
   store: string
   image: string
   url: string
+  discount?: number
 }
 
 interface ProductGridProps {
@@ -35,7 +37,7 @@ export default function ProductGrid({ query = "" }: ProductGridProps) {
 
       if (cleanQuery) {
         request = request.or(
-          `name.ilike.%${cleanQuery}%,brand.ilike.%${cleanQuery}%`
+          `name.ilike.%${cleanQuery}%,brand.ilike.%${cleanQuery}%,category.ilike.%${cleanQuery}%`
         )
       }
 
@@ -64,27 +66,76 @@ export default function ProductGrid({ query = "" }: ProductGridProps) {
   }
 
   return (
-    <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
-      {products.map((product) => (
-        <a
-          key={product.id}
-          href={product.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="border rounded-xl p-4 hover:shadow-lg transition"
-        >
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-40 object-cover mb-3"
-          />
+    <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {products.map((product) => {
+        const originalPrice = product.discount
+          ? product.price / (1 - product.discount / 100)
+          : null
 
-          <h3 className="text-sm font-semibold">{product.name}</h3>
-          <p className="text-gray-500 text-sm">{product.store}</p>
-          <p className="text-xs text-gray-400">{product.brand}</p>
-          <p className="font-bold mt-2">${product.price}</p>
-        </a>
-      ))}
+        return (
+          <div
+            key={product.id}
+            className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition hover:shadow-md"
+          >
+            <div className="relative aspect-[4/5] overflow-hidden bg-muted">
+              <img
+                src={product.image}
+                alt={product.name}
+                className="h-full w-full object-cover"
+              />
+
+              <div className="absolute left-3 top-3 rounded-full bg-yellow-400 px-3 py-1 text-xs font-semibold text-black">
+                Mejor opción
+              </div>
+
+              {product.discount ? (
+                <div className="absolute right-3 top-3 rounded-full bg-black px-3 py-1 text-xs font-semibold text-white">
+                  -{product.discount}%
+                </div>
+              ) : null}
+            </div>
+
+            <div className="space-y-3 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {product.brand}
+                  </p>
+                  <h3 className="line-clamp-2 text-lg font-semibold text-foreground">
+                    {product.name}
+                  </h3>
+                </div>
+
+                <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+                  {product.store}
+                </span>
+              </div>
+
+              <div className="flex items-end gap-2">
+                <p className="text-3xl font-bold tracking-tight text-foreground">
+                  ${Math.round(product.price).toLocaleString("es-MX")}
+                </p>
+
+                {originalPrice ? (
+                  <p className="text-base text-muted-foreground line-through">
+                    ${Math.round(originalPrice).toLocaleString("es-MX")}
+                  </p>
+                ) : null}
+              </div>
+
+              <a
+                href={product.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-yellow-400 px-4 py-3 font-medium text-black transition hover:brightness-95"
+              >
+                Ver tienda
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
