@@ -1,164 +1,92 @@
 import { supabase } from './supabase'
 import { Product } from '@/types/product'
 
-// ─── Diccionario bilingüe ES ↔ EN ─────────────────────────────────────────────
 const SINONIMOS: Record<string, string[]> = {
-  // Hoodies / Sudaderas
   sudadera:   ['hoodie', 'hoodies', 'sweatshirt', 'sweater', 'sudaderas'],
   hoodie:     ['sudadera', 'sudaderas', 'hoodies', 'sweatshirt', 'sweater'],
   hoodies:    ['sudadera', 'sudaderas', 'hoodie', 'sweatshirt'],
-  sweatshirt: ['sudadera', 'hoodie', 'sweater'],
-  sweater:    ['sueter', 'sudadera', 'jersey'],
-  sueter:     ['sweater', 'sudadera', 'jersey'],
-  // Playeras / T-shirts
   playera:    ['t-shirt', 'tshirt', 'camiseta', 'shirt', 'tee', 'playeras'],
   playeras:   ['t-shirt', 'tshirt', 'camiseta', 'shirt', 'tee', 'playera'],
-  camiseta:   ['playera', 't-shirt', 'shirt', 'tee', 'playeras'],
+  camiseta:   ['playera', 't-shirt', 'shirt', 'tee'],
   tshirt:     ['playera', 'camiseta', 'shirt', 'tee'],
-  shirt:      ['playera', 'camiseta', 'camisa', 'tshirt'],
-  tee:        ['playera', 'camiseta', 't-shirt'],
   camisa:     ['shirt', 'camisas', 'blusa'],
   blusa:      ['blouse', 'top', 'blusas', 'camisa'],
-  top:        ['blusa', 'blusas', 'tops'],
-  // Chamarras / Jackets
-  chamarra:   ['jacket', 'chaqueta', 'chamarras', 'cazadora', 'coat'],
+  chamarra:   ['jacket', 'chaqueta', 'chamarras', 'coat'],
   chamarras:  ['jacket', 'chaqueta', 'chamarra', 'coat'],
   jacket:     ['chamarra', 'chaqueta', 'chamarras'],
-  chaqueta:   ['jacket', 'chamarra', 'chamarras'],
-  abrigo:     ['coat', 'overcoat', 'chamarra', 'jacket'],
-  coat:       ['abrigo', 'chamarra', 'jacket'],
-  // Pantalones
+  abrigo:     ['coat', 'chamarra', 'jacket'],
   pantalon:   ['pants', 'pantalones', 'trousers'],
   pantalones: ['pants', 'trousers', 'pantalon'],
-  pants:      ['pantalon', 'pantalones', 'joggers', 'trousers'],
-  joggers:    ['pants', 'pantalones', 'deportivo'],
-  trousers:   ['pantalon', 'pantalones', 'pants'],
-  // Jeans
+  pants:      ['pantalon', 'pantalones', 'joggers'],
   jeans:      ['mezclilla', 'vaqueros', 'denim'],
   mezclilla:  ['jeans', 'denim', 'vaqueros'],
   denim:      ['jeans', 'mezclilla', 'vaqueros'],
-  vaqueros:   ['jeans', 'mezclilla', 'denim'],
-  // Shorts
   shorts:     ['short', 'bermudas', 'bermuda'],
-  short:      ['shorts', 'bermudas', 'bermuda'],
-  bermuda:    ['shorts', 'short', 'bermudas'],
-  bermudas:   ['shorts', 'short', 'bermuda'],
-  // Faldas
-  falda:      ['skirt', 'faldas', 'minifalda'],
-  faldas:     ['skirt', 'falda', 'minifalda'],
+  short:      ['shorts', 'bermudas'],
+  falda:      ['skirt', 'faldas'],
   skirt:      ['falda', 'faldas'],
-  // Leggings
   leggings:   ['leggins', 'mallas', 'tights'],
-  leggins:    ['leggings', 'mallas', 'tights'],
-  mallas:     ['leggings', 'leggins', 'tights'],
-  tights:     ['leggings', 'leggins', 'mallas'],
-  // Tenis / Sneakers
-  tenis:      ['sneakers', 'zapatillas', 'shoes', 'sneaker', 'tennis', 'kicks', 'calzado'],
+  leggins:    ['leggings', 'mallas'],
+  tenis:      ['sneakers', 'zapatillas', 'shoes', 'sneaker', 'tennis', 'kicks'],
   tennis:     ['tenis', 'sneakers', 'zapatillas'],
   sneakers:   ['tenis', 'zapatillas', 'tennis', 'kicks', 'shoes'],
   sneaker:    ['tenis', 'zapatillas', 'sneakers'],
-  zapatillas: ['tenis', 'sneakers', 'shoes'],
-  kicks:      ['tenis', 'sneakers', 'zapatillas'],
   zapatos:    ['shoes', 'calzado', 'zapatillas'],
-  shoes:      ['zapatos', 'tenis', 'calzado', 'zapatillas'],
-  calzado:    ['shoes', 'zapatos', 'tenis'],
-  // Botas
+  shoes:      ['zapatos', 'tenis', 'calzado'],
   botas:      ['boots', 'bota', 'botines'],
-  bota:       ['boots', 'botas', 'botines'],
   boots:      ['botas', 'bota', 'botines'],
-  botines:    ['botas', 'boots', 'ankle boots'],
-  // Sandalias
-  sandalias:  ['sandals', 'chanclas', 'slides', 'huaraches'],
-  sandals:    ['sandalias', 'chanclas', 'slides'],
+  sandalias:  ['sandals', 'chanclas', 'slides'],
   chanclas:   ['sandalias', 'slides', 'sandals'],
-  slides:     ['chanclas', 'sandalias', 'sandals'],
-  // Vestidos
   vestido:    ['dress', 'vestidos'],
-  vestidos:   ['dress', 'vestido'],
   dress:      ['vestido', 'vestidos'],
-  // Bolsas
-  bolso:      ['bag', 'bolsa', 'purse', 'tote', 'bolsos'],
-  bolsa:      ['bag', 'bolso', 'purse', 'tote', 'bolsas'],
-  bolsas:     ['bag', 'bolso', 'purse', 'tote', 'bolsa'],
-  bag:        ['bolsa', 'bolso', 'mochila', 'purse'],
-  purse:      ['bolsa', 'bolso', 'cartera'],
-  tote:       ['bolsa', 'bolso', 'bag'],
-  cartera:    ['wallet', 'bolsa', 'bolso'],
-  // Mochilas
+  bolso:      ['bag', 'bolsa', 'purse', 'tote'],
+  bolsa:      ['bag', 'bolso', 'purse', 'tote'],
+  bag:        ['bolsa', 'bolso', 'mochila'],
   mochila:    ['backpack', 'bag', 'mochilas'],
-  mochilas:   ['backpack', 'bag', 'mochila'],
   backpack:   ['mochila', 'mochilas', 'bag'],
-  // Deportivo
-  deportivo:  ['sport', 'athletic', 'activewear', 'gym', 'fitness', 'training'],
-  sport:      ['deportivo', 'athletic', 'activewear'],
-  athletic:   ['deportivo', 'sport', 'activewear'],
-  activewear: ['deportivo', 'gym', 'fitness', 'athletic'],
+  deportivo:  ['sport', 'athletic', 'activewear', 'gym', 'fitness'],
   gym:        ['deportivo', 'fitness', 'training', 'activewear'],
-  fitness:    ['gym', 'deportivo', 'training', 'activewear'],
-  training:   ['entrenamiento', 'gym', 'deportivo'],
-  entrenamiento: ['training', 'gym', 'deportivo'],
-  running:    ['correr', 'atletismo', 'jogging', 'run'],
-  correr:     ['running', 'jogging', 'atletismo'],
-  yoga:       ['pilates', 'activewear', 'leggings'],
-  // Fit / estilo
-  oversize:   ['oversized', 'holgado', 'amplio', 'loose', 'relaxed'],
+  running:    ['correr', 'atletismo', 'jogging'],
+  oversize:   ['oversized', 'holgado', 'loose', 'relaxed'],
   oversized:  ['oversize', 'holgado', 'loose'],
-  holgado:    ['oversize', 'oversized', 'loose', 'relaxed'],
-  slim:       ['ajustado', 'skinny', 'entallado'],
-  skinny:     ['slim', 'ajustado', 'entallado'],
-  ajustado:   ['slim', 'skinny', 'entallado'],
-  // Gorras
+  slim:       ['ajustado', 'skinny'],
+  skinny:     ['slim', 'ajustado'],
   gorra:      ['cap', 'hat', 'gorras', 'cachucha'],
-  gorras:     ['cap', 'hat', 'gorra', 'cachucha'],
-  cachucha:   ['gorra', 'cap', 'hat'],
-  cap:        ['gorra', 'gorras', 'cachucha', 'hat'],
-  // Colores EN → ES
-  white:      ['blanco', 'crema', 'ivory'],
-  blanco:     ['white', 'crema', 'ivory'],
-  black:      ['negro'],
-  negro:      ['black'],
-  gray:       ['gris', 'grey'],
-  grey:       ['gris', 'gray'],
-  gris:       ['gray', 'grey'],
-  blue:       ['azul', 'navy', 'celeste'],
-  azul:       ['blue', 'navy', 'celeste'],
-  navy:       ['azul marino', 'azul', 'blue'],
-  red:        ['rojo'],
-  rojo:       ['red'],
-  green:      ['verde'],
-  verde:      ['green'],
-  pink:       ['rosa'],
-  rosa:       ['pink'],
-  purple:     ['morado', 'violet', 'lila'],
-  morado:     ['purple', 'violet', 'lila'],
-  yellow:     ['amarillo'],
-  amarillo:   ['yellow'],
-  orange:     ['naranja'],
-  naranja:    ['orange'],
-  brown:      ['cafe', 'marron'],
-  cafe:       ['brown', 'marron'],
-  beige:      ['crema', 'tan', 'nude'],
-  crema:      ['beige', 'cream', 'nude'],
+  cap:        ['gorra', 'gorras', 'hat'],
+  white:  ['blanco', 'crema'],
+  blanco: ['white', 'crema'],
+  black:  ['negro'],
+  negro:  ['black'],
+  gray:   ['gris', 'grey'],
+  grey:   ['gris', 'gray'],
+  gris:   ['gray', 'grey'],
+  blue:   ['azul', 'navy'],
+  azul:   ['blue', 'navy'],
+  red:    ['rojo'],
+  rojo:   ['red'],
+  green:  ['verde'],
+  verde:  ['green'],
+  pink:   ['rosa'],
+  rosa:   ['pink'],
+  purple: ['morado'],
+  morado: ['purple'],
+  brown:  ['cafe', 'marron'],
+  cafe:   ['brown', 'marron'],
+  beige:  ['crema', 'tan'],
+  crema:  ['beige', 'cream'],
 }
 
 function normalizar(texto: string): string {
-  return texto
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // quita tildes
-    .trim()
+  return texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
 }
 
 function expandirTerminos(query: string): string[] {
   const terminos = normalizar(query).split(/\s+/).filter(Boolean)
   const todos = new Set<string>()
-
   for (const t of terminos) {
     todos.add(t)
-    // Sinónimos directos
     const syns = SINONIMOS[t]
     if (syns) syns.forEach(s => todos.add(normalizar(s)))
-    // Busca si este término aparece como sinónimo de otra palabra
     for (const [clave, lista] of Object.entries(SINONIMOS)) {
       if (lista.map(normalizar).includes(t)) {
         todos.add(normalizar(clave))
@@ -166,7 +94,6 @@ function expandirTerminos(query: string): string[] {
       }
     }
   }
-
   return Array.from(todos)
 }
 
@@ -189,55 +116,54 @@ function mapRow(row: Record<string, unknown>): Product {
 }
 
 export interface SearchFilters {
-  query?:    string
-  marca?:    string
-  tienda?:   string
+  query?:     string
+  marca?:     string
+  tienda?:    string
+  categoria?: string
+  color?:     string
+  talla?:     string
+  precioMin?: string
   precioMax?: string
-  ordenar?:  string
+  descuento?: string
+  ofertas?:   string
+  mejor?:     string
+  ordenar?:   string
 }
 
 export async function searchProductsFromDB(filters: SearchFilters): Promise<Product[]> {
-  const { query, marca, tienda, precioMax, ordenar } = filters
+  const { query, marca, tienda, categoria, color, talla,
+          precioMin, precioMax, descuento, ofertas, mejor, ordenar } = filters
 
-  let dbQuery = supabase
-    .from('products')
-    .select('*')
-    .eq('available', true)
+  let dbQuery = supabase.from('products').select('*').eq('available', true)
 
-  // ── Búsqueda de texto bilingüe ──────────────────────────────────────────────
   if (query && query.trim()) {
     const terminos = expandirTerminos(query)
-
     const orConditions = terminos.flatMap(t => [
       `name.ilike.%${t}%`,
       `brand.ilike.%${t}%`,
       `category.ilike.%${t}%`,
       `color.ilike.%${t}%`,
     ]).join(',')
-
     dbQuery = dbQuery.or(orConditions)
   }
 
-  // ── Filtros adicionales ─────────────────────────────────────────────────────
-  if (marca)    dbQuery = dbQuery.ilike('brand', `%${marca}%`)
-  if (tienda)   dbQuery = dbQuery.ilike('store', `%${tienda}%`)
+  if (marca)     dbQuery = dbQuery.ilike('brand', `%${marca}%`)
+  if (tienda)    dbQuery = dbQuery.ilike('store', `%${tienda}%`)
+  if (categoria) dbQuery = dbQuery.ilike('category', `%${categoria}%`)
+  if (color)     dbQuery = dbQuery.ilike('color', `%${color}%`)
+  if (talla)     dbQuery = dbQuery.ilike('size', `%${talla}%`)
+  if (precioMin) dbQuery = dbQuery.gte('price', parseInt(precioMin))
   if (precioMax) dbQuery = dbQuery.lte('price', parseInt(precioMax))
+  if (descuento) dbQuery = dbQuery.gte('discount', parseInt(descuento))
+  if (ofertas === '1') dbQuery = dbQuery.gt('discount', 0)
+  if (mejor === '1')   dbQuery = dbQuery.eq('best_option', true)
 
-  // ── Ordenamiento ────────────────────────────────────────────────────────────
-  if (ordenar === 'precio-asc') {
-    dbQuery = dbQuery.order('price', { ascending: true })
-  } else if (ordenar === 'precio-desc') {
-    dbQuery = dbQuery.order('price', { ascending: false })
-  } else {
-    dbQuery = dbQuery.order('created_at', { ascending: false })
-  }
+  if (ordenar === 'precio-asc')  dbQuery = dbQuery.order('price', { ascending: true })
+  else if (ordenar === 'precio-desc') dbQuery = dbQuery.order('price', { ascending: false })
+  else if (ordenar === 'descuento')   dbQuery = dbQuery.order('discount', { ascending: false })
+  else dbQuery = dbQuery.order('created_at', { ascending: false })
 
   const { data, error } = await dbQuery.limit(100)
-
-  if (error) {
-    console.error('Error buscando en Supabase:', error.message)
-    return []
-  }
-
+  if (error) { console.error('Supabase error:', error.message); return [] }
   return (data ?? []).map(mapRow)
 }

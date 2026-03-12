@@ -10,11 +10,18 @@ import { searchProductsFromDB } from '@/lib/search'
 
 interface SearchPageProps {
   searchParams: Promise<{
-    q?: string
-    marca?: string
-    tienda?: string
+    q?:         string
+    marca?:     string
+    tienda?:    string
+    categoria?: string
+    color?:     string
+    talla?:     string
+    precioMin?: string
     precioMax?: string
-    ordenar?: string
+    descuento?: string
+    ofertas?:   string
+    mejor?:     string
+    ordenar?:   string
   }>
 }
 
@@ -22,17 +29,23 @@ async function SearchResults({ searchParams }: SearchPageProps) {
   const params = await searchParams
 
   const products = await searchProductsFromDB({
-    query:    params.q,
-    marca:    params.marca,
-    tienda:   params.tienda,
+    query:     params.q,
+    marca:     params.marca,
+    tienda:    params.tienda,
+    categoria: params.categoria,
+    color:     params.color,
+    talla:     params.talla,
+    precioMin: params.precioMin,
     precioMax: params.precioMax,
-    ordenar:  params.ordenar,
+    descuento: params.descuento,
+    ofertas:   params.ofertas,
+    mejor:     params.mejor,
+    ordenar:   params.ordenar,
   })
 
   return (
     <>
       <SortBar resultCount={products.length} query={params.q || 'todo'} />
-
       {products.length > 0 ? (
         <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {products.map((product) => (
@@ -47,9 +60,7 @@ async function SearchResults({ searchParams }: SearchPageProps) {
             </svg>
           </div>
           <p className="text-lg font-semibold text-foreground">No encontramos resultados</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Intenta con otras palabras o ajusta los filtros
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground">Intenta con otras palabras o ajusta los filtros</p>
         </div>
       )}
     </>
@@ -58,7 +69,6 @@ async function SearchResults({ searchParams }: SearchPageProps) {
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams
-
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
@@ -73,16 +83,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 <SearchBar initialQuery={params.q || ''} />
               </div>
             </div>
-            <Suspense fallback={null}>
-              <MobileFilters />
-            </Suspense>
+            <Suspense fallback={null}><MobileFilters /></Suspense>
           </div>
-
           <div className="flex gap-8">
             <Suspense fallback={<div className="hidden w-64 shrink-0 lg:block" />}>
               <FiltersSidebar className="sticky top-24 hidden h-fit w-64 shrink-0 lg:block" />
             </Suspense>
-
             <div className="min-w-0 flex-1">
               <Suspense fallback={
                 <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
