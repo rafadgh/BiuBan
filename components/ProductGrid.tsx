@@ -4,12 +4,24 @@ import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 
+type Product = {
+  id: string
+  name: string
+  brand: string
+  category: string
+  color: string
+  price: number
+  store: string
+  image: string
+  url: string
+}
+
 export default function ProductGrid() {
-  const [products, setProducts] = useState<any[]>([])
+  const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const searchParams = useSearchParams()
 
-  const query = searchParams.get("q") || ""
+  const query = (searchParams.get("q") || "").trim()
 
   useEffect(() => {
     async function loadProducts() {
@@ -19,9 +31,9 @@ export default function ProductGrid() {
         .from("products")
         .select("*")
 
-      if (query.trim()) {
+      if (query) {
         request = request.or(
-          `name.ilike.%${query}%,brand.ilike.%${query}%,category.ilike.%${query}%,color.ilike.%${query}%,store.ilike.%${query}%`
+          `name.ilike.%${query}%,brand.ilike.%${query}%`
         )
       }
 
@@ -34,7 +46,7 @@ export default function ProductGrid() {
         return
       }
 
-      setProducts(data || [])
+      setProducts((data as Product[]) || [])
       setLoading(false)
     }
 
@@ -68,6 +80,8 @@ export default function ProductGrid() {
           <h3 className="text-sm font-semibold">{product.name}</h3>
 
           <p className="text-gray-500 text-sm">{product.store}</p>
+
+          <p className="text-xs text-gray-400">{product.brand}</p>
 
           <p className="font-bold mt-2">${product.price}</p>
         </a>
