@@ -382,12 +382,182 @@ export function getDiscountedProducts(): Product[] {
   return products.filter(product => product.descuento && product.descuento > 0)
 }
 
+// ─── Búsqueda bilingüe ES ↔ EN ────────────────────────────────────────────────
+
+const SINONIMOS: Record<string, string[]> = {
+  // Ropa superior
+  sudadera:  ['hoodie', 'hoodies', 'sweatshirt', 'sweater', 'sudaderas'],
+  hoodie:    ['sudadera', 'sudaderas', 'hoodies', 'sweatshirt', 'sweater'],
+  hoodies:   ['sudadera', 'sudaderas', 'hoodie', 'sweatshirt'],
+  sweatshirt:['sudadera', 'hoodie', 'sweater'],
+  sweater:   ['suéter', 'sueter', 'sudadera', 'jersey'],
+  'suéter':  ['sweater', 'sueter', 'jersey', 'sudadera'],
+  sueter:    ['sweater', 'suéter', 'jersey'],
+  playera:   ['t-shirt', 'tshirt', 'camiseta', 'shirt', 'tee', 'playeras', 'remera'],
+  camiseta:  ['playera', 't-shirt', 'shirt', 'tee', 'playeras'],
+  'tshirt':  ['playera', 'camiseta', 'shirt', 'tee'],
+  'tee':     ['playera', 'camiseta', 't-shirt'],
+  camisa:    ['shirt', 'camisas', 'blusa', 'button-up', 'button up'],
+  blusa:     ['blouse', 'top', 'blusas', 'camisa'],
+  top:       ['blusa', 'crop top', 'blusas', 'tops'],
+  chamarra:  ['jacket', 'chaqueta', 'chamarras', 'cazadora', 'coat', 'abrigo'],
+  jacket:    ['chamarra', 'chaqueta', 'chamarras', 'cazadora'],
+  chaqueta:  ['jacket', 'chamarra', 'chamarras'],
+  abrigo:    ['coat', 'overcoat', 'chamarra', 'jacket', 'abrigos'],
+  coat:      ['abrigo', 'chamarra', 'jacket'],
+
+  // Ropa inferior
+  pantalón:  ['pants', 'pantalones', 'pantalon', 'trousers', 'slacks'],
+  pantalon:  ['pants', 'pantalones', 'pantalón', 'trousers'],
+  pantalones:['pants', 'trousers', 'pantalon', 'pantalón'],
+  pants:     ['pantalón', 'pantalones', 'pantalon', 'joggers', 'trousers'],
+  jeans:     ['mezclilla', 'vaqueros', 'denim', 'pantalón de mezclilla'],
+  mezclilla: ['jeans', 'denim', 'vaqueros'],
+  denim:     ['jeans', 'mezclilla', 'vaqueros'],
+  shorts:    ['short', 'bermudas', 'bermuda', 'pantalón corto'],
+  short:     ['shorts', 'bermudas', 'bermuda'],
+  bermuda:   ['shorts', 'short', 'bermudas'],
+  falda:     ['skirt', 'faldas', 'minifalda'],
+  skirt:     ['falda', 'faldas', 'minifalda'],
+  leggings:  ['leggins', 'mallas', 'legging', 'tights'],
+  leggins:   ['leggings', 'mallas', 'tights'],
+  mallas:    ['leggings', 'leggins', 'tights'],
+
+  // Calzado
+  tenis:     ['sneakers', 'zapatillas', 'shoes', 'sneaker', 'tennis', 'kicks', 'calzado deportivo'],
+  sneakers:  ['tenis', 'zapatillas', 'tennis', 'kicks', 'shoes'],
+  sneaker:   ['tenis', 'zapatillas', 'sneakers'],
+  zapatillas:['tenis', 'sneakers', 'shoes'],
+  zapatos:   ['shoes', 'calzado', 'footwear', 'zapatillas'],
+  shoes:     ['zapatos', 'tenis', 'calzado', 'zapatillas'],
+  calzado:   ['shoes', 'zapatos', 'tenis', 'footwear'],
+  botas:     ['boots', 'bota', 'botines'],
+  boots:     ['botas', 'bota', 'botines'],
+  botines:   ['botas', 'boots', 'ankle boots'],
+  sandalias: ['sandals', 'chanclas', 'slides', 'huaraches'],
+  sandals:   ['sandalias', 'chanclas', 'slides'],
+  chanclas:  ['sandalias', 'slides', 'flip flops', 'flip-flops'],
+  slides:    ['chanclas', 'sandalias', 'sliders'],
+
+  // Tipos de prenda
+  vestido:   ['dress', 'vestidos'],
+  dress:     ['vestido', 'vestidos'],
+  polo:      ['polo shirt', 'playera polo', 'polo tee'],
+  bolso:     ['bag', 'bolsa', 'purse', 'tote', 'cartera'],
+  bolsa:     ['bag', 'bolso', 'purse', 'tote', 'cartera'],
+  bag:       ['bolsa', 'bolso', 'mochila', 'cartera'],
+  mochila:   ['backpack', 'bag', 'mochilas'],
+  backpack:  ['mochila', 'mochilas', 'bag'],
+  conjunto:  ['set', 'outfit', 'conjuntos', 'coordinado', 'look'],
+  outfit:    ['conjunto', 'look', 'atuendo', 'coordinado'],
+
+  // Deportivo / uso
+  deportivo: ['sport', 'athletic', 'activewear', 'gym', 'fitness', 'training'],
+  gym:       ['deportivo', 'fitness', 'training', 'entrenamiento', 'activewear'],
+  running:   ['correr', 'atletismo', 'jogging', 'run'],
+  training:  ['entrenamiento', 'gym', 'deportivo', 'fitness'],
+  yoga:      ['pilates', 'activewear', 'leggings', 'deportivo'],
+  casual:    ['everyday', 'diario', 'básico', 'basico'],
+
+  // Tallas y fit
+  oversize:  ['oversized', 'holgado', 'amplio', 'loose', 'relaxed'],
+  oversized: ['oversize', 'holgado', 'loose'],
+  slim:      ['slim fit', 'ajustado', 'entallado', 'skinny'],
+  skinny:    ['slim', 'ajustado', 'entallado'],
+
+  // Colores EN → ES
+  white:     ['blanco', 'crema', 'ivory'],
+  blanco:    ['white', 'crema', 'ivory'],
+  black:     ['negro', 'dark'],
+  negro:     ['black', 'dark'],
+  gray:      ['gris', 'grey'],
+  grey:      ['gris', 'gray'],
+  gris:      ['gray', 'grey'],
+  blue:      ['azul', 'navy', 'celeste'],
+  azul:      ['blue', 'navy', 'celeste'],
+  navy:      ['azul marino', 'azul', 'blue'],
+  red:       ['rojo', 'crimson'],
+  rojo:      ['red', 'crimson'],
+  green:     ['verde', 'olive'],
+  verde:     ['green', 'olive'],
+  pink:      ['rosa', 'rose'],
+  rosa:      ['pink', 'rose'],
+  purple:    ['morado', 'violet', 'lila'],
+  morado:    ['purple', 'violet', 'lila'],
+  yellow:    ['amarillo', 'gold'],
+  amarillo:  ['yellow', 'gold'],
+  orange:    ['naranja'],
+  naranja:   ['orange'],
+  brown:     ['café', 'cafe', 'marrón', 'marron'],
+  café:      ['brown', 'cafe', 'marrón'],
+  cafe:      ['brown', 'café', 'marrón'],
+  beige:     ['crema', 'tan', 'nude', 'arena'],
+  crema:     ['beige', 'cream', 'nude', 'ivory'],
+}
+
+function normalizarTexto(texto: string): string {
+  return texto
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // quita tildes
+    .trim()
+}
+
+function expandirTerminos(query: string): string[] {
+  const terminos = normalizarTexto(query).split(/\s+/).filter(Boolean)
+  const todos = new Set<string>()
+
+  for (const termino of terminos) {
+    todos.add(termino)
+
+    // Sinónimos directos
+    const sinonimos = SINONIMOS[termino]
+    if (sinonimos) {
+      sinonimos.forEach(s => todos.add(normalizarTexto(s)))
+    }
+
+    // Busca si el término aparece como valor en alguna entrada
+    for (const [clave, lista] of Object.entries(SINONIMOS)) {
+      const listaNorm = lista.map(normalizarTexto)
+      if (listaNorm.includes(termino)) {
+        todos.add(normalizarTexto(clave))
+        listaNorm.forEach(s => todos.add(s))
+      }
+    }
+  }
+
+  return Array.from(todos)
+}
+
 export function searchProducts(query: string): Product[] {
-  const searchTerm = query.toLowerCase()
-  return products.filter(product => 
-    product.nombre.toLowerCase().includes(searchTerm) ||
-    product.marca.toLowerCase().includes(searchTerm) ||
-    product.categoria.toLowerCase().includes(searchTerm) ||
-    product.color?.toLowerCase().includes(searchTerm)
-  )
+  if (!query.trim()) return products
+
+  const terminos = expandirTerminos(query)
+
+  // Puntúa cada producto según cuántos términos coinciden y en qué campo
+  const scored = products.map(product => {
+    const campos = {
+      nombre:    normalizarTexto(product.nombre),
+      marca:     normalizarTexto(product.marca),
+      categoria: normalizarTexto(product.categoria),
+      color:     normalizarTexto(product.color || ''),
+      tienda:    normalizarTexto(product.tienda),
+    }
+
+    let score = 0
+    for (const termino of terminos) {
+      if (campos.nombre.includes(termino))    score += 4  // nombre pesa más
+      if (campos.marca.includes(termino))     score += 3
+      if (campos.categoria.includes(termino)) score += 2
+      if (campos.color.includes(termino))     score += 1
+      if (campos.tienda.includes(termino))    score += 1
+    }
+
+    return { product, score }
+  })
+
+  return scored
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score)   // mejores coincidencias primero
+    .map(({ product }) => product)
 }
