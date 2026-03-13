@@ -12,8 +12,8 @@ const footerLinks = {
     { href: '/contacto',       label: 'Contacto' },
   ],
   legal: [
-    { href: '#', label: 'Términos de uso' },
-    { href: '#', label: 'Privacidad' },
+    { href: '/terminos',   label: 'Términos de uso' },
+    { href: '/privacidad', label: 'Privacidad' },
   ],
 }
 
@@ -23,7 +23,6 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
 
-          {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
             <Link href="/" className="inline-block">
               <span className="text-lg font-semibold tracking-tight text-white">BiuBan</span>
@@ -33,7 +32,6 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Navegación */}
           <div>
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#E5E5E5]">
               Navegación
@@ -50,7 +48,6 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Empresa */}
           <div>
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#E5E5E5]">
               Empresa
@@ -67,7 +64,6 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Legal */}
           <div>
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#E5E5E5]">
               Legal
