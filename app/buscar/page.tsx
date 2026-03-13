@@ -1,3 +1,4 @@
+// app/buscar/page.tsx
 import { Suspense } from 'react'
 import { Header } from '@/components/Header'
 import { FiltersSidebar } from '@/components/FiltersSidebar'
@@ -15,6 +16,7 @@ interface SearchPageProps {
     tienda?:    string
     color?:     string
     talla?:     string
+    genero?:    string
     precioMin?: string
     precioMax?: string
     descuento?: string
@@ -35,6 +37,7 @@ async function SearchResults({ searchParams }: SearchPageProps) {
     tienda:     params.tienda,
     color:      params.color,
     talla:      params.talla,
+    genero:     params.genero,
     precioMin:  params.precioMin,
     precioMax:  params.precioMax,
     descuento:  params.descuento,
@@ -91,29 +94,30 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           </div>
         </div>
 
-        {/* Sidebar + resultados */}
-        <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 gap-0 px-4 sm:px-6 lg:px-8">
-
-          {/* Sidebar desktop */}
-          <div className="hidden w-64 shrink-0 lg:flex lg:flex-col">
-            <Suspense fallback={<div className="w-64" />}>
-              <FiltersSidebar className="my-6 flex-1 min-h-0 overflow-hidden" />
+        {/* Layout principal */}
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          {/* Sidebar — solo desktop */}
+          <div className="hidden w-72 shrink-0 overflow-y-auto border-r border-[#E5E5E5] bg-white p-4 lg:block xl:w-80">
+            <Suspense fallback={null}>
+              <FiltersSidebar className="h-full" />
             </Suspense>
           </div>
 
           {/* Resultados */}
-          <div className="flex min-w-0 flex-1 flex-col overflow-y-auto py-6 lg:pl-8">
-            <Suspense
-              fallback={
-                <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className="aspect-[3/4] animate-pulse rounded-2xl bg-[#E5E5E5]" />
-                  ))}
-                </div>
-              }
-            >
-              <SearchResults searchParams={searchParams} />
-            </Suspense>
+          <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-5xl">
+              <Suspense
+                fallback={
+                  <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div key={i} className="aspect-[3/4] animate-pulse rounded-2xl bg-[#E5E5E5]" />
+                    ))}
+                  </div>
+                }
+              >
+                <SearchResults searchParams={searchParams} />
+              </Suspense>
+            </div>
           </div>
         </div>
       </main>

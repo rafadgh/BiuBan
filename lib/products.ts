@@ -1,3 +1,4 @@
+// lib/products.ts
 import { supabase } from './supabase'
 import type { Product } from '@/types/product'
 
@@ -66,6 +67,77 @@ function isDiscountedProduct(product: Product): boolean {
   return hasDiscountField || hasSaleFlag || hasLowerPrice
 }
 
+// Mapa de sinónimos de color para normalizar queries de color en búsqueda libre
+const COLOR_SINONIMOS: Record<string, string[]> = {
+  blanco:  ['white', 'blanco', 'crema', 'cream', 'off-white'],
+  white:   ['blanco', 'white', 'crema'],
+  negro:   ['black', 'negro'],
+  black:   ['negro', 'black'],
+  gris:    ['gray', 'grey', 'gris'],
+  gray:    ['gris', 'gray', 'grey'],
+  grey:    ['gris', 'gray', 'grey'],
+  azul:    ['blue', 'azul', 'navy'],
+  blue:    ['azul', 'blue'],
+  navy:    ['azul', 'navy', 'marino'],
+  rojo:    ['red', 'rojo'],
+  red:     ['rojo', 'red'],
+  verde:   ['green', 'verde'],
+  green:   ['verde', 'green'],
+  rosa:    ['pink', 'rosa'],
+  pink:    ['rosa', 'pink'],
+  morado:  ['purple', 'morado', 'violeta'],
+  purple:  ['morado', 'purple'],
+  amarillo:['yellow', 'amarillo'],
+  yellow:  ['amarillo', 'yellow'],
+  naranja: ['orange', 'naranja'],
+  orange:  ['naranja', 'orange'],
+  cafe:    ['brown', 'café', 'cafe', 'marrón'],
+  brown:   ['café', 'brown', 'cafe'],
+  beige:   ['beige', 'arena', 'crema'],
+}
+
+// Detecta si alguna palabra de la query es un color conocido
+function extractColorTermsFromQuery(query: string): string[] {
+  const words = query.toLowerCase().split(/\s+/)
+  const colorTerms: string[] = []
+
+  for (const word of words) {
+    const normalized = word.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    if (COLOR_SINONIMOS[normalized]) {
+      colorTerms.push(...COLOR_SINONIMOS[normalized])
+      colorTerms.push(word)
+    }
+    // también busca la palabra directamente si tiene acento (café, etc)
+    if (COLOR_SINONIMOS[word]) {
+      colorTerms.push(...COLOR_SINONIMOS[word])
+    }
+  }
+
+  return [...new Set(colorTerms)]
+}
+
+// Detecta si alguna palabra es un término de color y devuelve las palabras NO-color
+function splitQueryColorAndRest(query: string): { mainTerms: string; colorTerms: string[] } {
+  const words = query.trim().split(/\s+/)
+  const colorWords: string[] = []
+  const restWords: string[] = []
+
+  for (const word of words) {
+    const normalized = word.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    const isColor = !!(COLOR_SINONIMOS[normalized] || COLOR_SINONIMOS[word.toLowerCase()])
+    if (isColor) {
+      colorWords.push(word)
+    } else {
+      restWords.push(word)
+    }
+  }
+
+  return {
+    mainTerms: restWords.join(' '),
+    colorTerms: colorWords.length > 0 ? extractColorTermsFromQuery(colorWords.join(' ')) : [],
+  }
+}
+
 export interface SearchFilters {
   query?: string
   categoria?: string
@@ -73,6 +145,7 @@ export interface SearchFilters {
   tienda?: string
   color?: string
   talla?: string
+  genero?: string
   precioMin?: string
   precioMax?: string
   descuento?: string
@@ -89,6 +162,7 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
     tienda,
     color,
     talla,
+    genero,
     precioMin,
     precioMax,
     descuento,
@@ -102,13 +176,55 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
     .select('*')
     .eq('available', true)
 
+  // ── Búsqueda de texto ────────────────────────────────────────────────────
   if (query?.trim()) {
-    const t = query.trim()
-    q = q.or(
-      `name.ilike.%${t}%,brand.ilike.%${t}%,category.ilike.%${t}%,subcategory.ilike.%${t}%,color.ilike.%${t}%,description.ilike.%${t}%`
-    )
+    const rawQuery = query.trim()
+
+    // Separar términos de color de los demás términos
+    const { mainTerms, colorTerms } = splitQueryColorAndRest(rawQuery)
+
+    if (colorTerms.length > 0 && mainTerms.trim()) {
+      // Hay color Y otros términos: buscar productos que coincidan en texto Y en color
+      // Primero buscar en nombre/marca/categoría por los términos principales
+      const textConds = [
+        `name.ilike.%${mainTerms}%`,
+        `brand.ilike.%${mainTerms}%`,
+        `category.ilike.%${mainTerms}%`,
+        `subcategory.ilike.%${mainTerms}%`,
+        `description.ilike.%${mainTerms}%`,
+        // también buscar la query completa por si el nombre ya incluye el color
+        `name.ilike.%${rawQuery}%`,
+      ]
+      q = q.or(textConds.join(','))
+
+      // Luego filtrar por color como condición AND
+      const colorConds = colorTerms.flatMap(c => [
+        `color_primary.ilike.%${c}%`,
+        `color.ilike.%${c}%`,
+        `name.ilike.%${c}%`,
+        `description.ilike.%${c}%`,
+      ])
+      q = q.or(colorConds.join(','))
+
+    } else if (colorTerms.length > 0 && !mainTerms.trim()) {
+      // Solo color en la query: buscar por color
+      const colorConds = colorTerms.flatMap(c => [
+        `color_primary.ilike.%${c}%`,
+        `color.ilike.%${c}%`,
+        `name.ilike.%${c}%`,
+        `description.ilike.%${c}%`,
+      ])
+      q = q.or(colorConds.join(','))
+
+    } else {
+      // Sin color detectado: búsqueda normal en todos los campos de texto
+      q = q.or(
+        `name.ilike.%${rawQuery}%,brand.ilike.%${rawQuery}%,category.ilike.%${rawQuery}%,subcategory.ilike.%${rawQuery}%,color.ilike.%${rawQuery}%,color_primary.ilike.%${rawQuery}%,description.ilike.%${rawQuery}%`
+      )
+    }
   }
 
+  // ── Filtros adicionales ─────────────────────────────────────────────────
   if (categoria) {
     const cats = categoria.split(',').map(c => c.trim()).filter(Boolean)
     q =
@@ -135,7 +251,13 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
 
   if (color) {
     const colores = color.split(',').map(c => c.trim()).filter(Boolean)
-    const conds = colores.flatMap(c => [
+    // Para cada color del filtro, también expandir sinónimos
+    const expandedColors = colores.flatMap(c => {
+      const normalized = c.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      return [c, ...(COLOR_SINONIMOS[normalized] || []), ...(COLOR_SINONIMOS[c.toLowerCase()] || [])]
+    })
+    const uniqueColors = [...new Set(expandedColors)]
+    const conds = uniqueColors.flatMap(c => [
       `color_primary.ilike.%${c}%`,
       `color.ilike.%${c}%`,
     ])
@@ -144,10 +266,24 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
 
   if (talla) {
     const tallas = talla.split(',').map(t => t.trim()).filter(Boolean)
+    // Buscar talla en el campo sizes_available que puede ser texto o array JSON
+    // Usamos múltiples patrones para máxima compatibilidad
     if (tallas.length === 1) {
-      q = q.ilike('sizes_available', `%${tallas[0]}%`)
+      const t = tallas[0]
+      q = q.or(
+        `sizes_available.ilike.%${t}%`
+      )
     } else {
       q = q.or(tallas.map(t => `sizes_available.ilike.%${t}%`).join(','))
+    }
+  }
+
+  if (genero) {
+    const generos = genero.split(',').map(g => g.trim()).filter(Boolean)
+    if (generos.length === 1) {
+      q = q.ilike('gender', `%${generos[0]}%`)
+    } else {
+      q = q.or(generos.map(g => `gender.ilike.%${g}%`).join(','))
     }
   }
 
@@ -180,7 +316,7 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
   const { data, error } = await q.limit(120)
 
   if (error) {
-    console.error('[BiuBan] Supabase error:', error.message)
+    console.error('[BiuBan] Error en búsqueda:', error.message)
     return []
   }
 
@@ -241,7 +377,7 @@ export async function getDiscountedProducts(limit = 8): Promise<Product[]> {
     .limit(200)
 
   if (error) {
-    console.error('[BiuBan] Supabase error in getDiscountedProducts:', error.message)
+    console.error('[BiuBan] Error en getDiscountedProducts:', error.message)
     return []
   }
 
@@ -279,7 +415,7 @@ export async function getProductsByCategory(categoria: string, limit = 24): Prom
     .limit(limit)
 
   if (error) {
-    console.error('[BiuBan] Supabase error in getProductsByCategory:', error.message)
+    console.error('[BiuBan] Error en getProductsByCategory:', error.message)
     return []
   }
 
@@ -296,7 +432,7 @@ export async function getProductsByBrand(marca: string, limit = 24): Promise<Pro
     .limit(limit)
 
   if (error) {
-    console.error('[BiuBan] Supabase error in getProductsByBrand:', error.message)
+    console.error('[BiuBan] Error en getProductsByBrand:', error.message)
     return []
   }
 
