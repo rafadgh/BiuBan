@@ -1,6 +1,21 @@
 import { supabase } from './supabase'
 import type { Product } from '@/types/product'
 
+function parseTextArray(value: unknown): string[] | undefined {
+  if (Array.isArray(value)) {
+    return value.map(String)
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    return value
+      .split(',')
+      .map(item => item.trim())
+      .filter(Boolean)
+  }
+
+  return undefined
+}
+
 function mapRow(row: Record<string, unknown>): Product {
   return {
     id: String(row.id ?? ''),
@@ -20,7 +35,7 @@ function mapRow(row: Record<string, unknown>): Product {
     subcategoria: row.subcategory ? String(row.subcategory) : undefined,
     genero: row.gender ? String(row.gender) : undefined,
     grupoEdad: row.age_group ? String(row.age_group) : undefined,
-    tallasDisponibles: Array.isArray(row.sizes_available) ? (row.sizes_available as string[]) : undefined,
+    tallasDisponibles: parseTextArray(row.sizes_available),
     tipoTalla: row.size_type ? String(row.size_type) : undefined,
     color: row.color ? String(row.color) : undefined,
     colorPrimario: row.color_primary ? String(row.color_primary) : undefined,
@@ -36,7 +51,7 @@ function mapRow(row: Record<string, unknown>): Product {
     disponible: Boolean(row.available ?? true),
     stockStatus: row.stock_status ? String(row.stock_status) : undefined,
     envioGratis: Boolean(row.free_shipping ?? false),
-    tags: Array.isArray(row.tags) ? (row.tags as string[]) : undefined,
+    tags: parseTextArray(row.tags),
   }
 }
 
@@ -79,29 +94,32 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
   if (query?.trim()) {
     const t = query.trim()
     q = q.or(
-      `name.ilike.%${t}%,brand.ilike.%${t}%,category.ilike.%${t}%,color.ilike.%${t}%,description.ilike.%${t}%`
+      `name.ilike.%${t}%,brand.ilike.%${t}%,category.ilike.%${t}%,subcategory.ilike.%${t}%,color.ilike.%${t}%,description.ilike.%${t}%`
     )
   }
 
   if (categoria) {
     const cats = categoria.split(',').map(c => c.trim()).filter(Boolean)
-    q = cats.length === 1
-      ? q.ilike('category', `%${cats[0]}%`)
-      : q.or(cats.map(c => `category.ilike.%${c}%`).join(','))
+    q =
+      cats.length === 1
+        ? q.ilike('category', `%${cats[0]}%`)
+        : q.or(cats.map(c => `category.ilike.%${c}%`).join(','))
   }
 
   if (marca) {
     const marcas = marca.split(',').map(m => m.trim()).filter(Boolean)
-    q = marcas.length === 1
-      ? q.ilike('brand', `%${marcas[0]}%`)
-      : q.or(marcas.map(m => `brand.ilike.%${m}%`).join(','))
+    q =
+      marcas.length === 1
+        ? q.ilike('brand', `%${marcas[0]}%`)
+        : q.or(marcas.map(m => `brand.ilike.%${m}%`).join(','))
   }
 
   if (tienda) {
     const tiendas = tienda.split(',').map(t => t.trim()).filter(Boolean)
-    q = tiendas.length === 1
-      ? q.ilike('store', `%${tiendas[0]}%`)
-      : q.or(tiendas.map(t => `store.ilike.%${t}%`).join(','))
+    q =
+      tiendas.length === 1
+        ? q.ilike('store', `%${tiendas[0]}%`)
+        : q.or(tiendas.map(t => `store.ilike.%${t}%`).join(','))
   }
 
   if (color) {
@@ -115,12 +133,23 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
 
   if (talla) {
     const tallas = talla.split(',').map(t => t.trim()).filter(Boolean)
-    q = q.contains('sizes_available', tallas)
+    if (tallas.length === 1) {
+      q = q.ilike('sizes_available', `%${tallas[0]}%`)
+    } else {
+      q = q.or(tallas.map(t => `sizes_available.ilike.%${t}%`).join(','))
+    }
   }
 
   if (precioMin) q = q.gte('price', Number(precioMin))
   if (precioMax) q = q.lte('price', Number(precioMax))
-  if (descuento) q = q.gte('discount', Math.min(...descuento.split(',').map(Number)))
+
+  if (descuento) {
+    const valores = descuento.split(',').map(Number).filter(n => !Number.isNaN(n))
+    if (valores.length > 0) {
+      q = q.gte('discount', Math.min(...valores))
+    }
+  }
+
   if (ofertas === '1') q = q.gt('discount', 0)
   if (mejor === '1') q = q.eq('best_option', true)
 
@@ -145,10 +174,10 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
     return []
   }
 
-  return (data ?? []).map(mapRow)
+  return (data ?? []).map(row => mapRow(row as Record<string, unknown>))
 }
 
-export async function getDiscountedProducts(limit = 12): Promise<Product[]> {
+export async function getDiscountedProducts(limit = 8): Promise<Product[]> {
   const { data, error } = await supabase
     .from('products')
     .select('*')
@@ -162,7 +191,7 @@ export async function getDiscountedProducts(limit = 12): Promise<Product[]> {
     return []
   }
 
-  return (data ?? []).map(mapRow)
+  return (data ?? []).map(row => mapRow(row as Record<string, unknown>))
 }
 
 export async function getProductsByCategory(categoria: string, limit = 24): Promise<Product[]> {
@@ -179,7 +208,7 @@ export async function getProductsByCategory(categoria: string, limit = 24): Prom
     return []
   }
 
-  return (data ?? []).map(mapRow)
+  return (data ?? []).map(row => mapRow(row as Record<string, unknown>))
 }
 
 export async function getProductsByBrand(marca: string, limit = 24): Promise<Product[]> {
@@ -196,7 +225,7 @@ export async function getProductsByBrand(marca: string, limit = 24): Promise<Pro
     return []
   }
 
-  return (data ?? []).map(mapRow)
+  return (data ?? []).map(row => mapRow(row as Record<string, unknown>))
 }
 
 export async function searchProducts(query: string): Promise<Product[]> {
