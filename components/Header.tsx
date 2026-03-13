@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Menu, X, Search } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { usePathname } from 'next/navigation'
+import { Menu, X, Search, ChevronLeft } from 'lucide-react'
 
 const navLinks = [
   { href: '/ofertas', label: 'Ofertas' },
@@ -13,69 +13,93 @@ const navLinks = [
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const pathname = usePathname()
+  const isHome = pathname === '/'
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/98 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full border-b border-[#1F1F1F] bg-[#0B0B0B]">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:h-16 sm:px-6 lg:px-8">
-        {/* Logo */}
-        <Link href="/" className="flex items-center">
-          <span className="text-lg font-bold tracking-tight text-foreground sm:text-xl">BiuBan</span>
-        </Link>
 
-        {/* Desktop Navigation */}
+        {/* Izquierda: botón volver + logo */}
+        <div className="flex items-center gap-2">
+          {!isHome && (
+            <Link
+              href="/"
+              className="mr-1 flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm text-[#6B6B6B] transition-colors hover:text-[#22C55E]"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Inicio</span>
+            </Link>
+          )}
+          <Link href="/" className="flex items-center">
+            <span className="text-lg font-bold tracking-tight text-white sm:text-xl">
+              Biu<span className="text-[#22C55E]">Ban</span>
+            </span>
+          </Link>
+        </div>
+
+        {/* Nav desktop */}
         <nav className="hidden items-center gap-8 md:flex">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className={`text-sm font-medium transition-colors ${
+                pathname === link.href
+                  ? 'text-[#22C55E]'
+                  : 'text-[#6B6B6B] hover:text-[#22C55E]'
+              }`}
             >
               {link.label}
             </Link>
           ))}
         </nav>
 
-        {/* Desktop CTA */}
+        {/* CTA desktop */}
         <div className="hidden md:block">
-          <Button asChild size="sm" className="rounded-full px-4">
-            <Link href="/buscar">
-              <Search className="mr-2 h-4 w-4" />
-              Buscar
-            </Link>
-          </Button>
+          <Link
+            href="/buscar"
+            className="flex items-center gap-2 rounded-full bg-[#FACC15] px-4 py-2 text-sm font-semibold text-[#0B0B0B] transition-colors hover:bg-[#EAB308]"
+          >
+            <Search className="h-4 w-4" />
+            Buscar
+          </Link>
         </div>
 
-        {/* Mobile Menu Button */}
+        {/* Botón menú mobile */}
         <button
-          className="inline-flex items-center justify-center rounded-lg p-2 text-foreground transition-colors hover:bg-muted md:hidden"
+          className="inline-flex items-center justify-center rounded-lg p-2 text-white transition-colors hover:text-[#22C55E] md:hidden"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
         >
           {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
-      {/* Mobile Navigation */}
+      {/* Menú mobile */}
       {isMenuOpen && (
-        <div className="border-t border-border/50 bg-background md:hidden">
+        <div className="border-t border-[#1F1F1F] bg-[#0B0B0B] md:hidden">
           <nav className="flex flex-col px-4 py-3">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                className={`rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:text-[#22C55E] ${
+                  pathname === link.href ? 'text-[#22C55E]' : 'text-[#6B6B6B]'
+                }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 {link.label}
               </Link>
             ))}
             <div className="mt-3 px-3 pb-1">
-              <Button asChild className="w-full rounded-full" size="sm">
-                <Link href="/buscar">
-                  <Search className="mr-2 h-4 w-4" />
-                  Buscar
-                </Link>
-              </Button>
+              <Link
+                href="/buscar"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-[#FACC15] py-2.5 text-sm font-semibold text-[#0B0B0B] transition-colors hover:bg-[#EAB308]"
+              >
+                <Search className="h-4 w-4" />
+                Buscar
+              </Link>
             </div>
           </nav>
         </div>
