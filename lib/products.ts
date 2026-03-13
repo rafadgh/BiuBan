@@ -1,59 +1,76 @@
 import { supabase } from './supabase'
-import { Product } from '@/types/product'
+import type { Product } from '@/types/product'
 
 // Mapea una fila de Supabase al tipo Product de la app
 function mapRow(row: Record<string, unknown>): Product {
   return {
-    id:                 String(row.id ?? ''),
-    nombre:             String(row.name ?? ''),
-    slug:               row.slug        ? String(row.slug)        : undefined,
-    marca:              String(row.brand ?? ''),
-    modelo:             row.model       ? String(row.model)       : undefined,
-    descripcion:        row.description ? String(row.description) : undefined,
-    tienda:             String(row.store ?? ''),
-    storeTipo:          row.store_type  ? String(row.store_type)  : undefined,
-    precio:             Number(row.price ?? 0),
-    precioOriginal:     row.original_price ? Number(row.original_price) : undefined,
-    descuento:          row.discount    ? Number(row.discount)    : undefined,
-    imagen:             String(row.image ?? ''),
-    url:                String(row.url ?? ''),
-    categoria:          String(row.category ?? ''),
-    subcategoria:       row.subcategory ? String(row.subcategory) : undefined,
-    genero:             row.gender      ? String(row.gender)      : undefined,
-    grupoEdad:          row.age_group   ? String(row.age_group)   : undefined,
-    tallasDisponibles:  Array.isArray(row.sizes_available) ? row.sizes_available as string[] : undefined,
-    tipoTalla:          row.size_type   ? String(row.size_type)   : undefined,
-    color:              row.color       ? String(row.color)       : undefined,
-    colorPrimario:      row.color_primary ? String(row.color_primary) : undefined,
-    colorHex:           row.color_hex   ? String(row.color_hex)   : undefined,
-    material:           row.material    ? String(row.material)    : undefined,
-    estilo:             row.style       ? String(row.style)       : undefined,
-    fit:                row.fit         ? String(row.fit)         : undefined,
-    productGroup:       row.product_group ? String(row.product_group) : undefined,
-    mejorOpcion:        Boolean(row.best_option ?? false),
-    esNuevo:            Boolean(row.is_new      ?? false),
-    enOferta:           Boolean(row.on_sale     ?? false),
-    trending:           Boolean(row.trending    ?? false),
-    disponible:         Boolean(row.available   ?? true),
-    stockStatus:        row.stock_status ? String(row.stock_status) : undefined,
-    envioGratis:        Boolean(row.free_shipping ?? false),
-    tags:               Array.isArray(row.tags) ? row.tags as string[] : undefined,
+    id: String(row.id ?? ''),
+    nombre: String(row.name ?? ''),
+    slug: row.slug ? String(row.slug) : undefined,
+    marca: String(row.brand ?? ''),
+    modelo: row.model ? String(row.model) : undefined,
+    descripcion: row.description ? String(row.description) : undefined,
+    tienda: String(row.store ?? ''),
+    storeTipo: row.store_type ? String(row.store_type) : undefined,
+    precio: Number(row.price ?? 0),
+    precioOriginal: row.original_price != null ? Number(row.original_price) : undefined,
+    descuento: row.discount != null ? Number(row.discount) : undefined,
+    imagen: String(row.image ?? ''),
+    url: String(row.url ?? ''),
+    categoria: String(row.category ?? ''),
+    subcategoria: row.subcategory ? String(row.subcategory) : undefined,
+    genero: row.gender ? String(row.gender) : undefined,
+    grupoEdad: row.age_group ? String(row.age_group) : undefined,
+    tallasDisponibles: Array.isArray(row.sizes_available) ? (row.sizes_available as string[]) : undefined,
+    tipoTalla: row.size_type ? String(row.size_type) : undefined,
+    color: row.color ? String(row.color) : undefined,
+    colorPrimario: row.color_primary ? String(row.color_primary) : undefined,
+    colorHex: row.color_hex ? String(row.color_hex) : undefined,
+    material: row.material ? String(row.material) : undefined,
+    estilo: row.style ? String(row.style) : undefined,
+    fit: row.fit ? String(row.fit) : undefined,
+    productGroup: row.product_group ? String(row.product_group) : undefined,
+    mejorOpcion: Boolean(row.best_option ?? false),
+    esNuevo: Boolean(row.is_new ?? false),
+    enOferta: Boolean(row.on_sale ?? false),
+    trending: Boolean(row.trending ?? false),
+    disponible: Boolean(row.available ?? true),
+    stockStatus: row.stock_status ? String(row.stock_status) : undefined,
+    envioGratis: Boolean(row.free_shipping ?? false),
+    tags: Array.isArray(row.tags) ? (row.tags as string[]) : undefined,
   }
 }
 
 export interface SearchFilters {
-  query?:      string
-  categoria?:  string   // puede ser "tenis,hoodies" para multi
-  marca?:      string
-  tienda?:     string
-  color?:      string
-  talla?:      string
-  precioMin?:  string
-  precioMax?:  string
-  descuento?:  string
-  ofertas?:    string
-  mejor?:      string
-  ordenar?:    string
+  query?: string
+  categoria?: string // puede ser "tenis,hoodies" para multi
+  marca?: string
+  tienda?: string
+  color?: string
+  talla?: string
+  precioMin?: string
+  precioMax?: string
+  descuento?: string
+  ofertas?: string
+  mejor?: string
+  ordenar?: string
+}
+
+export async function getDiscountedProducts(limit = 12): Promise<Product[]> {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('available', true)
+    .gt('discount', 0)
+    .order('discount', { ascending: false })
+    .limit(limit)
+
+  if (error) {
+    console.error('[BiuBan] Error Supabase getDiscountedProducts:', error.message)
+    return []
+  }
+
+  return (data ?? []).map(mapRow)
 }
 
 export async function searchProductsFromDB(filters: SearchFilters): Promise<Product[]> {
@@ -67,7 +84,7 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
     .select('*')
     .eq('available', true)
 
-  // Búsqueda por texto — busca en nombre, marca, categoría, color y tags
+  // Búsqueda por texto — busca en nombre, marca, categoría, color y descripción
   if (query?.trim()) {
     const term = query.trim()
     q = q.or(
@@ -78,7 +95,7 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
 
   // Categoría — soporta multi: "tenis,hoodies"
   if (categoria) {
-    const cats = categoria.split(',').filter(Boolean)
+    const cats = categoria.split(',').map(c => c.trim()).filter(Boolean)
     if (cats.length === 1) {
       q = q.ilike('category', `%${cats[0]}%`)
     } else {
@@ -88,7 +105,7 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
 
   // Marca
   if (marca) {
-    const marcas = marca.split(',').filter(Boolean)
+    const marcas = marca.split(',').map(m => m.trim()).filter(Boolean)
     if (marcas.length === 1) {
       q = q.ilike('brand', `%${marcas[0]}%`)
     } else {
@@ -98,7 +115,7 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
 
   // Tienda
   if (tienda) {
-    const tiendas = tienda.split(',').filter(Boolean)
+    const tiendas = tienda.split(',').map(t => t.trim()).filter(Boolean)
     if (tiendas.length === 1) {
       q = q.ilike('store', `%${tiendas[0]}%`)
     } else {
@@ -106,9 +123,9 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
     }
   }
 
-  // Color — busca en color_primary (normalizado) y color (display)
+  // Color — busca en color_primary y color
   if (color) {
-    const colores = color.split(',').filter(Boolean)
+    const colores = color.split(',').map(c => c.trim()).filter(Boolean)
     if (colores.length === 1) {
       q = q.or(`color_primary.ilike.%${colores[0]}%,color.ilike.%${colores[0]}%`)
     } else {
@@ -122,8 +139,7 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
 
   // Talla — busca dentro del array sizes_available
   if (talla) {
-    const tallas = talla.split(',').filter(Boolean)
-    // cs = "contains" para arrays en Supabase
+    const tallas = talla.split(',').map(t => t.trim()).filter(Boolean)
     q = q.contains('sizes_available', tallas)
   }
 
@@ -145,10 +161,17 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
 
   // Ordenamiento
   switch (ordenar) {
-    case 'precio-asc':  q = q.order('price',    { ascending: true  }); break
-    case 'precio-desc': q = q.order('price',    { ascending: false }); break
-    case 'descuento':   q = q.order('discount', { ascending: false }); break
-    default:            q = q.order('created_at', { ascending: false })
+    case 'precio-asc':
+      q = q.order('price', { ascending: true })
+      break
+    case 'precio-desc':
+      q = q.order('price', { ascending: false })
+      break
+    case 'descuento':
+      q = q.order('discount', { ascending: false })
+      break
+    default:
+      q = q.order('created_at', { ascending: false })
   }
 
   const { data, error } = await q.limit(120)
