@@ -20,7 +20,6 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-[#1A1A1A] bg-[#0B0B0B]">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:h-16 sm:px-6 lg:px-8">
 
-        {/* Izquierda */}
         <div className="flex items-center gap-2">
           {!isHome && (
             <Link
@@ -38,7 +37,6 @@ export function Header() {
           </Link>
         </div>
 
-        {/* Nav desktop */}
         <nav className="hidden items-center gap-8 md:flex">
           {navLinks.map((link) => (
             <Link
@@ -55,18 +53,17 @@ export function Header() {
           ))}
         </nav>
 
-        {/* CTA desktop — amarillo solo aquí */}
+        {/* CTA — blanco sobre negro, borde sutil */}
         <div className="hidden md:block">
           <Link
             href="/buscar"
-            className="flex items-center gap-2 rounded-full bg-[#EAB308] px-4 py-2 text-sm font-semibold text-[#0B0B0B] transition-colors hover:bg-[#CA8A04]"
+            className="flex items-center gap-2 rounded-full border border-[#2A2A2A] bg-white px-4 py-2 text-sm font-semibold text-[#0B0B0B] transition-all hover:bg-[#F3F4F6]"
           >
             <Search className="h-4 w-4" />
             Buscar
           </Link>
         </div>
 
-        {/* Mobile toggle */}
         <button
           className="inline-flex items-center justify-center rounded-lg p-2 text-white transition-colors hover:text-[#778C43] md:hidden"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -75,7 +72,6 @@ export function Header() {
         </button>
       </div>
 
-      {/* Mobile menu */}
       {isMenuOpen && (
         <div className="border-t border-[#1A1A1A] bg-[#0B0B0B] md:hidden">
           <nav className="flex flex-col px-4 py-3">
@@ -95,7 +91,7 @@ export function Header() {
               <Link
                 href="/buscar"
                 onClick={() => setIsMenuOpen(false)}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-[#EAB308] py-2.5 text-sm font-semibold text-[#0B0B0B] transition-colors hover:bg-[#CA8A04]"
+                className="flex w-full items-center justify-center gap-2 rounded-full border border-[#2A2A2A] bg-white py-2.5 text-sm font-semibold text-[#0B0B0B] transition-colors hover:bg-[#F3F4F6]"
               >
                 <Search className="h-4 w-4" />
                 Buscar

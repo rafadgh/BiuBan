@@ -52,6 +52,7 @@ export function ProductCard({ product }: ProductCardProps) {
           <span className="text-xs font-semibold uppercase tracking-wide text-[#0B0B0B]">
             {product.marca}
           </span>
+
           <span className="rounded-md bg-[#F5F5F5] px-2 py-0.5 text-[11px] font-medium text-[#6B6B6B]">
             {product.tienda}
           </span>
@@ -81,7 +82,7 @@ export function ProductCard({ product }: ProductCardProps) {
           href={product.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex w-full items-center justify-center gap-2 rounded-full bg-[#EAB308] py-2 text-sm font-semibold text-[#0B0B0B] transition-colors hover:bg-[#CA8A04]"
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-[#0B0B0B] py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1A1A1A]"
         >
           Ver tienda
           <ExternalLink className="h-3.5 w-3.5" />
