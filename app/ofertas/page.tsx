@@ -9,15 +9,14 @@ export const metadata: Metadata = {
   description: 'Descubre las mejores ofertas y descuentos en ropa, tenis y accesorios. Compara precios y ahorra.',
 }
 
-export default function OfertasPage() {
-  const deals = getDiscountedProducts()
+export default async function OfertasPage() {
+  const deals = await getDiscountedProducts()
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
       <main className="flex-1">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
-          {/* Page Header */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
@@ -29,7 +28,6 @@ export default function OfertasPage() {
             </div>
           </div>
 
-          {/* Products Grid */}
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {deals.map((product) => (
               <ProductCard key={product.id} product={product} />

@@ -1,11 +1,9 @@
 import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
 import { getDiscountedProducts } from '@/lib/products'
 import { ProductCard } from './ProductCard'
-import { Button } from '@/components/ui/button'
 
-export function FeaturedDeals() {
-  const deals = getDiscountedProducts().slice(0, 4)
+export async function FeaturedDeals() {
+  const deals = await getDiscountedProducts(4)
 
   return (
     <section className="py-12 sm:py-16">
@@ -14,8 +12,8 @@ export function FeaturedDeals() {
           <h2 className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
             Ofertas destacadas
           </h2>
-          <Link 
-            href="/ofertas" 
+          <Link
+            href="/ofertas"
             className="text-sm font-medium text-foreground/70 transition-colors hover:text-foreground"
           >
             Ver todas →
