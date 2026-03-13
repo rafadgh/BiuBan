@@ -55,6 +55,17 @@ function mapRow(row: Record<string, unknown>): Product {
   }
 }
 
+function isDiscountedProduct(product: Product): boolean {
+  const hasDiscountField = typeof product.descuento === 'number' && product.descuento > 0
+  const hasSaleFlag = product.enOferta === true
+  const hasLowerPrice =
+    typeof product.precioOriginal === 'number' &&
+    product.precioOriginal > 0 &&
+    product.precio < product.precioOriginal
+
+  return hasDiscountField || hasSaleFlag || hasLowerPrice
+}
+
 export interface SearchFilters {
   query?: string
   categoria?: string
@@ -150,7 +161,6 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
     }
   }
 
-  if (ofertas === '1') q = q.gt('discount', 0)
   if (mejor === '1') q = q.eq('best_option', true)
 
   switch (ordenar) {
@@ -161,7 +171,7 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
       q = q.order('price', { ascending: false })
       break
     case 'descuento':
-      q = q.order('discount', { ascending: false })
+      q = q.order('discount', { ascending: false, nullsFirst: false })
       break
     default:
       q = q.order('created_at', { ascending: false })
@@ -174,7 +184,52 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
     return []
   }
 
-  return (data ?? []).map(row => mapRow(row as Record<string, unknown>))
+  let products = (data ?? []).map(row => mapRow(row as Record<string, unknown>))
+
+  if (ofertas === '1') {
+    products = products.filter(isDiscountedProduct)
+  }
+
+  if (descuento) {
+    const valores = descuento.split(',').map(Number).filter(n => !Number.isNaN(n))
+    if (valores.length > 0) {
+      const minDescuento = Math.min(...valores)
+      products = products.filter(product => {
+        if (typeof product.descuento === 'number') return product.descuento >= minDescuento
+        if (
+          typeof product.precioOriginal === 'number' &&
+          product.precioOriginal > 0 &&
+          product.precio < product.precioOriginal
+        ) {
+          const porcentaje = ((product.precioOriginal - product.precio) / product.precioOriginal) * 100
+          return porcentaje >= minDescuento
+        }
+        return false
+      })
+    }
+  }
+
+  if (ordenar === 'descuento') {
+    products = products.sort((a, b) => {
+      const descuentoA =
+        typeof a.descuento === 'number'
+          ? a.descuento
+          : typeof a.precioOriginal === 'number' && a.precioOriginal > 0 && a.precio < a.precioOriginal
+            ? ((a.precioOriginal - a.precio) / a.precioOriginal) * 100
+            : 0
+
+      const descuentoB =
+        typeof b.descuento === 'number'
+          ? b.descuento
+          : typeof b.precioOriginal === 'number' && b.precioOriginal > 0 && b.precio < b.precioOriginal
+            ? ((b.precioOriginal - b.precio) / b.precioOriginal) * 100
+            : 0
+
+      return descuentoB - descuentoA
+    })
+  }
+
+  return products
 }
 
 export async function getDiscountedProducts(limit = 8): Promise<Product[]> {
@@ -182,16 +237,36 @@ export async function getDiscountedProducts(limit = 8): Promise<Product[]> {
     .from('products')
     .select('*')
     .eq('available', true)
-    .gt('discount', 0)
-    .order('discount', { ascending: false })
-    .limit(limit)
+    .order('created_at', { ascending: false })
+    .limit(200)
 
   if (error) {
     console.error('[BiuBan] Supabase error in getDiscountedProducts:', error.message)
     return []
   }
 
-  return (data ?? []).map(row => mapRow(row as Record<string, unknown>))
+  const discountedProducts = (data ?? [])
+    .map(row => mapRow(row as Record<string, unknown>))
+    .filter(isDiscountedProduct)
+    .sort((a, b) => {
+      const descuentoA =
+        typeof a.descuento === 'number'
+          ? a.descuento
+          : typeof a.precioOriginal === 'number' && a.precioOriginal > 0 && a.precio < a.precioOriginal
+            ? ((a.precioOriginal - a.precio) / a.precioOriginal) * 100
+            : 0
+
+      const descuentoB =
+        typeof b.descuento === 'number'
+          ? b.descuento
+          : typeof b.precioOriginal === 'number' && b.precioOriginal > 0 && b.precio < b.precioOriginal
+            ? ((b.precioOriginal - b.precio) / b.precioOriginal) * 100
+            : 0
+
+      return descuentoB - descuentoA
+    })
+
+  return discountedProducts.slice(0, limit)
 }
 
 export async function getProductsByCategory(categoria: string, limit = 24): Promise<Product[]> {
