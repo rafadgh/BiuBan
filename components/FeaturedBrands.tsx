@@ -3,16 +3,16 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 
 const featuredBrands = [
-  { name: 'Nike',           slug: 'nike' },
-  { name: 'Adidas',         slug: 'adidas' },
-  { name: 'Zara',           slug: 'zara' },
-  { name: 'H&M',            slug: 'hm' },
-  { name: 'Liverpool',      slug: 'liverpool' },
-  { name: 'Mercado Libre',  slug: 'mercado-libre' },
-  { name: 'Lacoste',        slug: 'lacoste' },
-  { name: "Levi's",         slug: 'levis' },
-  { name: 'New Balance',    slug: 'new-balance' },
-  { name: 'Puma',           slug: 'puma' },
+  { name: 'Nike',          slug: 'nike' },
+  { name: 'Adidas',        slug: 'adidas' },
+  { name: 'Zara',          slug: 'zara' },
+  { name: 'H&M',           slug: 'hm' },
+  { name: 'Liverpool',     slug: 'liverpool' },
+  { name: 'Mercado Libre', slug: 'mercado-libre' },
+  { name: 'Lacoste',       slug: 'lacoste' },
+  { name: "Levi's",        slug: 'levis' },
+  { name: 'New Balance',   slug: 'new-balance' },
+  { name: 'Puma',          slug: 'puma' },
 ]
 
 export function FeaturedBrands() {
@@ -26,7 +26,7 @@ export function FeaturedBrands() {
               Tiendas disponibles
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Comparamos precios en más de 25 tiendas
+              Comparamos precios en más de 25 tiendas y marcas
             </p>
           </div>
           <Link
@@ -49,10 +49,10 @@ export function FeaturedBrands() {
             </Link>
           ))}
 
-          {/* Chip "y muchas más" que lleva a /marcas */}
+          {/* Chip que lleva a /marcas */}
           <Link
             href="/marcas"
-            className="flex items-center gap-1.5 rounded-full border border-dashed border-border bg-transparent px-4 py-2 text-sm text-muted-foreground transition-all hover:border-foreground/30 hover:text-foreground"
+            className="flex items-center gap-1.5 rounded-full border border-dashed border-border/60 px-4 py-2 text-sm text-muted-foreground transition-all hover:border-foreground/40 hover:text-foreground"
           >
             y muchas más
             <ArrowRight className="h-3.5 w-3.5" />
