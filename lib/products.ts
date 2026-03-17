@@ -596,6 +596,7 @@ export interface SearchFacets {
   generos:       string[]  // valores de gender normalizados
   tallas:        string[]  // valores únicos de sizes_available
   subcategorias: string[]  // valores de subcategory normalizados
+  marcas:        string[]  // marcas disponibles en resultados
 }
 
 export async function getSearchFacets(
@@ -603,7 +604,7 @@ export async function getSearchFacets(
 ): Promise<SearchFacets> {
   let q = supabase
     .from('products')
-    .select('color_primary, gender, sizes_available, subcategory')
+    .select('color_primary, gender, sizes_available, subcategory, brand')
     .eq('available', true)
 
   if (filters.categoria) {
@@ -638,9 +639,9 @@ export async function getSearchFacets(
   }
 
   const { data } = await q.limit(500)
-  if (!data || data.length === 0) return { colores: [], generos: [], tallas: [], subcategorias: [] }
+  if (!data || data.length === 0) return { colores: [], generos: [], tallas: [], subcategorias: [], marcas: [] }
 
-  type Row = { color_primary: string | null; gender: string | null; sizes_available: string[] | null; subcategory: string | null }
+  type Row = { color_primary: string | null; gender: string | null; sizes_available: string[] | null; subcategory: string | null; brand: string | null }
   let rows = data as Row[]
 
   // Aplicar filtro de género en memoria: desde query ("tenis hombre") y desde el param genero
@@ -667,12 +668,13 @@ export async function getSearchFacets(
     })
   }
 
-  const colores       = [...new Set(rows.map(r => r.color_primary).filter(Boolean) as string[])].map(norm)
-  const generos       = [...new Set(rows.map(r => r.gender).filter(Boolean) as string[])].map(norm)
-  const tallas        = [...new Set(rows.flatMap(r => r.sizes_available ?? []))]
-  const subcategorias = [...new Set(rows.map(r => r.subcategory).filter(Boolean) as string[])].map(norm)
-
-  return { colores, generos, tallas, subcategorias }
+  return {
+    colores:       [...new Set(rows.map(r => r.color_primary).filter(Boolean) as string[])].map(norm),
+    generos:       [...new Set(rows.map(r => r.gender).filter(Boolean) as string[])].map(norm),
+    tallas:        [...new Set(rows.flatMap(r => r.sizes_available ?? []))],
+    subcategorias: [...new Set(rows.map(r => r.subcategory).filter(Boolean) as string[])].map(norm),
+    marcas:        [...new Set(rows.map(r => r.brand).filter(Boolean) as string[])].sort(),
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -819,7 +821,7 @@ export async function getOffersFacets(
 ): Promise<SearchFacets> {
   let q = supabase
     .from('products')
-    .select('color_primary, gender, sizes_available, subcategory')
+    .select('color_primary, gender, sizes_available, subcategory, brand')
     .eq('available', true)
     .or('on_sale.eq.true,discount.gt.0')
 
@@ -849,9 +851,9 @@ export async function getOffersFacets(
   }
 
   const { data } = await q.limit(500)
-  if (!data || data.length === 0) return { colores: [], generos: [], tallas: [], subcategorias: [] }
+  if (!data || data.length === 0) return { colores: [], generos: [], tallas: [], subcategorias: [], marcas: [] }
 
-  type Row = { color_primary: string | null; gender: string | null; sizes_available: string[] | null; subcategory: string | null }
+  type Row = { color_primary: string | null; gender: string | null; sizes_available: string[] | null; subcategory: string | null; brand: string | null }
   let rows = data as Row[]
 
   const genderTerms: Record<string, string[]> = {
@@ -880,6 +882,7 @@ export async function getOffersFacets(
     generos:       [...new Set(rows.map(r => r.gender).filter(Boolean) as string[])].map(norm),
     tallas:        [...new Set(rows.flatMap(r => r.sizes_available ?? []))],
     subcategorias: [...new Set(rows.map(r => r.subcategory).filter(Boolean) as string[])].map(norm),
+    marcas:        [...new Set(rows.map(r => r.brand).filter(Boolean) as string[])].sort(),
   }
 }
 

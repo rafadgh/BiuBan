@@ -8,7 +8,9 @@ import { SortBar } from '@/components/SortBar'
 import { ProductCard } from '@/components/ProductCard'
 import { SearchBar } from '@/components/SearchBar'
 import { searchOffersFromDB, getOffersPriceRange, getOffersFacets } from '@/lib/products'
-import type { SearchFacets } from '@/lib/products'
+import { Pagination } from '@/components/Pagination'
+
+const PER_PAGE = 24
 
 export const metadata: Metadata = {
   title: 'Ofertas - BiuBan',
@@ -29,13 +31,15 @@ interface OffersPageProps {
     descuento?: string
     mejor?:     string
     ordenar?:   string
+    pagina?:    string
   }>
 }
 
 async function OffersResults({ searchParams }: OffersPageProps) {
   const params = await searchParams
+  const page   = Math.max(1, parseInt(params.pagina || '1'))
 
-  const products = await searchOffersFromDB({
+  const allProducts = await searchOffersFromDB({
     query:     params.q,
     categoria: params.categoria,
     marca:     params.marca,
@@ -50,20 +54,28 @@ async function OffersResults({ searchParams }: OffersPageProps) {
     ordenar:   params.ordenar,
   })
 
+  const total    = allProducts.length
+  const products = allProducts.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+
   return (
     <>
       <SortBar
-        resultCount={products.length}
+        resultCount={total}
         query={params.q || 'todas las ofertas'}
         basePath="/ofertas"
       />
 
       {products.length > 0 ? (
-        <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        <>
+          <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+          <Suspense fallback={null}>
+            <Pagination total={total} page={page} perPage={PER_PAGE} basePath="/ofertas" />
+          </Suspense>
+        </>
       ) : (
         <div className="mt-16 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#F5F5F5]">

@@ -25,6 +25,7 @@ export function SortBar({ resultCount, query, basePath = '/buscar' }: SortBarPro
     const params = new URLSearchParams(searchParams.toString())
     if (value === 'relevancia') params.delete('ordenar')
     else params.set('ordenar', value)
+    params.delete('pagina')
     router.push(`${basePath}?${params.toString()}`)
   }
 

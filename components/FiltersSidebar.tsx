@@ -198,6 +198,7 @@ export function FiltersSidebar({
   const effectiveMax = priceRange?.max ?? 10000
 
   const currentCategorias  = parseMulti(searchParams.get('categoria'))
+  const currentMarcas      = parseMulti(searchParams.get('marca'))
   const currentTiendas     = parseMulti(searchParams.get('tienda'))
   const currentColores     = parseMulti(searchParams.get('color'))
   const currentTallas      = parseMulti(searchParams.get('talla'))
@@ -227,6 +228,7 @@ export function FiltersSidebar({
     for (const [k, v] of Object.entries(updates)) {
       if (v) params.set(k, v); else params.delete(k)
     }
+    params.delete('pagina')
     router.push(`${basePath}?${params.toString()}`)
   }, [searchParams, router, basePath])
 
@@ -247,7 +249,7 @@ export function FiltersSidebar({
   }
 
   const activeCount = [
-    ...currentCategorias, ...currentTiendas, ...currentColores,
+    ...currentCategorias, ...currentMarcas, ...currentTiendas, ...currentColores,
     ...currentTallas, ...currentDescuentos, ...currentGeneros,
     (urlMin !== null && urlMin > effectiveMin) ? '1' : '',
     (urlMax !== null && urlMax < effectiveMax) ? '1' : '',
@@ -319,6 +321,9 @@ export function FiltersSidebar({
               const found = GENEROS.find(x => x.value === g)
               return <ActiveTag key={g} label={found?.label ?? g} onRemove={() => toggleMulti('genero', currentGeneros, g)} />
             })}
+            {currentMarcas.map(m => (
+              <ActiveTag key={m} label={m} onRemove={() => toggleMulti('marca', currentMarcas, m)} />
+            ))}
             {currentCategorias.map(c => {
               const found = ALL_CATEGORIAS.find(x => x.value === c)
               return <ActiveTag key={c} label={found?.label ?? c} onRemove={() => toggleMulti('categoria', currentCategorias, c)} />
@@ -384,6 +389,26 @@ export function FiltersSidebar({
                     ))}
                   </div>
                 </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* ── Marca (solo marcas con resultados) ── */}
+        {facets?.marcas && facets.marcas.length > 0 && (
+          <Section title="Marca" defaultOpen={false} badge={currentMarcas.length}>
+            <div className="max-h-48 space-y-0.5 overflow-y-auto">
+              {facets.marcas.map((marca) => (
+                <button key={marca}
+                  onClick={() => toggleMulti('marca', currentMarcas, marca)}
+                  className={`flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left text-sm transition-colors ${
+                    currentMarcas.includes(marca)
+                      ? 'bg-foreground text-background font-medium'
+                      : 'text-foreground/80 hover:bg-muted'
+                  }`}>
+                  {marca}
+                  {currentMarcas.includes(marca) && <X className="h-3 w-3" />}
+                </button>
               ))}
             </div>
           </Section>

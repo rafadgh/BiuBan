@@ -169,6 +169,7 @@ export function MobileFilters({ priceRange, facets, basePath = '/buscar' }: { pr
   const effectiveMax = priceRange?.max ?? 10000
 
   const currentCategorias  = parseMulti(searchParams.get('categoria'))
+  const currentMarcas      = parseMulti(searchParams.get('marca'))
   const currentTiendas     = parseMulti(searchParams.get('tienda'))
   const currentColores     = parseMulti(searchParams.get('color'))
   const currentTallas      = parseMulti(searchParams.get('talla'))
@@ -197,6 +198,7 @@ export function MobileFilters({ priceRange, facets, basePath = '/buscar' }: { pr
     for (const [k, v] of Object.entries(updates)) {
       if (v) params.set(k, v); else params.delete(k)
     }
+    params.delete('pagina')
     router.push(`${basePath}?${params.toString()}`)
   }, [searchParams, router, basePath])
 
@@ -218,7 +220,7 @@ export function MobileFilters({ priceRange, facets, basePath = '/buscar' }: { pr
   }
 
   const activeCount = [
-    ...currentCategorias, ...currentTiendas, ...currentColores,
+    ...currentCategorias, ...currentMarcas, ...currentTiendas, ...currentColores,
     ...currentTallas, ...currentDescuentos, ...currentGeneros,
     (urlMin !== null && urlMin > effectiveMin) ? '1' : '',
     (urlMax !== null && urlMax < effectiveMax) ? '1' : '',
@@ -330,6 +332,24 @@ export function MobileFilters({ priceRange, facets, basePath = '/buscar' }: { pr
                           ))}
                         </div>
                       </div>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
+              {facets?.marcas && facets.marcas.length > 0 && (
+                <Section title="Marca" badge={currentMarcas.length}>
+                  <div className="max-h-52 space-y-1 overflow-y-auto">
+                    {facets.marcas.map((marca) => (
+                      <button key={marca}
+                        onClick={() => toggleMulti('marca', currentMarcas, marca)}
+                        className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+                          currentMarcas.includes(marca)
+                            ? 'border-foreground bg-foreground text-background font-medium'
+                            : 'border-border text-foreground/80'
+                        }`}>
+                        {marca}
+                      </button>
                     ))}
                   </div>
                 </Section>
