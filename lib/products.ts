@@ -416,8 +416,11 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
   if (query?.trim()) {
     const { mainWords, colorWords: queryColorWords, genderWords: queryGenderWords } = splitQuery(query.trim())
 
-    if (mainWords.length > 0) {
-      const expandedTerms = expandMainTerms(mainWords)
+    // Filtrar palabras de 1 carácter (artículos como "a", "e") para evitar %a% que devuelve todo
+    const filteredMainWords = mainWords.filter(w => w.length > 1)
+
+    if (filteredMainWords.length > 0) {
+      const expandedTerms = expandMainTerms(filteredMainWords)
 
       const orConditions = expandedTerms.flatMap(t => [
         `name.ilike.%${t}%`,
@@ -1002,4 +1005,30 @@ export async function getProductsByBrand(marca: string, limit = 24): Promise<Pro
 
 export async function searchProducts(query: string): Promise<Product[]> {
   return searchProductsFromDB({ query })
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Marcas reales desde la base de datos (con conteo de productos)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface BrandInfo {
+  nombre: string
+  total: number
+}
+
+export async function getBrandsFromDB(): Promise<BrandInfo[]> {
+  const buildQ = () =>
+    supabase.from('products').select('brand').eq('available', true)
+
+  const rawData = await paginateAll(buildQ)
+
+  const counts: Record<string, number> = {}
+  for (const row of rawData) {
+    const b = String(row.brand ?? '').trim()
+    if (b) counts[b] = (counts[b] ?? 0) + 1
+  }
+
+  return Object.entries(counts)
+    .map(([nombre, total]) => ({ nombre, total }))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }))
 }

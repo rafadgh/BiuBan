@@ -2,20 +2,18 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
-import { brands } from '@/lib/brands'
+import { getBrandsFromDB } from '@/lib/products'
 
 export const metadata: Metadata = {
-  title: 'Marcas y Tiendas - BiuBan',
+  title: 'Marcas - BiuBan',
   description:
-    'Explora todas las marcas y tiendas disponibles en BiuBan. Nike, Adidas, Zara, Liverpool, Amazon México y más.',
+    'Explora todas las marcas disponibles en BiuBan. Nike, Adidas, Zara, Puma y más.',
 }
 
-export default function MarcasPage() {
-  const sortedBrands = [...brands].sort((a, b) =>
-    a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' })
-  )
+export default async function MarcasPage() {
+  const brands = await getBrandsFromDB()
 
-  const grouped = sortedBrands.reduce<Record<string, typeof brands>>(
+  const grouped = brands.reduce<Record<string, typeof brands>>(
     (acc, brand) => {
       const letter = brand.nombre[0].toUpperCase()
       if (!acc[letter]) acc[letter] = []
@@ -35,13 +33,14 @@ export default function MarcasPage() {
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
           <div className="mb-10">
             <h1 className="text-2xl font-bold tracking-tight text-[#0B0B0B] sm:text-3xl">
-              Marcas y Tiendas
+              Marcas
             </h1>
             <p className="mt-2 text-[#6B6B6B]">
               {brands.length} marcas disponibles · ordenadas alfabéticamente
             </p>
           </div>
 
+          {/* Índice de letras */}
           <div className="mb-8 flex flex-wrap gap-1.5">
             {letters.map((letter) => (
               <Link
@@ -67,24 +66,21 @@ export default function MarcasPage() {
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {grouped[letter].map((brand) => (
                     <Link
-                      key={brand.id}
-                      href={`/buscar?q=${encodeURIComponent(brand.nombre)}`}
+                      key={brand.nombre}
+                      href={`/buscar?marca=${encodeURIComponent(brand.nombre)}`}
                       className="group flex items-center gap-3 rounded-xl border border-[#E5E5E5] bg-white px-4 py-3 transition-all hover:border-[#586E26] hover:shadow-sm"
                     >
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#F5F5F5] text-sm font-bold text-[#0B0B0B] transition-colors group-hover:bg-[#31470B] group-hover:text-white">
                         {brand.nombre.charAt(0)}
                       </div>
 
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-[#0B0B0B]">
                           {brand.nombre}
                         </p>
-
-                        {brand.descripcion && (
-                          <p className="truncate text-xs text-[#6B6B6B]">
-                            {brand.descripcion}
-                          </p>
-                        )}
+                        <p className="text-xs text-[#6B6B6B]">
+                          {brand.total} {brand.total === 1 ? 'producto' : 'productos'}
+                        </p>
                       </div>
                     </Link>
                   ))}
