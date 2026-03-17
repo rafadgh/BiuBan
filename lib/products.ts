@@ -732,6 +732,200 @@ export async function getPriceRange(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Ofertas — búsqueda completa con filtros dentro de productos con descuento
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function searchOffersFromDB(filters: SearchFilters): Promise<Product[]> {
+  const { query, categoria, marca, tienda, color, talla, genero, precioMin, precioMax, descuento, mejor, ordenar } = filters
+
+  // Pre-filtrar en DB a productos con descuento o en oferta
+  let q = supabase.from('products').select('*').eq('available', true).or('on_sale.eq.true,discount.gt.0')
+
+  if (query?.trim()) {
+    const { mainWords } = splitQuery(query.trim())
+    if (mainWords.length > 0) {
+      const terms = expandMainTerms(mainWords)
+      const orConds = terms.flatMap(t => [
+        `name.ilike.%${t}%`,
+        `brand.ilike.%${t}%`,
+        `category.ilike.%${t}%`,
+        `subcategory.ilike.%${t}%`,
+      ]).join(',')
+      q = q.or(orConds)
+    }
+  }
+  if (categoria) {
+    const cats = categoria.split(',').map(c => c.trim()).filter(Boolean)
+    const catConds = cats.flatMap(c => [`category.ilike.%${c}%`, `subcategory.ilike.%${c}%`])
+    q = q.or(catConds.join(','))
+  }
+  if (marca) {
+    const marcas = marca.split(',').map(m => m.trim()).filter(Boolean)
+    q = marcas.length === 1 ? q.ilike('brand', `%${marcas[0]}%`) : q.or(marcas.map(m => `brand.ilike.%${m}%`).join(','))
+  }
+  if (tienda) {
+    const tiendas = tienda.split(',').map(t2 => t2.trim()).filter(Boolean)
+    q = tiendas.length === 1 ? q.ilike('store', `%${tiendas[0]}%`) : q.or(tiendas.map(t2 => `store.ilike.%${t2}%`).join(','))
+  }
+  if (precioMin) q = q.gte('price', Number(precioMin))
+  if (precioMax) q = q.lte('price', Number(precioMax))
+  if (descuento) {
+    const vals = descuento.split(',').map(Number).filter(n => !isNaN(n))
+    if (vals.length > 0) q = q.gte('discount', Math.min(...vals))
+  }
+  if (mejor === '1') q = q.eq('best_option', true)
+
+  switch (ordenar) {
+    case 'precio-asc':  q = q.order('price', { ascending: true }); break
+    case 'precio-desc': q = q.order('price', { ascending: false }); break
+    default:            q = q.order('discount', { ascending: false, nullsFirst: false })
+  }
+
+  const hasMemoryFilters = !!(color || talla || genero) ||
+    (query?.trim() ? (() => { const s = splitQuery(query.trim()); return s.colorWords.length > 0 || s.genderWords.length > 0 })() : false)
+  const { data, error } = await q.limit(hasMemoryFilters ? 1000 : 500)
+  if (error) { console.error('[BiuBan]', error.message); return [] }
+
+  let products = (data ?? []).map(row => mapRow(row as Record<string, unknown>)).filter(isDiscountedProduct)
+
+  const queryColorWords = query?.trim() ? splitQuery(query.trim()).colorWords : []
+  const queryGenderWords = query?.trim() ? splitQuery(query.trim()).genderWords : []
+  const allColorWords = [...queryColorWords, ...(color ? color.split(',').map(c => c.trim()).filter(Boolean) : [])]
+  const allGenderWords = [...queryGenderWords, ...(genero ? genero.split(',').map(g => g.trim()).filter(Boolean) : [])]
+
+  if (allColorWords.length > 0) products = products.filter(p => productMatchesColor(p, allColorWords))
+  if (talla) {
+    const tallas = talla.split(',').map(t2 => t2.trim()).filter(Boolean)
+    products = products.filter(p => productMatchesTalla(p, tallas))
+  }
+  if (allGenderWords.length > 0) products = products.filter(p => productMatchesGenero(p, allGenderWords))
+
+  if (ordenar === 'precio-asc' || ordenar === 'precio-desc') return products
+
+  // Por defecto: ordenar por mayor descuento (en memoria para incluir precio < precioOriginal)
+  return products.sort((a, b) => {
+    const da = typeof a.descuento === 'number' ? a.descuento
+      : (typeof a.precioOriginal === 'number' && a.precioOriginal > a.precio)
+        ? ((a.precioOriginal - a.precio) / a.precioOriginal) * 100 : 0
+    const db2 = typeof b.descuento === 'number' ? b.descuento
+      : (typeof b.precioOriginal === 'number' && b.precioOriginal > b.precio)
+        ? ((b.precioOriginal - b.precio) / b.precioOriginal) * 100 : 0
+    return db2 - da
+  })
+}
+
+export async function getOffersFacets(
+  filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda' | 'genero'>
+): Promise<SearchFacets> {
+  let q = supabase
+    .from('products')
+    .select('color_primary, gender, sizes_available, subcategory')
+    .eq('available', true)
+    .or('on_sale.eq.true,discount.gt.0')
+
+  if (filters.categoria) {
+    const cats = filters.categoria.split(',').map(c => c.trim()).filter(Boolean)
+    const catConds = cats.flatMap(c => [`category.ilike.%${c}%`, `subcategory.ilike.%${c}%`])
+    q = q.or(catConds.join(','))
+  }
+  if (filters.marca) {
+    const marcas = filters.marca.split(',').map(m => m.trim()).filter(Boolean)
+    q = marcas.length === 1 ? q.ilike('brand', `%${marcas[0]}%`) : q.or(marcas.map(m => `brand.ilike.%${m}%`).join(','))
+  }
+  if (filters.tienda) {
+    const tiendas = filters.tienda.split(',').map(t => t.trim()).filter(Boolean)
+    q = tiendas.length === 1 ? q.ilike('store', `%${tiendas[0]}%`) : q.or(tiendas.map(t => `store.ilike.%${t}%`).join(','))
+  }
+  if (filters.query?.trim()) {
+    const { mainWords } = splitQuery(filters.query.trim())
+    if (mainWords.length > 0) {
+      const terms = expandMainTerms(mainWords)
+      const orConds = terms.flatMap(t => [
+        `name.ilike.%${t}%`, `brand.ilike.%${t}%`,
+        `category.ilike.%${t}%`, `subcategory.ilike.%${t}%`,
+      ]).join(',')
+      q = q.or(orConds)
+    }
+  }
+
+  const { data } = await q.limit(500)
+  if (!data || data.length === 0) return { colores: [], generos: [], tallas: [], subcategorias: [] }
+
+  type Row = { color_primary: string | null; gender: string | null; sizes_available: string[] | null; subcategory: string | null }
+  let rows = data as Row[]
+
+  const genderTerms: Record<string, string[]> = {
+    hombre: ['hombre', 'male', 'men', 'man', 'masculino'],
+    mujer:  ['mujer', 'female', 'women', 'woman', 'femenino', 'dama'],
+    nino:   ['nino', 'niño', 'boy', 'kids', 'kid', 'infantil', 'junior'],
+    nina:   ['nina', 'niña', 'girl', 'kids', 'kid', 'infantil'],
+    unisex: ['unisex'],
+  }
+  const queryGenderWords = filters.query?.trim() ? splitQuery(filters.query.trim()).genderWords : []
+  const paramGenderWords = filters.genero ? filters.genero.split(',').map(g => g.trim()).filter(Boolean) : []
+  const allGenderWords = [...queryGenderWords, ...paramGenderWords]
+  if (allGenderWords.length > 0) {
+    rows = rows.filter(r => {
+      if (!r.gender) return false
+      const g = norm(r.gender)
+      return allGenderWords.some(gw => {
+        const terms = genderTerms[norm(gw)] ?? [norm(gw)]
+        return terms.some(t => g === t || g.includes(t))
+      })
+    })
+  }
+
+  return {
+    colores:       [...new Set(rows.map(r => r.color_primary).filter(Boolean) as string[])].map(norm),
+    generos:       [...new Set(rows.map(r => r.gender).filter(Boolean) as string[])].map(norm),
+    tallas:        [...new Set(rows.flatMap(r => r.sizes_available ?? []))],
+    subcategorias: [...new Set(rows.map(r => r.subcategory).filter(Boolean) as string[])].map(norm),
+  }
+}
+
+export async function getOffersPriceRange(
+  filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda' | 'genero'>
+): Promise<{ min: number; max: number }> {
+  let q = supabase.from('products').select('price').eq('available', true).or('on_sale.eq.true,discount.gt.0')
+
+  if (filters.categoria) {
+    const cats = filters.categoria.split(',').map(c => c.trim()).filter(Boolean)
+    const catConds = cats.flatMap(c => [`category.ilike.%${c}%`, `subcategory.ilike.%${c}%`])
+    q = q.or(catConds.join(','))
+  }
+  if (filters.marca) {
+    const marcas = filters.marca.split(',').map(m => m.trim()).filter(Boolean)
+    q = marcas.length === 1 ? q.ilike('brand', `%${marcas[0]}%`) : q.or(marcas.map(m => `brand.ilike.%${m}%`).join(','))
+  }
+  if (filters.tienda) {
+    const tiendas = filters.tienda.split(',').map(t => t.trim()).filter(Boolean)
+    q = tiendas.length === 1 ? q.ilike('store', `%${tiendas[0]}%`) : q.or(tiendas.map(t => `store.ilike.%${t}%`).join(','))
+  }
+  if (filters.query?.trim()) {
+    const { mainWords } = splitQuery(filters.query.trim())
+    if (mainWords.length > 0) {
+      const terms = expandMainTerms(mainWords)
+      const orConds = terms.flatMap(t => [
+        `name.ilike.%${t}%`, `brand.ilike.%${t}%`,
+        `category.ilike.%${t}%`, `subcategory.ilike.%${t}%`,
+      ]).join(',')
+      q = q.or(orConds)
+    }
+  }
+
+  const { data } = await q.limit(500)
+  if (!data || data.length === 0) return { min: 0, max: 10000 }
+
+  const prices = (data as { price: number }[]).map(r => Number(r.price)).filter(p => !isNaN(p) && p > 0)
+  if (prices.length === 0) return { min: 0, max: 10000 }
+
+  return {
+    min: Math.floor(Math.min(...prices) / 100) * 100,
+    max: Math.ceil(Math.max(...prices) / 100) * 100,
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Otras funciones de la app
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -740,8 +934,9 @@ export async function getDiscountedProducts(limit = 8): Promise<Product[]> {
     .from('products')
     .select('*')
     .eq('available', true)
-    .order('created_at', { ascending: false })
-    .limit(300)
+    .or('on_sale.eq.true,discount.gt.0')
+    .order('discount', { ascending: false, nullsFirst: false })
+    .limit(100)
 
   if (error) { console.error('[BiuBan] getDiscountedProducts:', error.message); return [] }
 

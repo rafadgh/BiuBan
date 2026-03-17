@@ -159,7 +159,7 @@ function Section({
   )
 }
 
-export function MobileFilters({ priceRange, facets }: { priceRange?: PriceRange; facets?: SearchFacets }) {
+export function MobileFilters({ priceRange, facets, basePath = '/buscar' }: { priceRange?: PriceRange; facets?: SearchFacets; basePath?: string }) {
   const [isOpen, setIsOpen] = useState(false)
   const [tiendaSearch, setTiendaSearch] = useState('')
   const router = useRouter()
@@ -197,8 +197,8 @@ export function MobileFilters({ priceRange, facets }: { priceRange?: PriceRange;
     for (const [k, v] of Object.entries(updates)) {
       if (v) params.set(k, v); else params.delete(k)
     }
-    router.push(`/buscar?${params.toString()}`)
-  }, [searchParams, router])
+    router.push(`${basePath}?${params.toString()}`)
+  }, [searchParams, router, basePath])
 
   const toggleMulti = (key: string, current: string[], value: string) => {
     const next = current.includes(value) ? current.filter(v => v !== value) : [...current, value]
@@ -213,7 +213,7 @@ export function MobileFilters({ priceRange, facets }: { priceRange?: PriceRange;
     if (q) params.set('q', q)
     setSliderValues([effectiveMin, effectiveMax])
     setTiendaSearch('')
-    router.push(`/buscar?${params.toString()}`)
+    router.push(`${basePath}?${params.toString()}`)
     setIsOpen(false)
   }
 

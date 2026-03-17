@@ -9,20 +9,23 @@ interface SearchBarProps {
   initialQuery?: string
   size?: 'default' | 'large'
   className?: string
+  basePath?: string
+  placeholder?: string
 }
 
-export function SearchBar({ initialQuery = '', size = 'default', className = '' }: SearchBarProps) {
+export function SearchBar({ initialQuery = '', size = 'default', className = '', basePath = '/buscar', placeholder }: SearchBarProps) {
   const [query, setQuery] = useState(initialQuery)
   const router = useRouter()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (query.trim()) {
-      router.push(`/buscar?q=${encodeURIComponent(query.trim())}`)
+      router.push(`${basePath}?q=${encodeURIComponent(query.trim())}`)
     }
   }
 
   const isLarge = size === 'large'
+  const defaultPlaceholder = isLarge ? 'Nike Air Force 1, tenis blancos, hoodie...' : 'Buscar productos...'
 
   return (
     <form onSubmit={handleSubmit} className={`relative w-full ${className}`}>
@@ -32,7 +35,7 @@ export function SearchBar({ initialQuery = '', size = 'default', className = '' 
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={isLarge ? 'Nike Air Force 1, tenis blancos, hoodie...' : 'Buscar productos...'}
+          placeholder={placeholder ?? defaultPlaceholder}
           className={`w-full rounded-full border-border/50 bg-card pl-11 shadow-sm transition-all focus:border-foreground/30 focus:shadow-md ${
             isLarge ? 'h-14 pr-14 text-base sm:h-16 sm:pr-16 sm:text-lg' : 'h-10 pr-10'
           }`}

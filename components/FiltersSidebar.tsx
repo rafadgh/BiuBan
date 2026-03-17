@@ -184,10 +184,12 @@ export function FiltersSidebar({
   className = '',
   priceRange,
   facets,
+  basePath = '/buscar',
 }: {
   className?: string
   priceRange?: PriceRange
   facets?: SearchFacets
+  basePath?: string
 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -225,8 +227,8 @@ export function FiltersSidebar({
     for (const [k, v] of Object.entries(updates)) {
       if (v) params.set(k, v); else params.delete(k)
     }
-    router.push(`/buscar?${params.toString()}`)
-  }, [searchParams, router])
+    router.push(`${basePath}?${params.toString()}`)
+  }, [searchParams, router, basePath])
 
   const toggleMulti = (key: string, current: string[], value: string) => {
     const next = current.includes(value) ? current.filter(v => v !== value) : [...current, value]
@@ -241,7 +243,7 @@ export function FiltersSidebar({
     if (q) params.set('q', q)
     setSliderValues([effectiveMin, effectiveMax])
     setTiendaSearch('')
-    router.push(`/buscar?${params.toString()}`)
+    router.push(`${basePath}?${params.toString()}`)
   }
 
   const activeCount = [

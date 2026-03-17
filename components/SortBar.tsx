@@ -13,9 +13,10 @@ const sortOptions = [
 interface SortBarProps {
   resultCount: number
   query: string
+  basePath?: string
 }
 
-export function SortBar({ resultCount, query }: SortBarProps) {
+export function SortBar({ resultCount, query, basePath = '/buscar' }: SortBarProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const currentSort = searchParams.get('ordenar') || 'relevancia'
@@ -24,7 +25,7 @@ export function SortBar({ resultCount, query }: SortBarProps) {
     const params = new URLSearchParams(searchParams.toString())
     if (value === 'relevancia') params.delete('ordenar')
     else params.set('ordenar', value)
-    router.push(`/buscar?${params.toString()}`)
+    router.push(`${basePath}?${params.toString()}`)
   }
 
   return (
