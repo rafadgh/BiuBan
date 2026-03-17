@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Checkbox } from '@/components/ui/checkbox'
+import type { SearchFacets } from '@/lib/products'
 
 interface PriceRange { min: number; max: number }
 
@@ -60,20 +61,21 @@ const TIENDAS = [
 ]
 
 const COLORES = [
-  { value: 'negro',    label: 'Negro',    hex: '#1a1a1a' },
-  { value: 'blanco',   label: 'Blanco',   hex: '#f5f5f5' },
-  { value: 'gris',     label: 'Gris',     hex: '#9ca3af' },
-  { value: 'azul',     label: 'Azul',     hex: '#3b82f6' },
-  { value: 'navy',     label: 'Navy',     hex: '#1e3a5f' },
-  { value: 'rojo',     label: 'Rojo',     hex: '#ef4444' },
-  { value: 'verde',    label: 'Verde',    hex: '#22c55e' },
-  { value: 'rosa',     label: 'Rosa',     hex: '#ec4899' },
-  { value: 'morado',   label: 'Morado',   hex: '#a855f7' },
-  { value: 'amarillo', label: 'Amarillo', hex: '#eab308' },
-  { value: 'naranja',  label: 'Naranja',  hex: '#f97316' },
-  { value: 'cafe',     label: 'Café',     hex: '#92400e' },
-  { value: 'beige',    label: 'Beige',    hex: '#d4b896' },
-  { value: 'dorado',   label: 'Dorado',   hex: '#d4af37' },
+  { value: 'negro',      label: 'Negro',      hex: '#1a1a1a' },
+  { value: 'blanco',     label: 'Blanco',     hex: '#f5f5f5' },
+  { value: 'gris',       label: 'Gris',       hex: '#9ca3af' },
+  { value: 'azul',       label: 'Azul',       hex: '#3b82f6' },
+  { value: 'navy',       label: 'Navy',       hex: '#1e3a5f' },
+  { value: 'rojo',       label: 'Rojo',       hex: '#ef4444' },
+  { value: 'verde',      label: 'Verde',      hex: '#22c55e' },
+  { value: 'rosa',       label: 'Rosa',       hex: '#ec4899' },
+  { value: 'morado',     label: 'Morado',     hex: '#a855f7' },
+  { value: 'amarillo',   label: 'Amarillo',   hex: '#eab308' },
+  { value: 'naranja',    label: 'Naranja',    hex: '#f97316' },
+  { value: 'cafe',       label: 'Café',       hex: '#92400e' },
+  { value: 'beige',      label: 'Beige',      hex: '#d4b896' },
+  { value: 'dorado',     label: 'Dorado',     hex: '#d4af37' },
+  { value: 'multicolor', label: 'Multicolor', hex: '' },
 ]
 
 const GENEROS = [
@@ -99,11 +101,13 @@ const DESCUENTOS = [
   { value: '50', label: '50% o más' },
 ]
 
+function nrm(s: string) {
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
+}
 function parseMulti(value: string | null): string[] {
   if (!value) return []
   return value.split(',').filter(Boolean)
 }
-
 function groupByLetter(items: string[]): Record<string, string[]> {
   return items.reduce<Record<string, string[]>>((acc, item) => {
     const letter = item[0].toUpperCase()
@@ -111,6 +115,24 @@ function groupByLetter(items: string[]): Record<string, string[]> {
     acc[letter].push(item)
     return acc
   }, {})
+}
+
+function hasFacetColor(facets: SearchFacets | undefined, value: string): boolean {
+  if (!facets || facets.colores.length === 0) return true
+  return facets.colores.includes(nrm(value))
+}
+function hasFacetGenero(facets: SearchFacets | undefined, value: string): boolean {
+  if (!facets || facets.generos.length === 0) return true
+  return facets.generos.includes(nrm(value))
+}
+function hasFacetTalla(facets: SearchFacets | undefined, value: string): boolean {
+  if (!facets || facets.tallas.length === 0) return true
+  return facets.tallas.includes(value)
+}
+function hasFacetSubcat(facets: SearchFacets | undefined, catValue: string): boolean {
+  if (!facets || facets.subcategorias.length === 0) return true
+  const v = nrm(catValue)
+  return facets.subcategorias.some(s => s === v || s.includes(v) || v.includes(s))
 }
 
 function Section({
@@ -121,10 +143,7 @@ function Section({
   const [open, setOpen] = useState(defaultOpen)
   return (
     <div className="border-b border-border/40 pb-4 last:border-0">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between py-3 text-left"
-      >
+      <button onClick={() => setOpen(!open)} className="flex w-full items-center justify-between py-3 text-left">
         <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
           {title}
           {badge > 0 && (
@@ -133,16 +152,14 @@ function Section({
             </span>
           )}
         </span>
-        {open
-          ? <ChevronUp className="h-4 w-4 text-muted-foreground" />
-          : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+        {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
       </button>
       {open && <div className="pb-2">{children}</div>}
     </div>
   )
 }
 
-export function MobileFilters({ priceRange }: { priceRange?: PriceRange }) {
+export function MobileFilters({ priceRange, facets }: { priceRange?: PriceRange; facets?: SearchFacets }) {
   const [isOpen, setIsOpen] = useState(false)
   const [tiendaSearch, setTiendaSearch] = useState('')
   const router = useRouter()
@@ -184,16 +201,12 @@ export function MobileFilters({ priceRange }: { priceRange?: PriceRange }) {
   }, [searchParams, router])
 
   const toggleMulti = (key: string, current: string[], value: string) => {
-    const next = current.includes(value)
-      ? current.filter(v => v !== value)
-      : [...current, value]
+    const next = current.includes(value) ? current.filter(v => v !== value) : [...current, value]
     pushParams({ [key]: next.join(',') || null })
   }
-
   const toggleBoolean = (key: string, current: boolean) => {
     pushParams({ [key]: current ? null : '1' })
   }
-
   const clearFilters = () => {
     const params = new URLSearchParams()
     const q = searchParams.get('q')
@@ -213,14 +226,27 @@ export function MobileFilters({ priceRange }: { priceRange?: PriceRange }) {
   ].filter(Boolean).length
 
   const filteredTiendas = useMemo(() =>
-    tiendaSearch.trim()
-      ? TIENDAS.filter(t => t.toLowerCase().includes(tiendaSearch.toLowerCase()))
-      : TIENDAS,
+    tiendaSearch.trim() ? TIENDAS.filter(t => t.toLowerCase().includes(tiendaSearch.toLowerCase())) : TIENDAS,
     [tiendaSearch]
   )
   const tiendaGroups = useMemo(() => groupByLetter(filteredTiendas), [filteredTiendas])
-
   const step = effectiveMax <= 1000 ? 50 : effectiveMax <= 5000 ? 200 : 500
+
+  // ── Opciones filtradas por facetas ────────────────────────────────────────
+  const visibleGeneros    = GENEROS.filter(g => hasFacetGenero(facets, g.value))
+  const visibleColores    = COLORES.filter(c => hasFacetColor(facets, c.value))
+  const filterTallas      = (arr: string[]) => arr.filter(t => hasFacetTalla(facets, t))
+  const visibleCatGroups  = CATEGORIA_GROUPS
+    .map(g => ({ ...g, items: g.items.filter(cat => hasFacetSubcat(facets, cat.value)) }))
+    .filter(g => g.items.length > 0)
+
+  const visibleTallasRopaH    = filterTallas(TALLAS_ROPA_H)
+  const visibleTallasRopaM    = filterTallas(TALLAS_ROPA_M)
+  const visibleTallasNum      = filterTallas(TALLAS_NUMERICAS)
+  const visibleTallasTenisH   = filterTallas(TALLAS_TENIS_H)
+  const visibleTallasTenisM   = filterTallas(TALLAS_TENIS_M)
+  const visibleTallasTenisKid = filterTallas(TALLAS_TENIS_KID)
+  const visibleTallasPantalon = filterTallas(TALLAS_PANTALON)
 
   const TallaBtn = ({ t }: { t: string }) => (
     <button onClick={() => toggleMulti('talla', currentTallas, t)}
@@ -233,9 +259,7 @@ export function MobileFilters({ priceRange }: { priceRange?: PriceRange }) {
 
   return (
     <>
-      <Button variant="outline" size="sm"
-        className="flex items-center gap-2 lg:hidden"
-        onClick={() => setIsOpen(true)}>
+      <Button variant="outline" size="sm" className="flex items-center gap-2 lg:hidden" onClick={() => setIsOpen(true)}>
         <SlidersHorizontal className="h-4 w-4" />
         Filtros
         {activeCount > 0 && (
@@ -248,7 +272,6 @@ export function MobileFilters({ priceRange }: { priceRange?: PriceRange }) {
       {isOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-foreground/20 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
-
           <div className="absolute bottom-0 left-0 right-0 flex max-h-[92vh] flex-col rounded-t-2xl bg-card shadow-2xl">
 
             {/* Header */}
@@ -269,44 +292,48 @@ export function MobileFilters({ priceRange }: { priceRange?: PriceRange }) {
             {/* Contenido */}
             <div className="flex-1 overflow-y-auto px-6">
 
-              <Section title="Género" defaultOpen badge={currentGeneros.length}>
-                <div className="flex flex-wrap gap-2">
-                  {GENEROS.map((g) => (
-                    <button key={g.value}
-                      onClick={() => toggleMulti('genero', currentGeneros, g.value)}
-                      className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
-                        currentGeneros.includes(g.value)
-                          ? 'border-foreground bg-foreground text-background font-medium'
-                          : 'border-border text-foreground/80'
-                      }`}>
-                      {g.label}
-                    </button>
-                  ))}
-                </div>
-              </Section>
+              {visibleGeneros.length > 0 && (
+                <Section title="Género" defaultOpen badge={currentGeneros.length}>
+                  <div className="flex flex-wrap gap-2">
+                    {visibleGeneros.map((g) => (
+                      <button key={g.value}
+                        onClick={() => toggleMulti('genero', currentGeneros, g.value)}
+                        className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
+                          currentGeneros.includes(g.value)
+                            ? 'border-foreground bg-foreground text-background font-medium'
+                            : 'border-border text-foreground/80'
+                        }`}>
+                        {g.label}
+                      </button>
+                    ))}
+                  </div>
+                </Section>
+              )}
 
-              <Section title="Categoría" defaultOpen badge={currentCategorias.length}>
-                <div className="space-y-3">
-                  {CATEGORIA_GROUPS.map(group => (
-                    <div key={group.group}>
-                      <p className="mb-1.5 pl-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
-                        {group.group}
-                      </p>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {group.items.map((cat) => (
-                          <button key={cat.value}
-                            onClick={() => toggleMulti('categoria', currentCategorias, cat.value)}
-                            className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
-                              currentCategorias.includes(cat.value)
-                                ? 'border-foreground bg-foreground text-background font-medium'
-                                : 'border-border text-foreground/80'
-                            }`}>{cat.label}</button>
-                        ))}
+              {visibleCatGroups.length > 0 && (
+                <Section title="Categoría" defaultOpen badge={currentCategorias.length}>
+                  <div className="space-y-3">
+                    {visibleCatGroups.map(group => (
+                      <div key={group.group}>
+                        <p className="mb-1.5 pl-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+                          {group.group}
+                        </p>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {group.items.map((cat) => (
+                            <button key={cat.value}
+                              onClick={() => toggleMulti('categoria', currentCategorias, cat.value)}
+                              className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+                                currentCategorias.includes(cat.value)
+                                  ? 'border-foreground bg-foreground text-background font-medium'
+                                  : 'border-border text-foreground/80'
+                              }`}>{cat.label}</button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </Section>
+                    ))}
+                  </div>
+                </Section>
+              )}
 
               <Section title="Rango de precio" defaultOpen>
                 <div className="space-y-3 px-1 pt-1">
@@ -319,11 +346,7 @@ export function MobileFilters({ priceRange }: { priceRange?: PriceRange }) {
                       ${sliderValues[1].toLocaleString('es-MX')}
                     </span>
                   </div>
-                  <Slider
-                    value={sliderValues}
-                    min={effectiveMin}
-                    max={effectiveMax}
-                    step={step}
+                  <Slider value={sliderValues} min={effectiveMin} max={effectiveMax} step={step}
                     onValueChange={(v) => setSliderValues(v as [number, number])}
                     onValueCommit={(v) => {
                       const [min, max] = v as [number, number]
@@ -345,15 +368,11 @@ export function MobileFilters({ priceRange }: { priceRange?: PriceRange }) {
                 <div className="space-y-3">
                   <label className="flex cursor-pointer items-center gap-3 py-1">
                     <Checkbox checked={currentSoloOfertas} onCheckedChange={() => toggleBoolean('ofertas', currentSoloOfertas)} />
-                    <div className="flex items-center gap-2 text-sm">
-                      <Tag className="h-4 w-4 text-orange-500" />Solo con descuento
-                    </div>
+                    <div className="flex items-center gap-2 text-sm"><Tag className="h-4 w-4 text-orange-500" />Solo con descuento</div>
                   </label>
                   <label className="flex cursor-pointer items-center gap-3 py-1">
                     <Checkbox checked={currentMejorOpcion} onCheckedChange={() => toggleBoolean('mejor', currentMejorOpcion)} />
-                    <div className="flex items-center gap-2 text-sm">
-                      <Star className="h-4 w-4 text-yellow-500" />Mejor opción
-                    </div>
+                    <div className="flex items-center gap-2 text-sm"><Star className="h-4 w-4 text-yellow-500" />Mejor opción</div>
                   </label>
                 </div>
               </Section>
@@ -374,75 +393,79 @@ export function MobileFilters({ priceRange }: { priceRange?: PriceRange }) {
                 </div>
               </Section>
 
-              <Section title="Color" badge={currentColores.length}>
-                <div className="flex flex-wrap gap-3 py-1">
-                  {COLORES.map((color) => (
-                    <button key={color.value}
-                      onClick={() => toggleMulti('color', currentColores, color.value)}
-                      title={color.label}
-                      className={`relative h-9 w-9 rounded-full transition-transform hover:scale-110 ${
-                        currentColores.includes(color.value)
-                          ? 'ring-2 ring-foreground ring-offset-2 ring-offset-card'
-                          : 'ring-1 ring-border'
-                      }`}
-                      style={{ backgroundColor: color.hex }}>
-                      {currentColores.includes(color.value) && (
-                        <span className="absolute inset-0 flex items-center justify-center">
-                          <span className="h-2.5 w-2.5 rounded-full bg-white shadow" />
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </Section>
+              {visibleColores.length > 0 && (
+                <Section title="Color" badge={currentColores.length}>
+                  <div className="flex flex-wrap gap-3 py-1">
+                    {visibleColores.map((color) => (
+                      <button key={color.value}
+                        onClick={() => toggleMulti('color', currentColores, color.value)}
+                        title={color.label}
+                        className={`relative h-9 w-9 rounded-full transition-transform hover:scale-110 ${
+                          currentColores.includes(color.value)
+                            ? 'ring-2 ring-foreground ring-offset-2 ring-offset-card'
+                            : 'ring-1 ring-border'
+                        }`}
+                        style={color.value === 'multicolor'
+                          ? { background: 'conic-gradient(red 0deg, yellow 60deg, green 120deg, blue 200deg, purple 270deg, red 360deg)' }
+                          : { backgroundColor: color.hex }}>
+                        {currentColores.includes(color.value) && (
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            <span className="h-2.5 w-2.5 rounded-full bg-white shadow" />
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </Section>
+              )}
 
-              <Section title="Talla — Hombre / Unisex" badge={currentTallas.filter(t => TALLAS_ROPA_H.includes(t)).length}>
-                <div className="flex flex-wrap gap-2">
-                  {TALLAS_ROPA_H.map(t => <TallaBtn key={t} t={t} />)}
-                </div>
-              </Section>
+              {visibleTallasRopaH.length > 0 && (
+                <Section title="Talla — Hombre / Unisex" badge={currentTallas.filter(t => visibleTallasRopaH.includes(t)).length}>
+                  <div className="flex flex-wrap gap-2">{visibleTallasRopaH.map(t => <TallaBtn key={t} t={t} />)}</div>
+                </Section>
+              )}
 
-              <Section title="Talla — Mujer" badge={currentTallas.filter(t => [...TALLAS_ROPA_M, ...TALLAS_NUMERICAS].includes(t)).length}>
-                <p className="mb-2 text-xs text-muted-foreground">Letras</p>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {TALLAS_ROPA_M.map(t => <TallaBtn key={t} t={t} />)}
-                </div>
-                <p className="mb-2 text-xs text-muted-foreground">Numéricas</p>
-                <div className="flex flex-wrap gap-2">
-                  {TALLAS_NUMERICAS.map(t => <TallaBtn key={t} t={t} />)}
-                </div>
-              </Section>
+              {(visibleTallasRopaM.length > 0 || visibleTallasNum.length > 0) && (
+                <Section title="Talla — Mujer" badge={currentTallas.filter(t => [...visibleTallasRopaM, ...visibleTallasNum].includes(t)).length}>
+                  {visibleTallasRopaM.length > 0 && (
+                    <><p className="mb-2 text-xs text-muted-foreground">Letras</p>
+                    <div className="flex flex-wrap gap-2 mb-3">{visibleTallasRopaM.map(t => <TallaBtn key={t} t={t} />)}</div></>
+                  )}
+                  {visibleTallasNum.length > 0 && (
+                    <><p className="mb-2 text-xs text-muted-foreground">Numéricas</p>
+                    <div className="flex flex-wrap gap-2">{visibleTallasNum.map(t => <TallaBtn key={t} t={t} />)}</div></>
+                  )}
+                </Section>
+              )}
 
-              <Section title="Talla tenis — Hombre (MX)" badge={currentTallas.filter(t => TALLAS_TENIS_H.includes(t)).length}>
-                <div className="flex flex-wrap gap-2">
-                  {TALLAS_TENIS_H.map(t => <TallaBtn key={t} t={t} />)}
-                </div>
-              </Section>
+              {visibleTallasTenisH.length > 0 && (
+                <Section title="Talla tenis — Hombre (MX)" badge={currentTallas.filter(t => visibleTallasTenisH.includes(t)).length}>
+                  <div className="flex flex-wrap gap-2">{visibleTallasTenisH.map(t => <TallaBtn key={t} t={t} />)}</div>
+                </Section>
+              )}
 
-              <Section title="Talla tenis — Mujer (MX)" badge={currentTallas.filter(t => TALLAS_TENIS_M.includes(t)).length}>
-                <div className="flex flex-wrap gap-2">
-                  {TALLAS_TENIS_M.map(t => <TallaBtn key={t} t={t} />)}
-                </div>
-              </Section>
+              {visibleTallasTenisM.length > 0 && (
+                <Section title="Talla tenis — Mujer (MX)" badge={currentTallas.filter(t => visibleTallasTenisM.includes(t)).length}>
+                  <div className="flex flex-wrap gap-2">{visibleTallasTenisM.map(t => <TallaBtn key={t} t={t} />)}</div>
+                </Section>
+              )}
 
-              <Section title="Talla tenis — Niño / Niña (MX)" badge={currentTallas.filter(t => TALLAS_TENIS_KID.includes(t)).length}>
-                <div className="flex flex-wrap gap-2">
-                  {TALLAS_TENIS_KID.map(t => <TallaBtn key={t} t={t} />)}
-                </div>
-              </Section>
+              {visibleTallasTenisKid.length > 0 && (
+                <Section title="Talla tenis — Niño / Niña (MX)" badge={currentTallas.filter(t => visibleTallasTenisKid.includes(t)).length}>
+                  <div className="flex flex-wrap gap-2">{visibleTallasTenisKid.map(t => <TallaBtn key={t} t={t} />)}</div>
+                </Section>
+              )}
 
-              <Section title="Talla pantalón (cintura)" badge={currentTallas.filter(t => TALLAS_PANTALON.includes(t)).length}>
-                <div className="flex flex-wrap gap-2">
-                  {TALLAS_PANTALON.map(t => <TallaBtn key={t} t={t} />)}
-                </div>
-              </Section>
+              {visibleTallasPantalon.length > 0 && (
+                <Section title="Talla pantalón (cintura)" badge={currentTallas.filter(t => visibleTallasPantalon.includes(t)).length}>
+                  <div className="flex flex-wrap gap-2">{visibleTallasPantalon.map(t => <TallaBtn key={t} t={t} />)}</div>
+                </Section>
+              )}
 
               <Section title="Tienda" badge={currentTiendas.length}>
                 <div className="relative mb-3">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    type="text" value={tiendaSearch}
-                    onChange={(e) => setTiendaSearch(e.target.value)}
+                  <input type="text" value={tiendaSearch} onChange={(e) => setTiendaSearch(e.target.value)}
                     placeholder="Buscar tienda..."
                     className="h-9 w-full rounded-lg border border-border bg-muted/50 pl-9 pr-9 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground/30 focus:outline-none"
                   />
@@ -453,17 +476,13 @@ export function MobileFilters({ priceRange }: { priceRange?: PriceRange }) {
                     </button>
                   )}
                 </div>
-
                 <div className="space-y-3">
                   {Object.keys(tiendaGroups).sort().map((letter) => (
                     <div key={letter}>
-                      <p className="mb-1 pl-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
-                        {letter}
-                      </p>
+                      <p className="mb-1 pl-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">{letter}</p>
                       <div className="grid grid-cols-2 gap-1.5">
                         {tiendaGroups[letter].map((store) => (
-                          <button key={store}
-                            onClick={() => toggleMulti('tienda', currentTiendas, store)}
+                          <button key={store} onClick={() => toggleMulti('tienda', currentTiendas, store)}
                             className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
                               currentTiendas.includes(store)
                                 ? 'border-foreground bg-foreground text-background font-medium'
@@ -487,9 +506,7 @@ export function MobileFilters({ priceRange }: { priceRange?: PriceRange }) {
             {/* Footer */}
             <div className="shrink-0 border-t border-border/40 p-4 flex gap-3">
               {activeCount > 0 && (
-                <Button variant="outline" className="flex-1" onClick={clearFilters}>
-                  Limpiar todo
-                </Button>
+                <Button variant="outline" className="flex-1" onClick={clearFilters}>Limpiar todo</Button>
               )}
               <Button className="flex-1" onClick={() => setIsOpen(false)}>
                 Ver resultados{activeCount > 0 ? ` · ${activeCount} filtros` : ''}

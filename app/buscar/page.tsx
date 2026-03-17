@@ -6,7 +6,8 @@ import { MobileFilters } from '@/components/MobileFilters'
 import { SortBar } from '@/components/SortBar'
 import { ProductCard } from '@/components/ProductCard'
 import { SearchBar } from '@/components/SearchBar'
-import { searchProductsFromDB, getPriceRange } from '@/lib/products'
+import { searchProductsFromDB, getPriceRange, getSearchFacets } from '@/lib/products'
+import type { SearchFacets } from '@/lib/products'
 
 interface SearchPageProps {
   searchParams: Promise<{
@@ -77,13 +78,17 @@ async function SearchResults({ searchParams }: SearchPageProps) {
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams
 
-  const priceRange = await getPriceRange({
+  const baseFilters = {
     query:    params.q,
     categoria: params.categoria,
     marca:    params.marca,
     tienda:   params.tienda,
-    genero:   params.genero,
-  })
+  }
+
+  const [priceRange, facets] = await Promise.all([
+    getPriceRange({ ...baseFilters, genero: params.genero }),
+    getSearchFacets(baseFilters),
+  ])
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#F5F5F5]">
@@ -97,7 +102,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               <SearchBar initialQuery={params.q || ''} />
             </div>
             <Suspense fallback={null}>
-              <MobileFilters priceRange={priceRange} />
+              <MobileFilters priceRange={priceRange} facets={facets} />
             </Suspense>
           </div>
         </div>
@@ -107,7 +112,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           {/* Sidebar — solo desktop */}
           <div className="hidden w-72 shrink-0 overflow-y-auto border-r border-[#E5E5E5] bg-white p-4 lg:block xl:w-80">
             <Suspense fallback={null}>
-              <FiltersSidebar className="h-full" priceRange={priceRange} />
+              <FiltersSidebar className="h-full" priceRange={priceRange} facets={facets} />
             </Suspense>
           </div>
 

@@ -182,13 +182,16 @@ function resolveColorTerm(word: string): string | null {
   }
 
   // Intentar formas plurales y femeninas del español:
-  // blancos → blanco, negras → negra/negro, azules → azul, grises → gris
+  // blancos → blanco, negras → negro, azules → azul, morada → morado, blanca → blanco
   const variants: string[] = []
   if (t.endsWith('es'))   variants.push(t.slice(0, -2))           // azules→azul, verdes→verde
   if (t.endsWith('os'))   variants.push(t.slice(0, -1))           // blancos→blanco, negros→negro
   if (t.endsWith('as'))   variants.push(t.slice(0, -1), t.slice(0, -2) + 'o') // blancas→blanca,blanco
   if (t.endsWith('s') && !t.endsWith('es') && !t.endsWith('os') && !t.endsWith('as'))
     variants.push(t.slice(0, -1))  // grays→gray
+  // Femenino singular: morada→morado, blanca→blanco, amarilla→amarillo, dorada→dorado
+  if (!t.endsWith('s') && t.endsWith('a') && t.length > 3)
+    variants.push(t.slice(0, -1) + 'o')
 
   for (const v of variants) {
     if (COLOR_SINONIMOS[v]) return v
@@ -581,6 +584,92 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
   }
 
   return products
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Facetas dinámicas para los filtros del sidebar
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface SearchFacets {
+  colores:       string[]  // valores de color_primary normalizados
+  generos:       string[]  // valores de gender normalizados
+  tallas:        string[]  // valores únicos de sizes_available
+  subcategorias: string[]  // valores de subcategory normalizados
+}
+
+export async function getSearchFacets(
+  filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda'>
+): Promise<SearchFacets> {
+  let q = supabase
+    .from('products')
+    .select('color_primary, gender, sizes_available, subcategory')
+    .eq('available', true)
+
+  if (filters.categoria) {
+    const cats = filters.categoria.split(',').map(c => c.trim()).filter(Boolean)
+    const catConds = cats.flatMap(c => [`category.ilike.%${c}%`, `subcategory.ilike.%${c}%`])
+    q = q.or(catConds.join(','))
+  }
+  if (filters.marca) {
+    const marcas = filters.marca.split(',').map(m => m.trim()).filter(Boolean)
+    q = marcas.length === 1
+      ? q.ilike('brand', `%${marcas[0]}%`)
+      : q.or(marcas.map(m => `brand.ilike.%${m}%`).join(','))
+  }
+  if (filters.tienda) {
+    const tiendas = filters.tienda.split(',').map(t => t.trim()).filter(Boolean)
+    q = tiendas.length === 1
+      ? q.ilike('store', `%${tiendas[0]}%`)
+      : q.or(tiendas.map(t => `store.ilike.%${t}%`).join(','))
+  }
+  if (filters.query?.trim()) {
+    const { mainWords } = splitQuery(filters.query.trim())
+    if (mainWords.length > 0) {
+      const terms = expandMainTerms(mainWords)
+      const orConds = terms.flatMap(t => [
+        `name.ilike.%${t}%`,
+        `brand.ilike.%${t}%`,
+        `category.ilike.%${t}%`,
+        `subcategory.ilike.%${t}%`,
+      ]).join(',')
+      q = q.or(orConds)
+    }
+  }
+
+  const { data } = await q.limit(500)
+  if (!data || data.length === 0) return { colores: [], generos: [], tallas: [], subcategorias: [] }
+
+  type Row = { color_primary: string | null; gender: string | null; sizes_available: string[] | null; subcategory: string | null }
+  let rows = data as Row[]
+
+  // Aplicar filtro de género de la query en memoria (ej: "tenis hombre" → solo facets de hombre)
+  if (filters.query?.trim()) {
+    const { genderWords } = splitQuery(filters.query.trim())
+    if (genderWords.length > 0) {
+      const genderTerms: Record<string, string[]> = {
+        hombre: ['hombre', 'male', 'men', 'man', 'masculino'],
+        mujer:  ['mujer', 'female', 'women', 'woman', 'femenino', 'dama'],
+        nino:   ['nino', 'niño', 'boy', 'kids', 'kid', 'infantil', 'junior'],
+        nina:   ['nina', 'niña', 'girl', 'kids', 'kid', 'infantil'],
+        unisex: ['unisex'],
+      }
+      rows = rows.filter(r => {
+        if (!r.gender) return false
+        const g = norm(r.gender)
+        return genderWords.some(gw => {
+          const terms = genderTerms[gw] ?? [gw]
+          return terms.some(t => g === t || g.includes(t))
+        })
+      })
+    }
+  }
+
+  const colores       = [...new Set(rows.map(r => r.color_primary).filter(Boolean) as string[])].map(norm)
+  const generos       = [...new Set(rows.map(r => r.gender).filter(Boolean) as string[])].map(norm)
+  const tallas        = [...new Set(rows.flatMap(r => r.sizes_available ?? []))]
+  const subcategorias = [...new Set(rows.map(r => r.subcategory).filter(Boolean) as string[])].map(norm)
+
+  return { colores, generos, tallas, subcategorias }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

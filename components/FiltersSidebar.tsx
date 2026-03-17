@@ -7,10 +7,10 @@ import { ChevronDown, ChevronUp, X, Star, Tag, Percent, Search } from 'lucide-re
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Checkbox } from '@/components/ui/checkbox'
+import type { SearchFacets } from '@/lib/products'
 
 interface PriceRange { min: number; max: number }
 
-// Grouped categories
 const CATEGORIA_GROUPS: { group: string; items: { value: string; label: string }[] }[] = [
   {
     group: 'Calzado',
@@ -53,51 +53,30 @@ const CATEGORIA_GROUPS: { group: string; items: { value: string; label: string }
 ]
 const ALL_CATEGORIAS = CATEGORIA_GROUPS.flatMap(g => g.items)
 
-// Ordenadas A-Z
 const TIENDAS = [
-  'Abercrombie & Fitch',
-  'Adidas',
-  'Amazon México',
-  'Bershka',
-  'Converse',
-  'Coppel',
-  'Gap',
-  'H&M',
-  'Hollister',
-  'Innovasport',
-  'Lacoste',
-  "Levi's",
-  'Liverpool',
-  'Mango',
-  'Martí',
-  'Mercado Libre',
-  'New Balance',
-  'Nike',
-  'Palacio de Hierro',
-  'Pull&Bear',
-  'Puma',
-  'Stradivarius',
-  'Under Armour',
-  'Uniqlo',
-  'Vans',
-  'Zara',
+  'Abercrombie & Fitch', 'Adidas', 'Amazon México', 'Bershka',
+  'Converse', 'Coppel', 'Gap', 'H&M', 'Hollister', 'Innovasport',
+  'Lacoste', "Levi's", 'Liverpool', 'Mango', 'Martí', 'Mercado Libre',
+  'New Balance', 'Nike', 'Palacio de Hierro', 'Pull&Bear', 'Puma',
+  'Stradivarius', 'Under Armour', 'Uniqlo', 'Vans', 'Zara',
 ]
 
 const COLORES = [
-  { value: 'negro',    label: 'Negro',    hex: '#1a1a1a' },
-  { value: 'blanco',   label: 'Blanco',   hex: '#f5f5f5' },
-  { value: 'gris',     label: 'Gris',     hex: '#9ca3af' },
-  { value: 'azul',     label: 'Azul',     hex: '#3b82f6' },
-  { value: 'navy',     label: 'Navy',     hex: '#1e3a5f' },
-  { value: 'rojo',     label: 'Rojo',     hex: '#ef4444' },
-  { value: 'verde',    label: 'Verde',    hex: '#22c55e' },
-  { value: 'rosa',     label: 'Rosa',     hex: '#ec4899' },
-  { value: 'morado',   label: 'Morado',   hex: '#a855f7' },
-  { value: 'amarillo', label: 'Amarillo', hex: '#eab308' },
-  { value: 'naranja',  label: 'Naranja',  hex: '#f97316' },
-  { value: 'cafe',     label: 'Café',     hex: '#92400e' },
-  { value: 'beige',    label: 'Beige',    hex: '#d4b896' },
-  { value: 'dorado',   label: 'Dorado',   hex: '#d4af37' },
+  { value: 'negro',     label: 'Negro',     hex: '#1a1a1a' },
+  { value: 'blanco',    label: 'Blanco',    hex: '#f5f5f5' },
+  { value: 'gris',      label: 'Gris',      hex: '#9ca3af' },
+  { value: 'azul',      label: 'Azul',      hex: '#3b82f6' },
+  { value: 'navy',      label: 'Navy',      hex: '#1e3a5f' },
+  { value: 'rojo',      label: 'Rojo',      hex: '#ef4444' },
+  { value: 'verde',     label: 'Verde',     hex: '#22c55e' },
+  { value: 'rosa',      label: 'Rosa',      hex: '#ec4899' },
+  { value: 'morado',    label: 'Morado',    hex: '#a855f7' },
+  { value: 'amarillo',  label: 'Amarillo',  hex: '#eab308' },
+  { value: 'naranja',   label: 'Naranja',   hex: '#f97316' },
+  { value: 'cafe',      label: 'Café',      hex: '#92400e' },
+  { value: 'beige',     label: 'Beige',     hex: '#d4b896' },
+  { value: 'dorado',    label: 'Dorado',    hex: '#d4af37' },
+  { value: 'multicolor',label: 'Multicolor',hex: 'conic-gradient(red,yellow,green,blue,red)' },
 ]
 
 const GENEROS = [
@@ -123,6 +102,11 @@ const DESCUENTOS = [
   { value: '50', label: '50% o más' },
 ]
 
+// Normaliza para comparaciones (minúsculas, sin acentos)
+function nrm(s: string) {
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
+}
+
 function parseMulti(value: string | null): string[] {
   if (!value) return []
   return value.split(',').filter(Boolean)
@@ -135,6 +119,25 @@ function groupByLetter(items: string[]): Record<string, string[]> {
     acc[letter].push(item)
     return acc
   }, {})
+}
+
+// Helpers para filtrar opciones basadas en facetas
+function hasFacetColor(facets: SearchFacets | undefined, value: string): boolean {
+  if (!facets || facets.colores.length === 0) return true
+  return facets.colores.includes(nrm(value))
+}
+function hasFacetGenero(facets: SearchFacets | undefined, value: string): boolean {
+  if (!facets || facets.generos.length === 0) return true
+  return facets.generos.includes(nrm(value))
+}
+function hasFacetTalla(facets: SearchFacets | undefined, value: string): boolean {
+  if (!facets || facets.tallas.length === 0) return true
+  return facets.tallas.includes(value)
+}
+function hasFacetSubcat(facets: SearchFacets | undefined, catValue: string): boolean {
+  if (!facets || facets.subcategorias.length === 0) return true
+  const v = nrm(catValue)
+  return facets.subcategorias.some(s => s === v || s.includes(v) || v.includes(s))
 }
 
 function Section({
@@ -180,9 +183,11 @@ function ActiveTag({ label, onRemove }: { label: string; onRemove: () => void })
 export function FiltersSidebar({
   className = '',
   priceRange,
+  facets,
 }: {
   className?: string
   priceRange?: PriceRange
+  facets?: SearchFacets
 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -207,7 +212,6 @@ export function FiltersSidebar({
   const [sliderValues, setSliderValues] = useState<[number, number]>([savedMin, savedMax])
   const [tiendaSearch, setTiendaSearch] = useState('')
 
-  // Sincronizar slider cuando cambia el rango dinámico (nueva búsqueda)
   useEffect(() => {
     setSliderValues([
       urlMin !== null ? Math.max(effectiveMin, Math.min(urlMin, effectiveMax)) : effectiveMin,
@@ -225,16 +229,12 @@ export function FiltersSidebar({
   }, [searchParams, router])
 
   const toggleMulti = (key: string, current: string[], value: string) => {
-    const next = current.includes(value)
-      ? current.filter(v => v !== value)
-      : [...current, value]
+    const next = current.includes(value) ? current.filter(v => v !== value) : [...current, value]
     pushParams({ [key]: next.join(',') || null })
   }
-
   const toggleBoolean = (key: string, current: boolean) => {
     pushParams({ [key]: current ? null : '1' })
   }
-
   const clearFilters = () => {
     const params = new URLSearchParams()
     const q = searchParams.get('q')
@@ -253,14 +253,38 @@ export function FiltersSidebar({
   ].filter(Boolean).length
 
   const filteredTiendas = useMemo(() =>
-    tiendaSearch.trim()
-      ? TIENDAS.filter(t => t.toLowerCase().includes(tiendaSearch.toLowerCase()))
-      : TIENDAS,
+    tiendaSearch.trim() ? TIENDAS.filter(t => t.toLowerCase().includes(tiendaSearch.toLowerCase())) : TIENDAS,
     [tiendaSearch]
   )
   const tiendaGroups = useMemo(() => groupByLetter(filteredTiendas), [filteredTiendas])
-
   const step = effectiveMax <= 1000 ? 50 : effectiveMax <= 5000 ? 200 : 500
+
+  // ── Opciones filtradas por facetas ────────────────────────────────────────
+  const visibleGeneros   = GENEROS.filter(g => hasFacetGenero(facets, g.value))
+  const visibleColores   = COLORES.filter(c => hasFacetColor(facets, c.value))
+  const filterTallas     = (arr: string[]) => arr.filter(t => hasFacetTalla(facets, t))
+  const filterCatItems   = (items: { value: string; label: string }[]) =>
+    items.filter(cat => hasFacetSubcat(facets, cat.value))
+  const visibleCatGroups = CATEGORIA_GROUPS
+    .map(g => ({ ...g, items: filterCatItems(g.items) }))
+    .filter(g => g.items.length > 0)
+
+  const visibleTallasRopaH   = filterTallas(TALLAS_ROPA_H)
+  const visibleTallasRopaM   = filterTallas(TALLAS_ROPA_M)
+  const visibleTallasNum     = filterTallas(TALLAS_NUMERICAS)
+  const visibleTallasTenisH  = filterTallas(TALLAS_TENIS_H)
+  const visibleTallasTenisM  = filterTallas(TALLAS_TENIS_M)
+  const visibleTallasTenisKid= filterTallas(TALLAS_TENIS_KID)
+  const visibleTallasPantalon= filterTallas(TALLAS_PANTALON)
+
+  const TallaBtn = ({ t }: { t: string }) => (
+    <button onClick={() => toggleMulti('talla', currentTallas, t)}
+      className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors ${
+        currentTallas.includes(t)
+          ? 'border-foreground bg-foreground text-background'
+          : 'border-border text-foreground/80 hover:border-foreground/40'
+      }`}>{t}</button>
+  )
 
   return (
     <aside className={`flex flex-col rounded-xl border border-border/50 bg-card ${className}`}>
@@ -315,49 +339,53 @@ export function FiltersSidebar({
           </div>
         )}
 
-        {/* ── Género ── */}
-        <Section title="Género" badge={currentGeneros.length}>
-          <div className="flex flex-wrap gap-1.5">
-            {GENEROS.map((g) => (
-              <button key={g.value}
-                onClick={() => toggleMulti('genero', currentGeneros, g.value)}
-                className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
-                  currentGeneros.includes(g.value)
-                    ? 'border-foreground bg-foreground text-background'
-                    : 'border-border text-foreground/80 hover:border-foreground/40'
-                }`}>
-                {g.label}
-              </button>
-            ))}
-          </div>
-        </Section>
+        {/* ── Género (solo si hay opciones relevantes) ── */}
+        {visibleGeneros.length > 0 && (
+          <Section title="Género" badge={currentGeneros.length}>
+            <div className="flex flex-wrap gap-1.5">
+              {visibleGeneros.map((g) => (
+                <button key={g.value}
+                  onClick={() => toggleMulti('genero', currentGeneros, g.value)}
+                  className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    currentGeneros.includes(g.value)
+                      ? 'border-foreground bg-foreground text-background'
+                      : 'border-border text-foreground/80 hover:border-foreground/40'
+                  }`}>
+                  {g.label}
+                </button>
+              ))}
+            </div>
+          </Section>
+        )}
 
-        {/* ── Categoría ── */}
-        <Section title="Categoría" badge={currentCategorias.length}>
-          <div className="space-y-3">
-            {CATEGORIA_GROUPS.map(group => (
-              <div key={group.group}>
-                <p className="mb-1 pl-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
-                  {group.group}
-                </p>
-                <div className="space-y-0.5">
-                  {group.items.map((cat) => (
-                    <button key={cat.value}
-                      onClick={() => toggleMulti('categoria', currentCategorias, cat.value)}
-                      className={`flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left text-sm transition-colors ${
-                        currentCategorias.includes(cat.value)
-                          ? 'bg-foreground text-background font-medium'
-                          : 'text-foreground/80 hover:bg-muted'
-                      }`}>
-                      {cat.label}
-                      {currentCategorias.includes(cat.value) && <X className="h-3 w-3" />}
-                    </button>
-                  ))}
+        {/* ── Categoría (agrupada, solo con resultados) ── */}
+        {visibleCatGroups.length > 0 && (
+          <Section title="Categoría" badge={currentCategorias.length}>
+            <div className="space-y-3">
+              {visibleCatGroups.map(group => (
+                <div key={group.group}>
+                  <p className="mb-1 pl-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+                    {group.group}
+                  </p>
+                  <div className="space-y-0.5">
+                    {group.items.map((cat) => (
+                      <button key={cat.value}
+                        onClick={() => toggleMulti('categoria', currentCategorias, cat.value)}
+                        className={`flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left text-sm transition-colors ${
+                          currentCategorias.includes(cat.value)
+                            ? 'bg-foreground text-background font-medium'
+                            : 'text-foreground/80 hover:bg-muted'
+                        }`}>
+                        {cat.label}
+                        {currentCategorias.includes(cat.value) && <X className="h-3 w-3" />}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </Section>
+              ))}
+            </div>
+          </Section>
+        )}
 
         {/* ── Precio dinámico ── */}
         <Section title="Precio">
@@ -371,11 +399,7 @@ export function FiltersSidebar({
                 ${sliderValues[1].toLocaleString('es-MX')}
               </span>
             </div>
-            <Slider
-              value={sliderValues}
-              min={effectiveMin}
-              max={effectiveMax}
-              step={step}
+            <Slider value={sliderValues} min={effectiveMin} max={effectiveMax} step={step}
               onValueChange={(v) => setSliderValues(v as [number, number])}
               onValueCommit={(v) => {
                 const [min, max] = v as [number, number]
@@ -428,143 +452,116 @@ export function FiltersSidebar({
           </div>
         </Section>
 
-        {/* ── Color ── */}
-        <Section title="Color" defaultOpen={false} badge={currentColores.length}>
-          <div className="flex flex-wrap gap-2 pt-1">
-            {COLORES.map((color) => (
-              <button key={color.value}
-                onClick={() => toggleMulti('color', currentColores, color.value)}
-                title={color.label}
-                className={`relative h-7 w-7 rounded-full transition-transform hover:scale-110 ${
-                  currentColores.includes(color.value)
-                    ? 'ring-2 ring-foreground ring-offset-2 ring-offset-card'
-                    : 'ring-1 ring-border'
-                }`}
-                style={{ backgroundColor: color.hex }}>
-                {currentColores.includes(color.value) && (
-                  <span className="absolute inset-0 flex items-center justify-center">
-                    <span className="h-2 w-2 rounded-full bg-white shadow-sm" />
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-          {currentColores.length > 0 && (
-            <p className="mt-2 text-xs text-muted-foreground">
-              {currentColores.map(c => COLORES.find(x => x.value === c)?.label ?? c).join(', ')}
-            </p>
-          )}
-        </Section>
+        {/* ── Color (solo colores que existen en resultados) ── */}
+        {visibleColores.length > 0 && (
+          <Section title="Color" defaultOpen={false} badge={currentColores.length}>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {visibleColores.map((color) => (
+                <button key={color.value}
+                  onClick={() => toggleMulti('color', currentColores, color.value)}
+                  title={color.label}
+                  className={`relative h-7 w-7 rounded-full transition-transform hover:scale-110 ${
+                    currentColores.includes(color.value)
+                      ? 'ring-2 ring-foreground ring-offset-2 ring-offset-card'
+                      : 'ring-1 ring-border'
+                  }`}
+                  style={color.value === 'multicolor'
+                    ? { background: 'conic-gradient(red 0deg, yellow 60deg, green 120deg, blue 200deg, purple 270deg, red 360deg)' }
+                    : { backgroundColor: color.hex }}>
+                  {currentColores.includes(color.value) && (
+                    <span className="absolute inset-0 flex items-center justify-center">
+                      <span className="h-2 w-2 rounded-full bg-white shadow-sm" />
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+            {currentColores.length > 0 && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {currentColores.map(c => COLORES.find(x => x.value === c)?.label ?? c).join(', ')}
+              </p>
+            )}
+          </Section>
+        )}
 
-        {/* ── Talla ropa hombre/unisex ── */}
-        <Section title="Talla — Hombre / Unisex" defaultOpen={false}
-          badge={currentTallas.filter(t => TALLAS_ROPA_H.includes(t)).length}>
-          <div className="flex flex-wrap gap-1.5">
-            {TALLAS_ROPA_H.map((t) => (
-              <button key={t} onClick={() => toggleMulti('talla', currentTallas, t)}
-                className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors ${
-                  currentTallas.includes(t)
-                    ? 'border-foreground bg-foreground text-background'
-                    : 'border-border text-foreground/80 hover:border-foreground/40'
-                }`}>{t}</button>
-            ))}
-          </div>
-        </Section>
+        {/* ── Tallas ropa hombre/unisex ── */}
+        {visibleTallasRopaH.length > 0 && (
+          <Section title="Talla — Hombre / Unisex" defaultOpen={false}
+            badge={currentTallas.filter(t => visibleTallasRopaH.includes(t)).length}>
+            <div className="flex flex-wrap gap-1.5">
+              {visibleTallasRopaH.map(t => <TallaBtn key={t} t={t} />)}
+            </div>
+          </Section>
+        )}
 
-        {/* ── Talla ropa mujer ── */}
-        <Section title="Talla — Mujer" defaultOpen={false}
-          badge={currentTallas.filter(t => [...TALLAS_ROPA_M, ...TALLAS_NUMERICAS].includes(t)).length}>
-          <p className="mb-1.5 text-xs text-muted-foreground">Letras</p>
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            {TALLAS_ROPA_M.map((t) => (
-              <button key={t} onClick={() => toggleMulti('talla', currentTallas, t)}
-                className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors ${
-                  currentTallas.includes(t)
-                    ? 'border-foreground bg-foreground text-background'
-                    : 'border-border text-foreground/80 hover:border-foreground/40'
-                }`}>{t}</button>
-            ))}
-          </div>
-          <p className="mb-1.5 text-xs text-muted-foreground">Numéricas</p>
-          <div className="flex flex-wrap gap-1.5">
-            {TALLAS_NUMERICAS.map((t) => (
-              <button key={t} onClick={() => toggleMulti('talla', currentTallas, t)}
-                className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors ${
-                  currentTallas.includes(t)
-                    ? 'border-foreground bg-foreground text-background'
-                    : 'border-border text-foreground/80 hover:border-foreground/40'
-                }`}>{t}</button>
-            ))}
-          </div>
-        </Section>
+        {/* ── Tallas ropa mujer ── */}
+        {(visibleTallasRopaM.length > 0 || visibleTallasNum.length > 0) && (
+          <Section title="Talla — Mujer" defaultOpen={false}
+            badge={currentTallas.filter(t => [...visibleTallasRopaM, ...visibleTallasNum].includes(t)).length}>
+            {visibleTallasRopaM.length > 0 && (
+              <>
+                <p className="mb-1.5 text-xs text-muted-foreground">Letras</p>
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {visibleTallasRopaM.map(t => <TallaBtn key={t} t={t} />)}
+                </div>
+              </>
+            )}
+            {visibleTallasNum.length > 0 && (
+              <>
+                <p className="mb-1.5 text-xs text-muted-foreground">Numéricas</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {visibleTallasNum.map(t => <TallaBtn key={t} t={t} />)}
+                </div>
+              </>
+            )}
+          </Section>
+        )}
 
-        {/* ── Talla tenis hombre ── */}
-        <Section title="Talla tenis — Hombre (MX)" defaultOpen={false}
-          badge={currentTallas.filter(t => TALLAS_TENIS_H.includes(t)).length}>
-          <div className="flex flex-wrap gap-1.5">
-            {TALLAS_TENIS_H.map((t) => (
-              <button key={t} onClick={() => toggleMulti('talla', currentTallas, t)}
-                className={`rounded-lg border px-2.5 py-1.5 text-xs font-bold transition-colors ${
-                  currentTallas.includes(t)
-                    ? 'border-foreground bg-foreground text-background'
-                    : 'border-border text-foreground/80 hover:border-foreground/40'
-                }`}>{t}</button>
-            ))}
-          </div>
-        </Section>
+        {/* ── Tallas tenis hombre ── */}
+        {visibleTallasTenisH.length > 0 && (
+          <Section title="Talla tenis — Hombre (MX)" defaultOpen={false}
+            badge={currentTallas.filter(t => visibleTallasTenisH.includes(t)).length}>
+            <div className="flex flex-wrap gap-1.5">
+              {visibleTallasTenisH.map(t => <TallaBtn key={t} t={t} />)}
+            </div>
+          </Section>
+        )}
 
-        {/* ── Talla tenis mujer ── */}
-        <Section title="Talla tenis — Mujer (MX)" defaultOpen={false}
-          badge={currentTallas.filter(t => TALLAS_TENIS_M.includes(t)).length}>
-          <div className="flex flex-wrap gap-1.5">
-            {TALLAS_TENIS_M.map((t) => (
-              <button key={t} onClick={() => toggleMulti('talla', currentTallas, t)}
-                className={`rounded-lg border px-2.5 py-1.5 text-xs font-bold transition-colors ${
-                  currentTallas.includes(t)
-                    ? 'border-foreground bg-foreground text-background'
-                    : 'border-border text-foreground/80 hover:border-foreground/40'
-                }`}>{t}</button>
-            ))}
-          </div>
-        </Section>
+        {/* ── Tallas tenis mujer ── */}
+        {visibleTallasTenisM.length > 0 && (
+          <Section title="Talla tenis — Mujer (MX)" defaultOpen={false}
+            badge={currentTallas.filter(t => visibleTallasTenisM.includes(t)).length}>
+            <div className="flex flex-wrap gap-1.5">
+              {visibleTallasTenisM.map(t => <TallaBtn key={t} t={t} />)}
+            </div>
+          </Section>
+        )}
 
-        {/* ── Talla tenis niño/niña ── */}
-        <Section title="Talla tenis — Niño / Niña (MX)" defaultOpen={false}
-          badge={currentTallas.filter(t => TALLAS_TENIS_KID.includes(t)).length}>
-          <div className="flex flex-wrap gap-1.5">
-            {TALLAS_TENIS_KID.map((t) => (
-              <button key={t} onClick={() => toggleMulti('talla', currentTallas, t)}
-                className={`rounded-lg border px-2.5 py-1.5 text-xs font-bold transition-colors ${
-                  currentTallas.includes(t)
-                    ? 'border-foreground bg-foreground text-background'
-                    : 'border-border text-foreground/80 hover:border-foreground/40'
-                }`}>{t}</button>
-            ))}
-          </div>
-        </Section>
+        {/* ── Tallas tenis niño/niña ── */}
+        {visibleTallasTenisKid.length > 0 && (
+          <Section title="Talla tenis — Niño / Niña (MX)" defaultOpen={false}
+            badge={currentTallas.filter(t => visibleTallasTenisKid.includes(t)).length}>
+            <div className="flex flex-wrap gap-1.5">
+              {visibleTallasTenisKid.map(t => <TallaBtn key={t} t={t} />)}
+            </div>
+          </Section>
+        )}
 
-        {/* ── Talla pantalón ── */}
-        <Section title="Talla pantalón (cintura)" defaultOpen={false}
-          badge={currentTallas.filter(t => TALLAS_PANTALON.includes(t)).length}>
-          <div className="flex flex-wrap gap-1.5">
-            {TALLAS_PANTALON.map((t) => (
-              <button key={t} onClick={() => toggleMulti('talla', currentTallas, t)}
-                className={`rounded-lg border px-2.5 py-1.5 text-xs font-bold transition-colors ${
-                  currentTallas.includes(t)
-                    ? 'border-foreground bg-foreground text-background'
-                    : 'border-border text-foreground/80 hover:border-foreground/40'
-                }`}>{t}</button>
-            ))}
-          </div>
-        </Section>
+        {/* ── Tallas pantalón ── */}
+        {visibleTallasPantalon.length > 0 && (
+          <Section title="Talla pantalón (cintura)" defaultOpen={false}
+            badge={currentTallas.filter(t => visibleTallasPantalon.includes(t)).length}>
+            <div className="flex flex-wrap gap-1.5">
+              {visibleTallasPantalon.map(t => <TallaBtn key={t} t={t} />)}
+            </div>
+          </Section>
+        )}
 
         {/* ── Tienda A-Z con buscador ── */}
         <Section title="Tienda" defaultOpen={false} badge={currentTiendas.length}>
           <div className="relative mb-3">
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              value={tiendaSearch}
+            <input type="text" value={tiendaSearch}
               onChange={(e) => setTiendaSearch(e.target.value)}
               placeholder="Buscar tienda..."
               className="h-8 w-full rounded-lg border border-border bg-muted/50 pl-8 pr-8 text-xs text-foreground placeholder:text-muted-foreground focus:border-foreground/30 focus:outline-none"
@@ -576,13 +573,10 @@ export function FiltersSidebar({
               </button>
             )}
           </div>
-
           <div className="space-y-3">
             {Object.keys(tiendaGroups).sort().map((letter) => (
               <div key={letter}>
-                <p className="mb-1 pl-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
-                  {letter}
-                </p>
+                <p className="mb-1 pl-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">{letter}</p>
                 <div className="space-y-0.5">
                   {tiendaGroups[letter].map((store) => (
                     <button key={store}
