@@ -87,7 +87,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   const [priceRange, facets] = await Promise.all([
     getPriceRange({ ...baseFilters, genero: params.genero }),
-    getSearchFacets(baseFilters),
+    getSearchFacets({ ...baseFilters, genero: params.genero }),
   ])
 
   return (

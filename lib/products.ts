@@ -598,7 +598,7 @@ export interface SearchFacets {
 }
 
 export async function getSearchFacets(
-  filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda'>
+  filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda' | 'genero'>
 ): Promise<SearchFacets> {
   let q = supabase
     .from('products')
@@ -642,26 +642,28 @@ export async function getSearchFacets(
   type Row = { color_primary: string | null; gender: string | null; sizes_available: string[] | null; subcategory: string | null }
   let rows = data as Row[]
 
-  // Aplicar filtro de género de la query en memoria (ej: "tenis hombre" → solo facets de hombre)
-  if (filters.query?.trim()) {
-    const { genderWords } = splitQuery(filters.query.trim())
-    if (genderWords.length > 0) {
-      const genderTerms: Record<string, string[]> = {
-        hombre: ['hombre', 'male', 'men', 'man', 'masculino'],
-        mujer:  ['mujer', 'female', 'women', 'woman', 'femenino', 'dama'],
-        nino:   ['nino', 'niño', 'boy', 'kids', 'kid', 'infantil', 'junior'],
-        nina:   ['nina', 'niña', 'girl', 'kids', 'kid', 'infantil'],
-        unisex: ['unisex'],
-      }
-      rows = rows.filter(r => {
-        if (!r.gender) return false
-        const g = norm(r.gender)
-        return genderWords.some(gw => {
-          const terms = genderTerms[gw] ?? [gw]
-          return terms.some(t => g === t || g.includes(t))
-        })
+  // Aplicar filtro de género en memoria: desde query ("tenis hombre") y desde el param genero
+  const genderTerms: Record<string, string[]> = {
+    hombre: ['hombre', 'male', 'men', 'man', 'masculino'],
+    mujer:  ['mujer', 'female', 'women', 'woman', 'femenino', 'dama'],
+    nino:   ['nino', 'niño', 'boy', 'kids', 'kid', 'infantil', 'junior'],
+    nina:   ['nina', 'niña', 'girl', 'kids', 'kid', 'infantil'],
+    unisex: ['unisex'],
+  }
+
+  const queryGenderWords = filters.query?.trim() ? splitQuery(filters.query.trim()).genderWords : []
+  const paramGenderWords = filters.genero ? filters.genero.split(',').map(g => g.trim()).filter(Boolean) : []
+  const allGenderWords = [...queryGenderWords, ...paramGenderWords]
+
+  if (allGenderWords.length > 0) {
+    rows = rows.filter(r => {
+      if (!r.gender) return false
+      const g = norm(r.gender)
+      return allGenderWords.some(gw => {
+        const terms = genderTerms[norm(gw)] ?? [norm(gw)]
+        return terms.some(t => g === t || g.includes(t))
       })
-    }
+    })
   }
 
   const colores       = [...new Set(rows.map(r => r.color_primary).filter(Boolean) as string[])].map(norm)
