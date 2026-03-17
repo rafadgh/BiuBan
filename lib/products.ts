@@ -137,19 +137,84 @@ function norm(s: string): string {
   return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
 }
 
-// Dado un término normalizado, devuelve todos sus sinónimos de color
-function getColorSynonyms(term: string): string[] {
-  const result = new Set<string>()
-  const t = norm(term)
+// Términos de género para detectarlos en la query
+const GENDER_TERMS: Record<string, string> = {
+  hombre:    'hombre',
+  hombres:   'hombre',
+  masculino: 'hombre',
+  masculina: 'hombre',
+  male:      'hombre',
+  men:       'hombre',
+  man:       'hombre',
+  mens:      'hombre',
+  mujer:     'mujer',
+  mujeres:   'mujer',
+  femenino:  'mujer',
+  femenina:  'mujer',
+  female:    'mujer',
+  women:     'mujer',
+  woman:     'mujer',
+  womens:    'mujer',
+  dama:      'mujer',
+  damas:     'mujer',
+  nino:      'nino',
+  ninos:     'nino',
+  nina:      'nina',
+  ninas:     'nina',
+  kids:      'nino',
+  kid:       'nino',
+  infantil:  'nino',
+  junior:    'nino',
+  unisex:    'unisex',
+}
 
-  if (COLOR_SINONIMOS[t]) {
-    COLOR_SINONIMOS[t].forEach(s => result.add(norm(s)))
-    result.add(t)
+// Resuelve un término de color (incluyendo plurales/femeninos en español)
+// Devuelve la clave canónica de COLOR_SINONIMOS o null si no es un color
+function resolveColorTerm(word: string): string | null {
+  const t = norm(word)
+
+  // Coincidencia directa con clave
+  if (COLOR_SINONIMOS[t]) return t
+
+  // Coincidencia como sinónimo
+  for (const [key, syns] of Object.entries(COLOR_SINONIMOS)) {
+    if (syns.map(norm).includes(t)) return key
   }
 
-  // Busca el término como sinónimo de otra clave
+  // Intentar formas plurales y femeninas del español:
+  // blancos → blanco, negras → negra/negro, azules → azul, grises → gris
+  const variants: string[] = []
+  if (t.endsWith('es'))   variants.push(t.slice(0, -2))           // azules→azul, verdes→verde
+  if (t.endsWith('os'))   variants.push(t.slice(0, -1))           // blancos→blanco, negros→negro
+  if (t.endsWith('as'))   variants.push(t.slice(0, -1), t.slice(0, -2) + 'o') // blancas→blanca,blanco
+  if (t.endsWith('s') && !t.endsWith('es') && !t.endsWith('os') && !t.endsWith('as'))
+    variants.push(t.slice(0, -1))  // grays→gray
+
+  for (const v of variants) {
+    if (COLOR_SINONIMOS[v]) return v
+    for (const [key, syns] of Object.entries(COLOR_SINONIMOS)) {
+      if (syns.map(norm).includes(v)) return key
+    }
+  }
+
+  return null
+}
+
+// Dado un término, devuelve todos sus sinónimos de color
+function getColorSynonyms(term: string): string[] {
+  const result = new Set<string>()
+  const canonical = resolveColorTerm(term)
+  if (!canonical) return []
+
+  result.add(canonical)
+  result.add(norm(term))
+
+  // Todos los sinónimos de la clave canónica
+  COLOR_SINONIMOS[canonical]?.forEach(s => result.add(norm(s)))
+
+  // Claves donde canonical aparece como sinónimo
   for (const [key, syns] of Object.entries(COLOR_SINONIMOS)) {
-    if (syns.map(norm).includes(t)) {
+    if (syns.map(norm).includes(canonical)) {
       result.add(norm(key))
       syns.forEach(s => result.add(norm(s)))
     }
@@ -158,31 +223,38 @@ function getColorSynonyms(term: string): string[] {
   return Array.from(result)
 }
 
-// Detecta si una palabra es un color conocido
+// Detecta si una palabra es un color conocido (incluyendo plurales)
 function isColorTerm(word: string): boolean {
-  const t = norm(word)
-  if (COLOR_SINONIMOS[t]) return true
-  for (const syns of Object.values(COLOR_SINONIMOS)) {
-    if (syns.map(norm).includes(t)) return true
-  }
-  return false
+  return resolveColorTerm(word) !== null
 }
 
-// Separa la query en palabras de color y palabras normales
-function splitQuery(query: string): { mainWords: string[]; colorWords: string[] } {
+// Detecta si una palabra es un término de género
+function isGenderTerm(word: string): boolean {
+  return norm(word) in GENDER_TERMS
+}
+
+// Separa la query en palabras de color, género y palabras normales
+function splitQuery(query: string): {
+  mainWords: string[]
+  colorWords: string[]
+  genderWords: string[]
+} {
   const words = query.trim().split(/\s+/).filter(Boolean)
   const mainWords: string[] = []
   const colorWords: string[] = []
+  const genderWords: string[] = []
 
   for (const w of words) {
     if (isColorTerm(w)) {
       colorWords.push(w)
+    } else if (isGenderTerm(w)) {
+      genderWords.push(GENDER_TERMS[norm(w)])
     } else {
       mainWords.push(w)
     }
   }
 
-  return { mainWords, colorWords }
+  return { mainWords, colorWords, genderWords }
 }
 
 // Expande palabras principales usando sinónimos de producto
@@ -322,14 +394,14 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
   // Las palabras de producto van a Supabase (OR con sinónimos).
   // Las palabras de color se filtran en memoria buscando en el nombre.
   if (query?.trim()) {
-    const { mainWords, colorWords: queryColorWords } = splitQuery(query.trim())
+    const { mainWords, colorWords: queryColorWords, genderWords: queryGenderWords } = splitQuery(query.trim())
 
     if (mainWords.length > 0) {
       // Expande sinónimos de producto y busca en Supabase
       const expandedTerms = expandMainTerms(mainWords)
 
-      // Trae un volumen mayor si hay colores que filtrar después
-      const limit = queryColorWords.length > 0 ? 500 : 200
+      // Trae un volumen mayor si hay colores o género que filtrar después
+      const limit = (queryColorWords.length > 0 || queryGenderWords.length > 0) ? 500 : 200
 
       const orConditions = expandedTerms.flatMap(t => [
         `name.ilike.%${t}%`,
@@ -392,10 +464,13 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
         products = products.filter(p => productMatchesTalla(p, tallas))
       }
 
-      // Género: en memoria
-      if (genero) {
-        const generos = genero.split(',').map(g => g.trim()).filter(Boolean)
-        products = products.filter(p => productMatchesGenero(p, generos))
+      // Género: combinar términos de la query con el filtro sidebar
+      const allGenderWords = [
+        ...queryGenderWords,
+        ...(genero ? genero.split(',').map(g => g.trim()).filter(Boolean) : []),
+      ]
+      if (allGenderWords.length > 0) {
+        products = products.filter(p => productMatchesGenero(p, allGenderWords))
       }
 
       // Solo ofertas
@@ -418,8 +493,8 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
 
       return products
 
-    } else if (queryColorWords.length > 0) {
-      // La query es SOLO colores (ej: "blanco") → traer todo y filtrar en memoria
+    } else if (queryColorWords.length > 0 || queryGenderWords.length > 0) {
+      // La query es SOLO colores/género (ej: "blanco", "hombre") → traer todo y filtrar en memoria
       // No aplicar filtro de texto en Supabase
     }
   }
@@ -469,12 +544,12 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
     products = products.filter(p => productMatchesColor(p, colores))
   }
 
-  // Si la query era solo colores, también filtramos aquí
-  if (query?.trim()) {
-    const { colorWords: queryColorWords } = splitQuery(query.trim())
-    if (queryColorWords.length > 0) {
-      products = products.filter(p => productMatchesColor(p, queryColorWords))
-    }
+  // Si la query era solo colores/género, también filtramos aquí
+  const queryColorWords2 = query?.trim() ? splitQuery(query.trim()).colorWords : []
+  const queryGenderWords2 = query?.trim() ? splitQuery(query.trim()).genderWords : []
+
+  if (queryColorWords2.length > 0) {
+    products = products.filter(p => productMatchesColor(p, queryColorWords2))
   }
 
   if (talla) {
@@ -482,9 +557,13 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
     products = products.filter(p => productMatchesTalla(p, tallas))
   }
 
-  if (genero) {
-    const generos = genero.split(',').map(g => g.trim()).filter(Boolean)
-    products = products.filter(p => productMatchesGenero(p, generos))
+  // Género: mezclar términos de la query con el filtro sidebar
+  const allGenderWords2 = [
+    ...queryGenderWords2,
+    ...(genero ? genero.split(',').map(g => g.trim()).filter(Boolean) : []),
+  ]
+  if (allGenderWords2.length > 0) {
+    products = products.filter(p => productMatchesGenero(p, allGenderWords2))
   }
 
   if (ofertas === '1') {
