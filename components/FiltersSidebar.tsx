@@ -2,24 +2,56 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { ChevronDown, ChevronUp, X, Star, Tag, Percent, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Checkbox } from '@/components/ui/checkbox'
 
-const CATEGORIAS = [
-  { value: 'tenis',      label: 'Tenis / Sneakers' },
-  { value: 'hoodies',    label: 'Hoodies / Sudaderas' },
-  { value: 'playeras',   label: 'Playeras / T-Shirts' },
-  { value: 'jeans',      label: 'Jeans / Pantalones' },
-  { value: 'chamarras',  label: 'Chamarras / Jackets' },
-  { value: 'vestidos',   label: 'Vestidos' },
-  { value: 'shorts',     label: 'Shorts / Bermudas' },
-  { value: 'deportivo',  label: 'Ropa Deportiva' },
-  { value: 'accesorios', label: 'Accesorios / Bolsas' },
-  { value: 'botas',      label: 'Botas / Botines' },
+interface PriceRange { min: number; max: number }
+
+// Grouped categories
+const CATEGORIA_GROUPS: { group: string; items: { value: string; label: string }[] }[] = [
+  {
+    group: 'Calzado',
+    items: [
+      { value: 'tenis',    label: 'Tenis / Sneakers' },
+      { value: 'botas',    label: 'Botas / Botines'  },
+    ],
+  },
+  {
+    group: 'Ropa',
+    items: [
+      { value: 'playeras',  label: 'Playeras / T-Shirts'  },
+      { value: 'sudaderas', label: 'Sudaderas / Hoodies'   },
+      { value: 'chamarras', label: 'Chamarras / Jackets'   },
+      { value: 'jeans',     label: 'Jeans / Pantalones'    },
+      { value: 'shorts',    label: 'Shorts / Bermudas'     },
+      { value: 'vestidos',  label: 'Vestidos'              },
+    ],
+  },
+  {
+    group: 'Deportivo',
+    items: [
+      { value: 'running',    label: 'Running / Atletismo'   },
+      { value: 'gym',        label: 'Gym / Fitness'         },
+      { value: 'futbol',     label: 'Fútbol'                },
+      { value: 'basketball', label: 'Basketball'            },
+      { value: 'golf',       label: 'Golf'                  },
+      { value: 'beisbol',    label: 'Béisbol'               },
+      { value: 'outdoor',    label: 'Outdoor / Senderismo'  },
+    ],
+  },
+  {
+    group: 'Accesorios',
+    items: [
+      { value: 'mochilas',   label: 'Mochilas / Bolsas'    },
+      { value: 'gorras',     label: 'Gorras / Sombreros'   },
+      { value: 'calcetines', label: 'Calcetines'           },
+    ],
+  },
 ]
+const ALL_CATEGORIAS = CATEGORIA_GROUPS.flatMap(g => g.items)
 
 // Ordenadas A-Z
 const TIENDAS = [
@@ -68,7 +100,6 @@ const COLORES = [
   { value: 'dorado',   label: 'Dorado',   hex: '#d4af37' },
 ]
 
-// Géneros disponibles
 const GENEROS = [
   { value: 'hombre', label: 'Hombre' },
   { value: 'mujer',  label: 'Mujer'  },
@@ -77,7 +108,6 @@ const GENEROS = [
   { value: 'unisex', label: 'Unisex' },
 ]
 
-// Tallas separadas por tipo
 const TALLAS_ROPA_H    = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL']
 const TALLAS_ROPA_M    = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL']
 const TALLAS_NUMERICAS = ['0', '2', '4', '6', '8', '10', '12', '14']
@@ -147,9 +177,18 @@ function ActiveTag({ label, onRemove }: { label: string; onRemove: () => void })
   )
 }
 
-export function FiltersSidebar({ className = '' }: { className?: string }) {
+export function FiltersSidebar({
+  className = '',
+  priceRange,
+}: {
+  className?: string
+  priceRange?: PriceRange
+}) {
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  const effectiveMin = priceRange?.min ?? 0
+  const effectiveMax = priceRange?.max ?? 10000
 
   const currentCategorias  = parseMulti(searchParams.get('categoria'))
   const currentTiendas     = parseMulti(searchParams.get('tienda'))
@@ -159,11 +198,23 @@ export function FiltersSidebar({ className = '' }: { className?: string }) {
   const currentGeneros     = parseMulti(searchParams.get('genero'))
   const currentSoloOfertas = searchParams.get('ofertas') === '1'
   const currentMejorOpcion = searchParams.get('mejor') === '1'
-  const savedMin = searchParams.get('precioMin') ? parseInt(searchParams.get('precioMin')!) : 0
-  const savedMax = searchParams.get('precioMax') ? parseInt(searchParams.get('precioMax')!) : 10000
+
+  const urlMin = searchParams.get('precioMin') ? parseInt(searchParams.get('precioMin')!) : null
+  const urlMax = searchParams.get('precioMax') ? parseInt(searchParams.get('precioMax')!) : null
+  const savedMin = urlMin !== null ? Math.max(effectiveMin, Math.min(urlMin, effectiveMax)) : effectiveMin
+  const savedMax = urlMax !== null ? Math.max(effectiveMin, Math.min(urlMax, effectiveMax)) : effectiveMax
 
   const [sliderValues, setSliderValues] = useState<[number, number]>([savedMin, savedMax])
   const [tiendaSearch, setTiendaSearch] = useState('')
+
+  // Sincronizar slider cuando cambia el rango dinámico (nueva búsqueda)
+  useEffect(() => {
+    setSliderValues([
+      urlMin !== null ? Math.max(effectiveMin, Math.min(urlMin, effectiveMax)) : effectiveMin,
+      urlMax !== null ? Math.max(effectiveMin, Math.min(urlMax, effectiveMax)) : effectiveMax,
+    ])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveMin, effectiveMax])
 
   const pushParams = useCallback((updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -188,7 +239,7 @@ export function FiltersSidebar({ className = '' }: { className?: string }) {
     const params = new URLSearchParams()
     const q = searchParams.get('q')
     if (q) params.set('q', q)
-    setSliderValues([0, 10000])
+    setSliderValues([effectiveMin, effectiveMax])
     setTiendaSearch('')
     router.push(`/buscar?${params.toString()}`)
   }
@@ -196,7 +247,8 @@ export function FiltersSidebar({ className = '' }: { className?: string }) {
   const activeCount = [
     ...currentCategorias, ...currentTiendas, ...currentColores,
     ...currentTallas, ...currentDescuentos, ...currentGeneros,
-    savedMin > 0 ? '1' : '', savedMax < 10000 ? '1' : '',
+    (urlMin !== null && urlMin > effectiveMin) ? '1' : '',
+    (urlMax !== null && urlMax < effectiveMax) ? '1' : '',
     currentSoloOfertas ? '1' : '', currentMejorOpcion ? '1' : '',
   ].filter(Boolean).length
 
@@ -207,6 +259,8 @@ export function FiltersSidebar({ className = '' }: { className?: string }) {
     [tiendaSearch]
   )
   const tiendaGroups = useMemo(() => groupByLetter(filteredTiendas), [filteredTiendas])
+
+  const step = effectiveMax <= 1000 ? 50 : effectiveMax <= 5000 ? 200 : 500
 
   return (
     <aside className={`flex flex-col rounded-xl border border-border/50 bg-card ${className}`}>
@@ -239,9 +293,10 @@ export function FiltersSidebar({ className = '' }: { className?: string }) {
               const found = GENEROS.find(x => x.value === g)
               return <ActiveTag key={g} label={found?.label ?? g} onRemove={() => toggleMulti('genero', currentGeneros, g)} />
             })}
-            {currentCategorias.map(c => (
-              <ActiveTag key={c} label={c} onRemove={() => toggleMulti('categoria', currentCategorias, c)} />
-            ))}
+            {currentCategorias.map(c => {
+              const found = ALL_CATEGORIAS.find(x => x.value === c)
+              return <ActiveTag key={c} label={found?.label ?? c} onRemove={() => toggleMulti('categoria', currentCategorias, c)} />
+            })}
             {currentTiendas.map(t => (
               <ActiveTag key={t} label={t} onRemove={() => toggleMulti('tienda', currentTiendas, t)} />
             ))}
@@ -279,23 +334,32 @@ export function FiltersSidebar({ className = '' }: { className?: string }) {
 
         {/* ── Categoría ── */}
         <Section title="Categoría" badge={currentCategorias.length}>
-          <div className="space-y-0.5">
-            {CATEGORIAS.map((cat) => (
-              <button key={cat.value}
-                onClick={() => toggleMulti('categoria', currentCategorias, cat.value)}
-                className={`flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left text-sm transition-colors ${
-                  currentCategorias.includes(cat.value)
-                    ? 'bg-foreground text-background font-medium'
-                    : 'text-foreground/80 hover:bg-muted'
-                }`}>
-                {cat.label}
-                {currentCategorias.includes(cat.value) && <X className="h-3 w-3" />}
-              </button>
+          <div className="space-y-3">
+            {CATEGORIA_GROUPS.map(group => (
+              <div key={group.group}>
+                <p className="mb-1 pl-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+                  {group.group}
+                </p>
+                <div className="space-y-0.5">
+                  {group.items.map((cat) => (
+                    <button key={cat.value}
+                      onClick={() => toggleMulti('categoria', currentCategorias, cat.value)}
+                      className={`flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left text-sm transition-colors ${
+                        currentCategorias.includes(cat.value)
+                          ? 'bg-foreground text-background font-medium'
+                          : 'text-foreground/80 hover:bg-muted'
+                      }`}>
+                      {cat.label}
+                      {currentCategorias.includes(cat.value) && <X className="h-3 w-3" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </Section>
 
-        {/* ── Precio ── */}
+        {/* ── Precio dinámico ── */}
         <Section title="Precio">
           <div className="space-y-3 px-1 pt-1">
             <div className="flex items-center justify-between">
@@ -307,19 +371,24 @@ export function FiltersSidebar({ className = '' }: { className?: string }) {
                 ${sliderValues[1].toLocaleString('es-MX')}
               </span>
             </div>
-            <Slider value={sliderValues} min={0} max={10000} step={200}
+            <Slider
+              value={sliderValues}
+              min={effectiveMin}
+              max={effectiveMax}
+              step={step}
               onValueChange={(v) => setSliderValues(v as [number, number])}
               onValueCommit={(v) => {
                 const [min, max] = v as [number, number]
                 pushParams({
-                  precioMin: min > 0 ? min.toString() : null,
-                  precioMax: max < 10000 ? max.toString() : null,
+                  precioMin: min > effectiveMin ? min.toString() : null,
+                  precioMax: max < effectiveMax ? max.toString() : null,
                 })
               }}
               className="w-full"
             />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>$0</span><span>$10,000+</span>
+              <span>${effectiveMin.toLocaleString('es-MX')}</span>
+              <span>${effectiveMax.toLocaleString('es-MX')}+</span>
             </div>
           </div>
         </Section>

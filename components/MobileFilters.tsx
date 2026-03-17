@@ -1,24 +1,54 @@
 // components/MobileFilters.tsx
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { SlidersHorizontal, X, ChevronDown, ChevronUp, Star, Tag, Percent, Search } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Checkbox } from '@/components/ui/checkbox'
 
-const CATEGORIAS = [
-  { value: 'tenis',      label: 'Tenis / Sneakers' },
-  { value: 'hoodies',    label: 'Hoodies / Sudaderas' },
-  { value: 'playeras',   label: 'Playeras / T-Shirts' },
-  { value: 'jeans',      label: 'Jeans / Pantalones' },
-  { value: 'chamarras',  label: 'Chamarras / Jackets' },
-  { value: 'vestidos',   label: 'Vestidos' },
-  { value: 'shorts',     label: 'Shorts / Bermudas' },
-  { value: 'deportivo',  label: 'Ropa Deportiva' },
-  { value: 'accesorios', label: 'Accesorios / Bolsas' },
-  { value: 'botas',      label: 'Botas / Botines' },
+interface PriceRange { min: number; max: number }
+
+const CATEGORIA_GROUPS: { group: string; items: { value: string; label: string }[] }[] = [
+  {
+    group: 'Calzado',
+    items: [
+      { value: 'tenis',    label: 'Tenis / Sneakers' },
+      { value: 'botas',    label: 'Botas / Botines'  },
+    ],
+  },
+  {
+    group: 'Ropa',
+    items: [
+      { value: 'playeras',  label: 'Playeras / T-Shirts'  },
+      { value: 'sudaderas', label: 'Sudaderas / Hoodies'   },
+      { value: 'chamarras', label: 'Chamarras / Jackets'   },
+      { value: 'jeans',     label: 'Jeans / Pantalones'    },
+      { value: 'shorts',    label: 'Shorts / Bermudas'     },
+      { value: 'vestidos',  label: 'Vestidos'              },
+    ],
+  },
+  {
+    group: 'Deportivo',
+    items: [
+      { value: 'running',    label: 'Running / Atletismo'   },
+      { value: 'gym',        label: 'Gym / Fitness'         },
+      { value: 'futbol',     label: 'Fútbol'                },
+      { value: 'basketball', label: 'Basketball'            },
+      { value: 'golf',       label: 'Golf'                  },
+      { value: 'beisbol',    label: 'Béisbol'               },
+      { value: 'outdoor',    label: 'Outdoor / Senderismo'  },
+    ],
+  },
+  {
+    group: 'Accesorios',
+    items: [
+      { value: 'mochilas',   label: 'Mochilas / Bolsas'    },
+      { value: 'gorras',     label: 'Gorras / Sombreros'   },
+      { value: 'calcetines', label: 'Calcetines'           },
+    ],
+  },
 ]
 
 const TIENDAS = [
@@ -112,11 +142,14 @@ function Section({
   )
 }
 
-export function MobileFilters() {
+export function MobileFilters({ priceRange }: { priceRange?: PriceRange }) {
   const [isOpen, setIsOpen] = useState(false)
   const [tiendaSearch, setTiendaSearch] = useState('')
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  const effectiveMin = priceRange?.min ?? 0
+  const effectiveMax = priceRange?.max ?? 10000
 
   const currentCategorias  = parseMulti(searchParams.get('categoria'))
   const currentTiendas     = parseMulti(searchParams.get('tienda'))
@@ -126,10 +159,21 @@ export function MobileFilters() {
   const currentGeneros     = parseMulti(searchParams.get('genero'))
   const currentSoloOfertas = searchParams.get('ofertas') === '1'
   const currentMejorOpcion = searchParams.get('mejor') === '1'
-  const savedMin = searchParams.get('precioMin') ? parseInt(searchParams.get('precioMin')!) : 0
-  const savedMax = searchParams.get('precioMax') ? parseInt(searchParams.get('precioMax')!) : 10000
+
+  const urlMin = searchParams.get('precioMin') ? parseInt(searchParams.get('precioMin')!) : null
+  const urlMax = searchParams.get('precioMax') ? parseInt(searchParams.get('precioMax')!) : null
+  const savedMin = urlMin !== null ? Math.max(effectiveMin, Math.min(urlMin, effectiveMax)) : effectiveMin
+  const savedMax = urlMax !== null ? Math.max(effectiveMin, Math.min(urlMax, effectiveMax)) : effectiveMax
 
   const [sliderValues, setSliderValues] = useState<[number, number]>([savedMin, savedMax])
+
+  useEffect(() => {
+    setSliderValues([
+      urlMin !== null ? Math.max(effectiveMin, Math.min(urlMin, effectiveMax)) : effectiveMin,
+      urlMax !== null ? Math.max(effectiveMin, Math.min(urlMax, effectiveMax)) : effectiveMax,
+    ])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveMin, effectiveMax])
 
   const pushParams = useCallback((updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -154,7 +198,7 @@ export function MobileFilters() {
     const params = new URLSearchParams()
     const q = searchParams.get('q')
     if (q) params.set('q', q)
-    setSliderValues([0, 10000])
+    setSliderValues([effectiveMin, effectiveMax])
     setTiendaSearch('')
     router.push(`/buscar?${params.toString()}`)
     setIsOpen(false)
@@ -163,7 +207,8 @@ export function MobileFilters() {
   const activeCount = [
     ...currentCategorias, ...currentTiendas, ...currentColores,
     ...currentTallas, ...currentDescuentos, ...currentGeneros,
-    savedMin > 0 ? '1' : '', savedMax < 10000 ? '1' : '',
+    (urlMin !== null && urlMin > effectiveMin) ? '1' : '',
+    (urlMax !== null && urlMax < effectiveMax) ? '1' : '',
     currentSoloOfertas ? '1' : '', currentMejorOpcion ? '1' : '',
   ].filter(Boolean).length
 
@@ -175,7 +220,9 @@ export function MobileFilters() {
   )
   const tiendaGroups = useMemo(() => groupByLetter(filteredTiendas), [filteredTiendas])
 
-  const TallaBtn = ({ t, arr }: { t: string; arr: string[] }) => (
+  const step = effectiveMax <= 1000 ? 50 : effectiveMax <= 5000 ? 200 : 500
+
+  const TallaBtn = ({ t }: { t: string }) => (
     <button onClick={() => toggleMulti('talla', currentTallas, t)}
       className={`rounded-lg border px-3 py-2 text-sm font-bold transition-colors ${
         currentTallas.includes(t)
@@ -239,15 +286,24 @@ export function MobileFilters() {
               </Section>
 
               <Section title="Categoría" defaultOpen badge={currentCategorias.length}>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {CATEGORIAS.map((cat) => (
-                    <button key={cat.value}
-                      onClick={() => toggleMulti('categoria', currentCategorias, cat.value)}
-                      className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
-                        currentCategorias.includes(cat.value)
-                          ? 'border-foreground bg-foreground text-background font-medium'
-                          : 'border-border text-foreground/80'
-                      }`}>{cat.label}</button>
+                <div className="space-y-3">
+                  {CATEGORIA_GROUPS.map(group => (
+                    <div key={group.group}>
+                      <p className="mb-1.5 pl-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+                        {group.group}
+                      </p>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {group.items.map((cat) => (
+                          <button key={cat.value}
+                            onClick={() => toggleMulti('categoria', currentCategorias, cat.value)}
+                            className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+                              currentCategorias.includes(cat.value)
+                                ? 'border-foreground bg-foreground text-background font-medium'
+                                : 'border-border text-foreground/80'
+                            }`}>{cat.label}</button>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </Section>
@@ -263,19 +319,24 @@ export function MobileFilters() {
                       ${sliderValues[1].toLocaleString('es-MX')}
                     </span>
                   </div>
-                  <Slider value={sliderValues} min={0} max={10000} step={200}
+                  <Slider
+                    value={sliderValues}
+                    min={effectiveMin}
+                    max={effectiveMax}
+                    step={step}
                     onValueChange={(v) => setSliderValues(v as [number, number])}
                     onValueCommit={(v) => {
                       const [min, max] = v as [number, number]
                       pushParams({
-                        precioMin: min > 0 ? min.toString() : null,
-                        precioMax: max < 10000 ? max.toString() : null,
+                        precioMin: min > effectiveMin ? min.toString() : null,
+                        precioMax: max < effectiveMax ? max.toString() : null,
                       })
                     }}
                     className="w-full"
                   />
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>$0</span><span>$10,000+</span>
+                    <span>${effectiveMin.toLocaleString('es-MX')}</span>
+                    <span>${effectiveMax.toLocaleString('es-MX')}+</span>
                   </div>
                 </div>
               </Section>
@@ -337,42 +398,42 @@ export function MobileFilters() {
 
               <Section title="Talla — Hombre / Unisex" badge={currentTallas.filter(t => TALLAS_ROPA_H.includes(t)).length}>
                 <div className="flex flex-wrap gap-2">
-                  {TALLAS_ROPA_H.map(t => <TallaBtn key={t} t={t} arr={TALLAS_ROPA_H} />)}
+                  {TALLAS_ROPA_H.map(t => <TallaBtn key={t} t={t} />)}
                 </div>
               </Section>
 
               <Section title="Talla — Mujer" badge={currentTallas.filter(t => [...TALLAS_ROPA_M, ...TALLAS_NUMERICAS].includes(t)).length}>
                 <p className="mb-2 text-xs text-muted-foreground">Letras</p>
                 <div className="flex flex-wrap gap-2 mb-3">
-                  {TALLAS_ROPA_M.map(t => <TallaBtn key={t} t={t} arr={TALLAS_ROPA_M} />)}
+                  {TALLAS_ROPA_M.map(t => <TallaBtn key={t} t={t} />)}
                 </div>
                 <p className="mb-2 text-xs text-muted-foreground">Numéricas</p>
                 <div className="flex flex-wrap gap-2">
-                  {TALLAS_NUMERICAS.map(t => <TallaBtn key={t} t={t} arr={TALLAS_NUMERICAS} />)}
+                  {TALLAS_NUMERICAS.map(t => <TallaBtn key={t} t={t} />)}
                 </div>
               </Section>
 
               <Section title="Talla tenis — Hombre (MX)" badge={currentTallas.filter(t => TALLAS_TENIS_H.includes(t)).length}>
                 <div className="flex flex-wrap gap-2">
-                  {TALLAS_TENIS_H.map(t => <TallaBtn key={t} t={t} arr={TALLAS_TENIS_H} />)}
+                  {TALLAS_TENIS_H.map(t => <TallaBtn key={t} t={t} />)}
                 </div>
               </Section>
 
               <Section title="Talla tenis — Mujer (MX)" badge={currentTallas.filter(t => TALLAS_TENIS_M.includes(t)).length}>
                 <div className="flex flex-wrap gap-2">
-                  {TALLAS_TENIS_M.map(t => <TallaBtn key={t} t={t} arr={TALLAS_TENIS_M} />)}
+                  {TALLAS_TENIS_M.map(t => <TallaBtn key={t} t={t} />)}
                 </div>
               </Section>
 
               <Section title="Talla tenis — Niño / Niña (MX)" badge={currentTallas.filter(t => TALLAS_TENIS_KID.includes(t)).length}>
                 <div className="flex flex-wrap gap-2">
-                  {TALLAS_TENIS_KID.map(t => <TallaBtn key={t} t={t} arr={TALLAS_TENIS_KID} />)}
+                  {TALLAS_TENIS_KID.map(t => <TallaBtn key={t} t={t} />)}
                 </div>
               </Section>
 
               <Section title="Talla pantalón (cintura)" badge={currentTallas.filter(t => TALLAS_PANTALON.includes(t)).length}>
                 <div className="flex flex-wrap gap-2">
-                  {TALLAS_PANTALON.map(t => <TallaBtn key={t} t={t} arr={TALLAS_PANTALON} />)}
+                  {TALLAS_PANTALON.map(t => <TallaBtn key={t} t={t} />)}
                 </div>
               </Section>
 

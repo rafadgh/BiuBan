@@ -6,7 +6,7 @@ import { MobileFilters } from '@/components/MobileFilters'
 import { SortBar } from '@/components/SortBar'
 import { ProductCard } from '@/components/ProductCard'
 import { SearchBar } from '@/components/SearchBar'
-import { searchProductsFromDB } from '@/lib/products'
+import { searchProductsFromDB, getPriceRange } from '@/lib/products'
 
 interface SearchPageProps {
   searchParams: Promise<{
@@ -77,6 +77,14 @@ async function SearchResults({ searchParams }: SearchPageProps) {
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams
 
+  const priceRange = await getPriceRange({
+    query:    params.q,
+    categoria: params.categoria,
+    marca:    params.marca,
+    tienda:   params.tienda,
+    genero:   params.genero,
+  })
+
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#F5F5F5]">
       <Header />
@@ -89,7 +97,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               <SearchBar initialQuery={params.q || ''} />
             </div>
             <Suspense fallback={null}>
-              <MobileFilters />
+              <MobileFilters priceRange={priceRange} />
             </Suspense>
           </div>
         </div>
@@ -99,7 +107,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           {/* Sidebar — solo desktop */}
           <div className="hidden w-72 shrink-0 overflow-y-auto border-r border-[#E5E5E5] bg-white p-4 lg:block xl:w-80">
             <Suspense fallback={null}>
-              <FiltersSidebar className="h-full" />
+              <FiltersSidebar className="h-full" priceRange={priceRange} />
             </Suspense>
           </div>
 
