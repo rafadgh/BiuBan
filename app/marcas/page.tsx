@@ -36,7 +36,7 @@ export default async function MarcasPage() {
               Marcas
             </h1>
             <p className="mt-2 text-[#6B6B6B]">
-              {brands.length} marcas disponibles · ordenadas alfabéticamente
+              {brands.length} marcas disponibles
             </p>
           </div>
 

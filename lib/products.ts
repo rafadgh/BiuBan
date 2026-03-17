@@ -611,6 +611,7 @@ export interface SearchFacets {
   tallas:        string[]  // valores únicos de sizes_available
   subcategorias: string[]  // valores de subcategory normalizados
   marcas:        string[]  // marcas disponibles en resultados
+  tiendas:       string[]  // tiendas disponibles en resultados
 }
 
 export async function getSearchFacets(
@@ -619,7 +620,7 @@ export async function getSearchFacets(
   const buildQ = () => {
     let q = supabase
       .from('products')
-      .select('color_primary, gender, sizes_available, subcategory, brand')
+      .select('color_primary, gender, sizes_available, subcategory, brand, store')
       .eq('available', true)
 
     if (filters.categoria) {
@@ -641,8 +642,9 @@ export async function getSearchFacets(
     }
     if (filters.query?.trim()) {
       const { mainWords } = splitQuery(filters.query.trim())
-      if (mainWords.length > 0) {
-        const terms = expandMainTerms(mainWords)
+      const filteredWords = mainWords.filter(w => w.length > 1)
+      if (filteredWords.length > 0) {
+        const terms = expandMainTerms(filteredWords)
         const orConds = terms.flatMap(t => [
           `name.ilike.%${t}%`,
           `brand.ilike.%${t}%`,
@@ -656,9 +658,9 @@ export async function getSearchFacets(
   }
 
   const rawData = await paginateAll(buildQ)
-  if (rawData.length === 0) return { colores: [], generos: [], tallas: [], subcategorias: [], marcas: [] }
+  if (rawData.length === 0) return { colores: [], generos: [], tallas: [], subcategorias: [], marcas: [], tiendas: [] }
 
-  type Row = { color_primary: string | null; gender: string | null; sizes_available: string[] | null; subcategory: string | null; brand: string | null }
+  type Row = { color_primary: string | null; gender: string | null; sizes_available: string[] | null; subcategory: string | null; brand: string | null; store: string | null }
   let rows = rawData as unknown as Row[]
 
   // Aplicar filtro de género en memoria
@@ -691,6 +693,7 @@ export async function getSearchFacets(
     tallas:        [...new Set(rows.flatMap(r => r.sizes_available ?? []))],
     subcategorias: [...new Set(rows.map(r => r.subcategory).filter(Boolean) as string[])].map(norm),
     marcas:        [...new Set(rows.map(r => r.brand).filter(Boolean) as string[])].sort(),
+    tiendas:       [...new Set(rows.map(r => r.store).filter(Boolean) as string[])].sort(),
   }
 }
 
@@ -841,7 +844,7 @@ export async function getOffersFacets(
   const buildQ = () => {
     let q = supabase
       .from('products')
-      .select('color_primary, gender, sizes_available, subcategory, brand')
+      .select('color_primary, gender, sizes_available, subcategory, brand, store')
       .eq('available', true)
       .or('on_sale.eq.true,discount.gt.0')
 
@@ -873,9 +876,9 @@ export async function getOffersFacets(
   }
 
   const rawData = await paginateAll(buildQ)
-  if (rawData.length === 0) return { colores: [], generos: [], tallas: [], subcategorias: [], marcas: [] }
+  if (rawData.length === 0) return { colores: [], generos: [], tallas: [], subcategorias: [], marcas: [], tiendas: [] }
 
-  type Row = { color_primary: string | null; gender: string | null; sizes_available: string[] | null; subcategory: string | null; brand: string | null }
+  type Row = { color_primary: string | null; gender: string | null; sizes_available: string[] | null; subcategory: string | null; brand: string | null; store: string | null }
   let rows = rawData as unknown as Row[]
 
   const genderTerms: Record<string, string[]> = {
@@ -905,6 +908,7 @@ export async function getOffersFacets(
     tallas:        [...new Set(rows.flatMap(r => r.sizes_available ?? []))],
     subcategorias: [...new Set(rows.map(r => r.subcategory).filter(Boolean) as string[])].map(norm),
     marcas:        [...new Set(rows.map(r => r.brand).filter(Boolean) as string[])].sort(),
+    tiendas:       [...new Set(rows.map(r => r.store).filter(Boolean) as string[])].sort(),
   }
 }
 

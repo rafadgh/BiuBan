@@ -53,13 +53,6 @@ const CATEGORIA_GROUPS: { group: string; items: { value: string; label: string }
 ]
 const ALL_CATEGORIAS = CATEGORIA_GROUPS.flatMap(g => g.items)
 
-const TIENDAS = [
-  'Abercrombie & Fitch', 'Adidas', 'Amazon México', 'Bershka',
-  'Converse', 'Coppel', 'Gap', 'H&M', 'Hollister', 'Innovasport',
-  'Lacoste', "Levi's", 'Liverpool', 'Mango', 'Martí', 'Mercado Libre',
-  'New Balance', 'Nike', 'Palacio de Hierro', 'Pull&Bear', 'Puma',
-  'Stradivarius', 'Under Armour', 'Uniqlo', 'Vans', 'Zara',
-]
 
 const COLORES = [
   { value: 'negro',     label: 'Negro',     hex: '#1a1a1a' },
@@ -110,15 +103,6 @@ function nrm(s: string) {
 function parseMulti(value: string | null): string[] {
   if (!value) return []
   return value.split(',').filter(Boolean)
-}
-
-function groupByLetter(items: string[]): Record<string, string[]> {
-  return items.reduce<Record<string, string[]>>((acc, item) => {
-    const letter = item[0].toUpperCase()
-    acc[letter] = acc[letter] ?? []
-    acc[letter].push(item)
-    return acc
-  }, {})
 }
 
 // Helpers para filtrar opciones basadas en facetas
@@ -214,6 +198,8 @@ export function FiltersSidebar({
 
   const [sliderValues, setSliderValues] = useState<[number, number]>([savedMin, savedMax])
   const [tiendaSearch, setTiendaSearch] = useState('')
+  // Tiendas dinámicas: vienen de facets (solo las que tienen productos en el contexto actual)
+  const tiendas = facets?.tiendas ?? []
 
   useEffect(() => {
     setSliderValues([
@@ -257,10 +243,9 @@ export function FiltersSidebar({
   ].filter(Boolean).length
 
   const filteredTiendas = useMemo(() =>
-    tiendaSearch.trim() ? TIENDAS.filter(t => t.toLowerCase().includes(tiendaSearch.toLowerCase())) : TIENDAS,
-    [tiendaSearch]
+    tiendaSearch.trim() ? tiendas.filter(t => t.toLowerCase().includes(tiendaSearch.toLowerCase())) : tiendas,
+    [tiendaSearch, tiendas]
   )
-  const tiendaGroups = useMemo(() => groupByLetter(filteredTiendas), [filteredTiendas])
   const step = effectiveMax <= 1000 ? 50 : effectiveMax <= 5000 ? 200 : 500
 
   // ── Opciones filtradas por facetas ────────────────────────────────────────
@@ -584,49 +569,46 @@ export function FiltersSidebar({
           </Section>
         )}
 
-        {/* ── Tienda A-Z con buscador ── */}
-        <Section title="Tienda" defaultOpen={false} badge={currentTiendas.length}>
-          <div className="relative mb-3">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <input type="text" value={tiendaSearch}
-              onChange={(e) => setTiendaSearch(e.target.value)}
-              placeholder="Buscar tienda..."
-              className="h-8 w-full rounded-lg border border-border bg-muted/50 pl-8 pr-8 text-xs text-foreground placeholder:text-muted-foreground focus:border-foreground/30 focus:outline-none"
-            />
-            {tiendaSearch && (
-              <button onClick={() => setTiendaSearch('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                <X className="h-3 w-3" />
-              </button>
-            )}
-          </div>
-          <div className="space-y-3">
-            {Object.keys(tiendaGroups).sort().map((letter) => (
-              <div key={letter}>
-                <p className="mb-1 pl-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">{letter}</p>
-                <div className="space-y-0.5">
-                  {tiendaGroups[letter].map((store) => (
-                    <button key={store}
-                      onClick={() => toggleMulti('tienda', currentTiendas, store)}
-                      className={`flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left text-sm transition-colors ${
-                        currentTiendas.includes(store)
-                          ? 'bg-foreground text-background font-medium'
-                          : 'text-foreground/80 hover:bg-muted'
-                      }`}>
-                      {store}
-                      {currentTiendas.includes(store) && <X className="h-3 w-3" />}
-                    </button>
-                  ))}
-                </div>
+        {/* ── Tiendas (solo las que tienen productos en el contexto actual) ── */}
+        {tiendas.length > 0 && (
+          <Section title="Tienda" defaultOpen={false} badge={currentTiendas.length}>
+            {tiendas.length > 8 && (
+              <div className="relative mb-3">
+                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <input type="text" value={tiendaSearch}
+                  onChange={(e) => setTiendaSearch(e.target.value)}
+                  placeholder="Buscar tienda..."
+                  className="h-8 w-full rounded-lg border border-border bg-muted/50 pl-8 pr-8 text-xs text-foreground placeholder:text-muted-foreground focus:border-foreground/30 focus:outline-none"
+                />
+                {tiendaSearch && (
+                  <button onClick={() => setTiendaSearch('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
               </div>
-            ))}
-            {filteredTiendas.length === 0 && (
-              <p className="py-3 text-center text-xs text-muted-foreground">
-                Sin resultados para &ldquo;{tiendaSearch}&rdquo;
-              </p>
             )}
-          </div>
-        </Section>
+            <div className="space-y-0.5">
+              {filteredTiendas.map((store) => (
+                <button key={store}
+                  onClick={() => toggleMulti('tienda', currentTiendas, store)}
+                  className={`flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left text-sm transition-colors ${
+                    currentTiendas.includes(store)
+                      ? 'bg-foreground text-background font-medium'
+                      : 'text-foreground/80 hover:bg-muted'
+                  }`}>
+                  {store}
+                  {currentTiendas.includes(store) && <X className="h-3 w-3" />}
+                </button>
+              ))}
+              {filteredTiendas.length === 0 && tiendaSearch && (
+                <p className="py-3 text-center text-xs text-muted-foreground">
+                  Sin resultados para &ldquo;{tiendaSearch}&rdquo;
+                </p>
+              )}
+            </div>
+          </Section>
+        )}
 
       </div>
     </aside>
