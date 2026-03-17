@@ -403,8 +403,9 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
       // Expande sinónimos de producto y busca en Supabase
       const expandedTerms = expandMainTerms(mainWords)
 
-      // Trae un volumen mayor si hay colores o género que filtrar después
-      const limit = (queryColorWords.length > 0 || queryGenderWords.length > 0) ? 500 : 200
+      // Trae un volumen mayor si hay filtros en memoria (color, género, talla)
+      const hasMemoryFilters = queryColorWords.length > 0 || queryGenderWords.length > 0 || !!genero || !!color || !!talla
+      const limit = hasMemoryFilters ? 500 : 200
 
       const orConditions = expandedTerms.flatMap(t => [
         `name.ilike.%${t}%`,
