@@ -10,16 +10,34 @@ const robotoSlab = Roboto_Slab({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://biuban.vercel.app'),
   title: 'BiuBan - Encuentra la mejor opción de moda',
-  description: 'Busca ropa, tenis y accesorios en un solo lugar. Compara precios entre Nike, Adidas, Zara, Liverpool, Amazon México y más tiendas.',
-  generator: 'v0.app',
+  description:
+    'Busca ropa, tenis y accesorios en un solo lugar. Compara precios entre Nike, Adidas, Zara, Liverpool, Amazon México y más tiendas.',
+  applicationName: 'BiuBan',
+  authors: [{ name: 'Rafael Diez', url: 'https://github.com/rafadgh' }],
+  creator: 'Rafael Diez',
+  publisher: 'rafadgh',
   icons: {
     icon: [
       { url: '/icon-light-32x32.png', media: '(prefers-color-scheme: light)' },
-      { url: '/icon-dark-32x32.png',  media: '(prefers-color-scheme: dark)' },
+      { url: '/icon-dark-32x32.png', media: '(prefers-color-scheme: dark)' },
       { url: '/icon.svg', type: 'image/svg+xml' },
     ],
     apple: '/apple-icon.png',
+  },
+  openGraph: {
+    title: 'BiuBan - Encuentra la mejor opción de moda',
+    description:
+      'Busca ropa, tenis y accesorios en un solo lugar. Compara precios entre distintas tiendas en México.',
+    siteName: 'BiuBan',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'BiuBan - Encuentra la mejor opción de moda',
+    description:
+      'Compara ropa, tenis y accesorios entre distintas tiendas en un solo lugar.',
   },
 }
 
