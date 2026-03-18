@@ -53,23 +53,26 @@ const CATEGORIA_GROUPS: { group: string; items: { value: string; label: string }
 ]
 const ALL_CATEGORIAS = CATEGORIA_GROUPS.flatMap(g => g.items)
 
-
 const COLORES = [
-  { value: 'negro',     label: 'Negro',     hex: '#1a1a1a' },
-  { value: 'blanco',    label: 'Blanco',    hex: '#f5f5f5' },
-  { value: 'gris',      label: 'Gris',      hex: '#9ca3af' },
-  { value: 'azul',      label: 'Azul',      hex: '#3b82f6' },
-  { value: 'navy',      label: 'Navy',      hex: '#1e3a5f' },
-  { value: 'rojo',      label: 'Rojo',      hex: '#ef4444' },
-  { value: 'verde',     label: 'Verde',     hex: '#22c55e' },
-  { value: 'rosa',      label: 'Rosa',      hex: '#ec4899' },
-  { value: 'morado',    label: 'Morado',    hex: '#a855f7' },
-  { value: 'amarillo',  label: 'Amarillo',  hex: '#eab308' },
-  { value: 'naranja',   label: 'Naranja',   hex: '#f97316' },
-  { value: 'cafe',      label: 'Café',      hex: '#92400e' },
-  { value: 'beige',     label: 'Beige',     hex: '#d4b896' },
-  { value: 'dorado',    label: 'Dorado',    hex: '#d4af37' },
-  { value: 'multicolor',label: 'Multicolor',hex: 'conic-gradient(red,yellow,green,blue,red)' },
+  { value: 'negro',      label: 'Negro',      hex: '#1a1a1a' },
+  { value: 'blanco',     label: 'Blanco',     hex: '#f5f5f5' },
+  { value: 'gris',       label: 'Gris',       hex: '#9ca3af' },
+  { value: 'azul',       label: 'Azul',       hex: '#3b82f6' },
+  { value: 'navy',       label: 'Navy',       hex: '#1e3a5f' },
+  { value: 'rojo',       label: 'Rojo',       hex: '#ef4444' },
+  { value: 'verde',      label: 'Verde',      hex: '#22c55e' },
+  { value: 'rosa',       label: 'Rosa',       hex: '#ec4899' },
+  { value: 'morado',     label: 'Morado',     hex: '#a855f7' },
+  { value: 'amarillo',   label: 'Amarillo',   hex: '#eab308' },
+  { value: 'naranja',    label: 'Naranja',    hex: '#f97316' },
+  { value: 'cafe',       label: 'Café',       hex: '#92400e' },
+  { value: 'beige',      label: 'Beige',      hex: '#d4b896' },
+  { value: 'dorado',     label: 'Dorado',     hex: '#d4af37' },
+  { value: 'plateado',   label: 'Plateado',   hex: '#c0c0c0' },
+  { value: 'turquesa',   label: 'Turquesa',   hex: '#06b6d4' },
+  { value: 'salmon',     label: 'Salmón',     hex: '#f87171' },
+  { value: 'vino',       label: 'Vino',       hex: '#7f1d1d' },
+  { value: 'multicolor', label: 'Multicolor', hex: '' },
 ]
 
 const GENEROS = [
@@ -80,13 +83,20 @@ const GENEROS = [
   { value: 'unisex', label: 'Unisex' },
 ]
 
+// ── Tallas ropa ───────────────────────────────────────────────────────────────
 const TALLAS_ROPA_H    = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL']
 const TALLAS_ROPA_M    = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL']
 const TALLAS_NUMERICAS = ['0', '2', '4', '6', '8', '10', '12', '14']
+const TALLAS_ROPA_KID  = ['2', '4', '6', '8', '10', '12', '14', '16']
+
+// ── Tallas calzado ────────────────────────────────────────────────────────────
 const TALLAS_TENIS_H   = ['24', '25', '26', '27', '27.5', '28', '28.5', '29', '30', '31']
 const TALLAS_TENIS_M   = ['22', '22.5', '23', '23.5', '24', '24.5', '25', '25.5', '26']
 const TALLAS_TENIS_KID = ['12', '13', '14', '15', '16', '17', '18', '19', '20', '21']
-const TALLAS_PANTALON  = ['28', '30', '32', '34', '36', '38', '40']
+
+// ── Tallas pantalón ───────────────────────────────────────────────────────────
+const TALLAS_CINTURA = ['28', '30', '32', '34', '36', '38', '40', '42']
+const TALLAS_LARGO   = ['28', '30', '32', '34']
 
 const DESCUENTOS = [
   { value: '10', label: '10% o más' },
@@ -95,7 +105,6 @@ const DESCUENTOS = [
   { value: '50', label: '50% o más' },
 ]
 
-// Normaliza para comparaciones (minúsculas, sin acentos)
 function nrm(s: string) {
   return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
 }
@@ -124,8 +133,9 @@ function hasFacetSubcat(facets: SearchFacets | undefined, catValue: string): boo
   return facets.subcategorias.some(s => s === v || s.includes(v) || v.includes(s))
 }
 
+// ── Componente Section (cerrado por defecto) ───────────────────────────────────
 function Section({
-  title, children, defaultOpen = true, badge = 0,
+  title, children, defaultOpen = false, badge = 0,
 }: {
   title: string; children: React.ReactNode; defaultOpen?: boolean; badge?: number
 }) {
@@ -164,6 +174,15 @@ function ActiveTag({ label, onRemove }: { label: string; onRemove: () => void })
   )
 }
 
+// ── Sub-etiqueta interna dentro de una Section ────────────────────────────────
+function SubLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mb-1.5 mt-3 first:mt-0 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+      {children}
+    </p>
+  )
+}
+
 export function FiltersSidebar({
   className = '',
   priceRange,
@@ -198,7 +217,6 @@ export function FiltersSidebar({
 
   const [sliderValues, setSliderValues] = useState<[number, number]>([savedMin, savedMax])
   const [tiendaSearch, setTiendaSearch] = useState('')
-  // Tiendas dinámicas: vienen de facets (solo las que tienen productos en el contexto actual)
   const tiendas = facets?.tiendas ?? []
 
   useEffect(() => {
@@ -246,7 +264,10 @@ export function FiltersSidebar({
     tiendaSearch.trim() ? tiendas.filter(t => t.toLowerCase().includes(tiendaSearch.toLowerCase())) : tiendas,
     [tiendaSearch, tiendas]
   )
-  const step = effectiveMax <= 1000 ? 50 : effectiveMax <= 5000 ? 200 : 500
+
+  // Step dinámico del slider
+  const range = effectiveMax - effectiveMin
+  const step = range <= 500 ? 10 : range <= 2000 ? 50 : range <= 10000 ? 100 : 500
 
   // ── Opciones filtradas por facetas ────────────────────────────────────────
   const visibleGeneros   = GENEROS.filter(g => hasFacetGenero(facets, g.value))
@@ -258,13 +279,29 @@ export function FiltersSidebar({
     .map(g => ({ ...g, items: filterCatItems(g.items) }))
     .filter(g => g.items.length > 0)
 
+  // Talla ropa (agrupadas por género)
   const visibleTallasRopaH   = filterTallas(TALLAS_ROPA_H)
   const visibleTallasRopaM   = filterTallas(TALLAS_ROPA_M)
   const visibleTallasNum     = filterTallas(TALLAS_NUMERICAS)
-  const visibleTallasTenisH  = filterTallas(TALLAS_TENIS_H)
-  const visibleTallasTenisM  = filterTallas(TALLAS_TENIS_M)
-  const visibleTallasTenisKid= filterTallas(TALLAS_TENIS_KID)
-  const visibleTallasPantalon= filterTallas(TALLAS_PANTALON)
+  const visibleTallasKid     = filterTallas(TALLAS_ROPA_KID)
+  const hasAnyRopa = visibleTallasRopaH.length > 0 || visibleTallasRopaM.length > 0 ||
+    visibleTallasNum.length > 0 || visibleTallasKid.length > 0
+
+  // Talla calzado (agrupadas por género)
+  const visibleTenisH   = filterTallas(TALLAS_TENIS_H)
+  const visibleTenisM   = filterTallas(TALLAS_TENIS_M)
+  const visibleTenisKid = filterTallas(TALLAS_TENIS_KID)
+  const hasAnyCalzado = visibleTenisH.length > 0 || visibleTenisM.length > 0 || visibleTenisKid.length > 0
+
+  // Talla pantalón
+  const visibleCintura = filterTallas(TALLAS_CINTURA)
+  const visibleLargo   = filterTallas(TALLAS_LARGO)
+  const hasAnyPantalon = visibleCintura.length > 0 || visibleLargo.length > 0
+
+  // Badge contadores
+  const allRopaTallas   = [...TALLAS_ROPA_H, ...TALLAS_ROPA_M, ...TALLAS_NUMERICAS, ...TALLAS_ROPA_KID]
+  const allTenisTallas  = [...TALLAS_TENIS_H, ...TALLAS_TENIS_M, ...TALLAS_TENIS_KID]
+  const allPantalonTallas = [...TALLAS_CINTURA, ...TALLAS_LARGO]
 
   const TallaBtn = ({ t }: { t: string }) => (
     <button onClick={() => toggleMulti('talla', currentTallas, t)}
@@ -331,7 +368,7 @@ export function FiltersSidebar({
           </div>
         )}
 
-        {/* ── Género (solo si hay opciones relevantes) ── */}
+        {/* ── Género ── */}
         {visibleGeneros.length > 0 && (
           <Section title="Género" badge={currentGeneros.length}>
             <div className="flex flex-wrap gap-1.5">
@@ -350,7 +387,7 @@ export function FiltersSidebar({
           </Section>
         )}
 
-        {/* ── Categoría (agrupada, solo con resultados) ── */}
+        {/* ── Categoría ── */}
         {visibleCatGroups.length > 0 && (
           <Section title="Categoría" badge={currentCategorias.length}>
             <div className="space-y-3">
@@ -379,9 +416,9 @@ export function FiltersSidebar({
           </Section>
         )}
 
-        {/* ── Marca (solo marcas con resultados) ── */}
+        {/* ── Marca ── */}
         {facets?.marcas && facets.marcas.length > 0 && (
-          <Section title="Marca" defaultOpen={false} badge={currentMarcas.length}>
+          <Section title="Marca" badge={currentMarcas.length}>
             <div className="max-h-48 space-y-0.5 overflow-y-auto">
               {facets.marcas.map((marca) => (
                 <button key={marca}
@@ -399,7 +436,7 @@ export function FiltersSidebar({
           </Section>
         )}
 
-        {/* ── Precio dinámico ── */}
+        {/* ── Precio ── */}
         <Section title="Precio">
           <div className="space-y-3 px-1 pt-1">
             <div className="flex items-center justify-between">
@@ -424,30 +461,32 @@ export function FiltersSidebar({
             />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>${effectiveMin.toLocaleString('es-MX')}</span>
-              <span>${effectiveMax.toLocaleString('es-MX')}+</span>
+              <span>${effectiveMax.toLocaleString('es-MX')}</span>
             </div>
           </div>
         </Section>
 
-        {/* ── Descuento ── */}
-        <Section title="Descuento" defaultOpen={false} badge={currentDescuentos.length}>
-          <div className="flex flex-wrap gap-1.5">
-            {DESCUENTOS.map((d) => (
-              <button key={d.value}
-                onClick={() => toggleMulti('descuento', currentDescuentos, d.value)}
-                className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
-                  currentDescuentos.includes(d.value)
-                    ? 'border-foreground bg-foreground text-background'
-                    : 'border-border text-foreground/80 hover:border-foreground/40'
-                }`}>
-                <Percent className="h-3 w-3" />{d.label}
-              </button>
-            ))}
-          </div>
-        </Section>
+        {/* ── Descuento (solo si hay productos con descuento) ── */}
+        {facets?.tieneDescuentos !== false && (
+          <Section title="Descuento" badge={currentDescuentos.length}>
+            <div className="flex flex-wrap gap-1.5">
+              {DESCUENTOS.map((d) => (
+                <button key={d.value}
+                  onClick={() => toggleMulti('descuento', currentDescuentos, d.value)}
+                  className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    currentDescuentos.includes(d.value)
+                      ? 'border-foreground bg-foreground text-background'
+                      : 'border-border text-foreground/80 hover:border-foreground/40'
+                  }`}>
+                  <Percent className="h-3 w-3" />{d.label}
+                </button>
+              ))}
+            </div>
+          </Section>
+        )}
 
         {/* ── Especiales ── */}
-        <Section title="Especiales" defaultOpen={false}>
+        <Section title="Especiales">
           <div className="space-y-2">
             <label className="flex cursor-pointer items-center gap-3 rounded-lg px-1 py-1.5 hover:bg-muted">
               <Checkbox checked={currentSoloOfertas} onCheckedChange={() => toggleBoolean('ofertas', currentSoloOfertas)} />
@@ -464,9 +503,9 @@ export function FiltersSidebar({
           </div>
         </Section>
 
-        {/* ── Color (solo colores que existen en resultados) ── */}
+        {/* ── Color ── */}
         {visibleColores.length > 0 && (
-          <Section title="Color" defaultOpen={false} badge={currentColores.length}>
+          <Section title="Color" badge={currentColores.length}>
             <div className="flex flex-wrap gap-2 pt-1">
               {visibleColores.map((color) => (
                 <button key={color.value}
@@ -496,82 +535,101 @@ export function FiltersSidebar({
           </Section>
         )}
 
-        {/* ── Tallas ropa hombre/unisex ── */}
-        {visibleTallasRopaH.length > 0 && (
-          <Section title="Talla — Hombre / Unisex" defaultOpen={false}
-            badge={currentTallas.filter(t => visibleTallasRopaH.includes(t)).length}>
-            <div className="flex flex-wrap gap-1.5">
-              {visibleTallasRopaH.map(t => <TallaBtn key={t} t={t} />)}
-            </div>
-          </Section>
-        )}
-
-        {/* ── Tallas ropa mujer ── */}
-        {(visibleTallasRopaM.length > 0 || visibleTallasNum.length > 0) && (
-          <Section title="Talla — Mujer" defaultOpen={false}
-            badge={currentTallas.filter(t => [...visibleTallasRopaM, ...visibleTallasNum].includes(t)).length}>
-            {visibleTallasRopaM.length > 0 && (
-              <>
-                <p className="mb-1.5 text-xs text-muted-foreground">Letras</p>
-                <div className="flex flex-wrap gap-1.5 mb-3">
-                  {visibleTallasRopaM.map(t => <TallaBtn key={t} t={t} />)}
+        {/* ── Talla (ropa, unificada) ── */}
+        {hasAnyRopa && (
+          <Section title="Talla"
+            badge={currentTallas.filter(t => allRopaTallas.includes(t)).length}>
+            <div className="space-y-3">
+              {visibleTallasRopaH.length > 0 && (
+                <div>
+                  <SubLabel>Hombre / Unisex</SubLabel>
+                  <div className="flex flex-wrap gap-1.5">
+                    {visibleTallasRopaH.map(t => <TallaBtn key={t} t={t} />)}
+                  </div>
                 </div>
-              </>
-            )}
-            {visibleTallasNum.length > 0 && (
-              <>
-                <p className="mb-1.5 text-xs text-muted-foreground">Numéricas</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {visibleTallasNum.map(t => <TallaBtn key={t} t={t} />)}
+              )}
+              {(visibleTallasRopaM.length > 0 || visibleTallasNum.length > 0) && (
+                <div>
+                  <SubLabel>Mujer</SubLabel>
+                  <div className="flex flex-wrap gap-1.5">
+                    {visibleTallasRopaM.map(t => <TallaBtn key={t} t={t} />)}
+                    {visibleTallasNum.map(t => <TallaBtn key={t} t={t} />)}
+                  </div>
                 </div>
-              </>
-            )}
-          </Section>
-        )}
-
-        {/* ── Tallas tenis hombre ── */}
-        {visibleTallasTenisH.length > 0 && (
-          <Section title="Talla tenis — Hombre (MX)" defaultOpen={false}
-            badge={currentTallas.filter(t => visibleTallasTenisH.includes(t)).length}>
-            <div className="flex flex-wrap gap-1.5">
-              {visibleTallasTenisH.map(t => <TallaBtn key={t} t={t} />)}
+              )}
+              {visibleTallasKid.length > 0 && (
+                <div>
+                  <SubLabel>Niño / Niña</SubLabel>
+                  <div className="flex flex-wrap gap-1.5">
+                    {visibleTallasKid.map(t => <TallaBtn key={t} t={t} />)}
+                  </div>
+                </div>
+              )}
             </div>
           </Section>
         )}
 
-        {/* ── Tallas tenis mujer ── */}
-        {visibleTallasTenisM.length > 0 && (
-          <Section title="Talla tenis — Mujer (MX)" defaultOpen={false}
-            badge={currentTallas.filter(t => visibleTallasTenisM.includes(t)).length}>
-            <div className="flex flex-wrap gap-1.5">
-              {visibleTallasTenisM.map(t => <TallaBtn key={t} t={t} />)}
+        {/* ── Talla Calzado (unificada) ── */}
+        {hasAnyCalzado && (
+          <Section title="Talla Calzado"
+            badge={currentTallas.filter(t => allTenisTallas.includes(t)).length}>
+            <div className="space-y-3">
+              {visibleTenisH.length > 0 && (
+                <div>
+                  <SubLabel>Hombre (MX)</SubLabel>
+                  <div className="flex flex-wrap gap-1.5">
+                    {visibleTenisH.map(t => <TallaBtn key={t} t={t} />)}
+                  </div>
+                </div>
+              )}
+              {visibleTenisM.length > 0 && (
+                <div>
+                  <SubLabel>Mujer (MX)</SubLabel>
+                  <div className="flex flex-wrap gap-1.5">
+                    {visibleTenisM.map(t => <TallaBtn key={t} t={t} />)}
+                  </div>
+                </div>
+              )}
+              {visibleTenisKid.length > 0 && (
+                <div>
+                  <SubLabel>Niño / Niña (MX)</SubLabel>
+                  <div className="flex flex-wrap gap-1.5">
+                    {visibleTenisKid.map(t => <TallaBtn key={t} t={t} />)}
+                  </div>
+                </div>
+              )}
             </div>
           </Section>
         )}
 
-        {/* ── Tallas tenis niño/niña ── */}
-        {visibleTallasTenisKid.length > 0 && (
-          <Section title="Talla tenis — Niño / Niña (MX)" defaultOpen={false}
-            badge={currentTallas.filter(t => visibleTallasTenisKid.includes(t)).length}>
-            <div className="flex flex-wrap gap-1.5">
-              {visibleTallasTenisKid.map(t => <TallaBtn key={t} t={t} />)}
+        {/* ── Talla Pantalón ── */}
+        {hasAnyPantalon && (
+          <Section title="Talla Pantalón"
+            badge={currentTallas.filter(t => allPantalonTallas.includes(t)).length}>
+            <div className="space-y-3">
+              {visibleCintura.length > 0 && (
+                <div>
+                  <SubLabel>Cintura (pulgadas)</SubLabel>
+                  <div className="flex flex-wrap gap-1.5">
+                    {visibleCintura.map(t => <TallaBtn key={t} t={t} />)}
+                  </div>
+                </div>
+              )}
+              {visibleLargo.length > 0 && (
+                <div>
+                  <SubLabel>Largo (pulgadas)</SubLabel>
+                  <div className="flex flex-wrap gap-1.5">
+                    {visibleLargo.map(t => <TallaBtn key={t} t={t} />)}
+                  </div>
+                </div>
+              )}
             </div>
           </Section>
         )}
 
-        {/* ── Tallas pantalón ── */}
-        {visibleTallasPantalon.length > 0 && (
-          <Section title="Talla pantalón (cintura)" defaultOpen={false}
-            badge={currentTallas.filter(t => visibleTallasPantalon.includes(t)).length}>
-            <div className="flex flex-wrap gap-1.5">
-              {visibleTallasPantalon.map(t => <TallaBtn key={t} t={t} />)}
-            </div>
-          </Section>
-        )}
-
-        {/* ── Tiendas (solo las que tienen productos en el contexto actual) ── */}
+        {/* ── Vendedor ── */}
         {tiendas.length > 0 && (
-          <Section title="Vendedor" defaultOpen={false} badge={currentTiendas.length}>
+          <Section title="Vendedor" badge={currentTiendas.length}>
             {tiendas.length > 8 && (
               <div className="relative mb-3">
                 <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />

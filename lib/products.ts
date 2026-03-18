@@ -779,12 +779,13 @@ function applyBaseFilters(q: any, filters: Pick<SearchFilters, 'query' | 'catego
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface SearchFacets {
-  colores:       string[]
-  generos:       string[]
-  tallas:        string[]
-  subcategorias: string[]
-  marcas:        string[]
-  tiendas:       string[]
+  colores:          string[]
+  generos:          string[]
+  tallas:           string[]
+  subcategorias:    string[]
+  marcas:           string[]
+  tiendas:          string[]
+  tieneDescuentos:  boolean
 }
 
 const FACET_GENDER_TERMS: Record<string, string[]> = {
@@ -795,7 +796,7 @@ const FACET_GENDER_TERMS: Record<string, string[]> = {
   unisex: ['unisex'],
 }
 
-type FacetRow = { color_primary: string | null; gender: string | null; sizes_available: string[] | null; subcategory: string | null; brand: string | null; store: string | null }
+type FacetRow = { color_primary: string | null; gender: string | null; sizes_available: string[] | null; subcategory: string | null; brand: string | null; store: string | null; discount: number | null; on_sale: boolean | null }
 
 function computeFacetsFromRows(rows: FacetRow[], generoFilter?: string, queryGenero?: string[]): SearchFacets {
   const allGenderWords = [
@@ -816,23 +817,24 @@ function computeFacetsFromRows(rows: FacetRow[], generoFilter?: string, queryGen
   }
 
   return {
-    colores:       [...new Set(filtered.map(r => r.color_primary).filter(Boolean) as string[])].map(norm),
-    generos:       [...new Set(filtered.map(r => r.gender).filter(Boolean) as string[])].map(norm),
-    tallas:        [...new Set(filtered.flatMap(r => r.sizes_available ?? []))],
-    subcategorias: [...new Set(filtered.map(r => r.subcategory).filter(Boolean) as string[])].map(norm),
-    marcas:        [...new Set(filtered.map(r => r.brand).filter(Boolean) as string[])].sort(),
-    tiendas:       [...new Set(filtered.map(r => r.store).filter(Boolean) as string[])].sort(),
+    colores:          [...new Set(filtered.map(r => r.color_primary).filter(Boolean) as string[])].map(norm),
+    generos:          [...new Set(filtered.map(r => r.gender).filter(Boolean) as string[])].map(norm),
+    tallas:           [...new Set(filtered.flatMap(r => r.sizes_available ?? []))],
+    subcategorias:    [...new Set(filtered.map(r => r.subcategory).filter(Boolean) as string[])].map(norm),
+    marcas:           [...new Set(filtered.map(r => r.brand).filter(Boolean) as string[])].sort(),
+    tiendas:          [...new Set(filtered.map(r => r.store).filter(Boolean) as string[])].sort(),
+    tieneDescuentos:  filtered.some(r => (r.discount != null && Number(r.discount) > 0) || r.on_sale === true),
   }
 }
 
-const EMPTY_FACETS: SearchFacets = { colores: [], generos: [], tallas: [], subcategorias: [], marcas: [], tiendas: [] }
+const EMPTY_FACETS: SearchFacets = { colores: [], generos: [], tallas: [], subcategorias: [], marcas: [], tiendas: [], tieneDescuentos: false }
 
 export async function getSearchFacets(
   filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda' | 'genero'>
 ): Promise<SearchFacets> {
   const baseQ = supabase
     .from('products')
-    .select('color_primary, gender, sizes_available, subcategory, brand, store')
+    .select('color_primary, gender, sizes_available, subcategory, brand, store, discount, on_sale')
     .eq('available', true)
 
   // Una sola request con límite alto — no loop de paginación
@@ -862,8 +864,8 @@ export async function getPriceRange(
   const rawMin = minData?.[0]?.price ?? 0
   const rawMax = maxData?.[0]?.price ?? 10000
   return {
-    min: Math.floor(Number(rawMin) / 100) * 100,
-    max: Math.ceil(Number(rawMax) / 100) * 100,
+    min: Math.floor(Number(rawMin) / 10) * 10,
+    max: Math.ceil(Number(rawMax) / 10) * 10,
   }
 }
 
@@ -958,7 +960,7 @@ export async function getOffersFacets(
 ): Promise<SearchFacets> {
   const baseQ = supabase
     .from('products')
-    .select('color_primary, gender, sizes_available, subcategory, brand, store')
+    .select('color_primary, gender, sizes_available, subcategory, brand, store, discount, on_sale')
     .eq('available', true)
     .or('on_sale.eq.true,discount.gt.0')
 
@@ -983,8 +985,8 @@ export async function getOffersPriceRange(
   const rawMin = minData?.[0]?.price ?? 0
   const rawMax = maxData?.[0]?.price ?? 10000
   return {
-    min: Math.floor(Number(rawMin) / 100) * 100,
-    max: Math.ceil(Number(rawMax) / 100) * 100,
+    min: Math.floor(Number(rawMin) / 10) * 10,
+    max: Math.ceil(Number(rawMax) / 10) * 10,
   }
 }
 

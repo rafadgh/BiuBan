@@ -1,7 +1,7 @@
 // components/MobileFilters.tsx
 'use client'
 
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { SlidersHorizontal, X, ChevronDown, ChevronUp, Star, Tag, Percent, Search } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -52,14 +52,6 @@ const CATEGORIA_GROUPS: { group: string; items: { value: string; label: string }
   },
 ]
 
-const TIENDAS = [
-  'Abercrombie & Fitch', 'Adidas', 'Amazon México', 'Bershka',
-  'Converse', 'Coppel', 'Gap', 'H&M', 'Hollister', 'Innovasport',
-  'Lacoste', "Levi's", 'Liverpool', 'Mango', 'Martí', 'Mercado Libre',
-  'New Balance', 'Nike', 'Palacio de Hierro', 'Pull&Bear', 'Puma',
-  'Stradivarius', 'Under Armour', 'Uniqlo', 'Vans', 'Zara',
-]
-
 const COLORES = [
   { value: 'negro',      label: 'Negro',      hex: '#1a1a1a' },
   { value: 'blanco',     label: 'Blanco',     hex: '#f5f5f5' },
@@ -75,6 +67,10 @@ const COLORES = [
   { value: 'cafe',       label: 'Café',       hex: '#92400e' },
   { value: 'beige',      label: 'Beige',      hex: '#d4b896' },
   { value: 'dorado',     label: 'Dorado',     hex: '#d4af37' },
+  { value: 'plateado',   label: 'Plateado',   hex: '#c0c0c0' },
+  { value: 'turquesa',   label: 'Turquesa',   hex: '#06b6d4' },
+  { value: 'salmon',     label: 'Salmón',     hex: '#f87171' },
+  { value: 'vino',       label: 'Vino',       hex: '#7f1d1d' },
   { value: 'multicolor', label: 'Multicolor', hex: '' },
 ]
 
@@ -86,13 +82,20 @@ const GENEROS = [
   { value: 'unisex', label: 'Unisex' },
 ]
 
+// ── Tallas ropa ───────────────────────────────────────────────────────────────
 const TALLAS_ROPA_H    = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL']
 const TALLAS_ROPA_M    = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL']
 const TALLAS_NUMERICAS = ['0', '2', '4', '6', '8', '10', '12', '14']
+const TALLAS_ROPA_KID  = ['2', '4', '6', '8', '10', '12', '14', '16']
+
+// ── Tallas calzado ────────────────────────────────────────────────────────────
 const TALLAS_TENIS_H   = ['24', '25', '26', '27', '27.5', '28', '28.5', '29', '30', '31']
 const TALLAS_TENIS_M   = ['22', '22.5', '23', '23.5', '24', '24.5', '25', '25.5', '26']
 const TALLAS_TENIS_KID = ['12', '13', '14', '15', '16', '17', '18', '19', '20', '21']
-const TALLAS_PANTALON  = ['28', '30', '32', '34', '36', '38', '40']
+
+// ── Tallas pantalón ───────────────────────────────────────────────────────────
+const TALLAS_CINTURA = ['28', '30', '32', '34', '36', '38', '40', '42']
+const TALLAS_LARGO   = ['28', '30', '32', '34']
 
 const DESCUENTOS = [
   { value: '10', label: '10% o más' },
@@ -107,14 +110,6 @@ function nrm(s: string) {
 function parseMulti(value: string | null): string[] {
   if (!value) return []
   return value.split(',').filter(Boolean)
-}
-function groupByLetter(items: string[]): Record<string, string[]> {
-  return items.reduce<Record<string, string[]>>((acc, item) => {
-    const letter = item[0].toUpperCase()
-    acc[letter] = acc[letter] ?? []
-    acc[letter].push(item)
-    return acc
-  }, {})
 }
 
 function hasFacetColor(facets: SearchFacets | undefined, value: string): boolean {
@@ -156,6 +151,14 @@ function Section({
       </button>
       {open && <div className="pb-2">{children}</div>}
     </div>
+  )
+}
+
+function SubLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mb-2 mt-3 first:mt-0 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
+      {children}
+    </p>
   )
 }
 
@@ -227,28 +230,47 @@ export function MobileFilters({ priceRange, facets, basePath = '/buscar' }: { pr
     currentSoloOfertas ? '1' : '', currentMejorOpcion ? '1' : '',
   ].filter(Boolean).length
 
-  const filteredTiendas = useMemo(() =>
-    tiendaSearch.trim() ? TIENDAS.filter(t => t.toLowerCase().includes(tiendaSearch.toLowerCase())) : TIENDAS,
-    [tiendaSearch]
-  )
-  const tiendaGroups = useMemo(() => groupByLetter(filteredTiendas), [filteredTiendas])
-  const step = effectiveMax <= 1000 ? 50 : effectiveMax <= 5000 ? 200 : 500
+  // Step dinámico del slider
+  const range = effectiveMax - effectiveMin
+  const step = range <= 500 ? 10 : range <= 2000 ? 50 : range <= 10000 ? 100 : 500
 
   // ── Opciones filtradas por facetas ────────────────────────────────────────
-  const visibleGeneros    = GENEROS.filter(g => hasFacetGenero(facets, g.value))
-  const visibleColores    = COLORES.filter(c => hasFacetColor(facets, c.value))
-  const filterTallas      = (arr: string[]) => arr.filter(t => hasFacetTalla(facets, t))
-  const visibleCatGroups  = CATEGORIA_GROUPS
+  const visibleGeneros   = GENEROS.filter(g => hasFacetGenero(facets, g.value))
+  const visibleColores   = COLORES.filter(c => hasFacetColor(facets, c.value))
+  const filterTallas     = (arr: string[]) => arr.filter(t => hasFacetTalla(facets, t))
+  const visibleCatGroups = CATEGORIA_GROUPS
     .map(g => ({ ...g, items: g.items.filter(cat => hasFacetSubcat(facets, cat.value)) }))
     .filter(g => g.items.length > 0)
 
-  const visibleTallasRopaH    = filterTallas(TALLAS_ROPA_H)
-  const visibleTallasRopaM    = filterTallas(TALLAS_ROPA_M)
-  const visibleTallasNum      = filterTallas(TALLAS_NUMERICAS)
-  const visibleTallasTenisH   = filterTallas(TALLAS_TENIS_H)
-  const visibleTallasTenisM   = filterTallas(TALLAS_TENIS_M)
-  const visibleTallasTenisKid = filterTallas(TALLAS_TENIS_KID)
-  const visibleTallasPantalon = filterTallas(TALLAS_PANTALON)
+  // Talla ropa
+  const visibleTallasRopaH = filterTallas(TALLAS_ROPA_H)
+  const visibleTallasRopaM = filterTallas(TALLAS_ROPA_M)
+  const visibleTallasNum   = filterTallas(TALLAS_NUMERICAS)
+  const visibleTallasKid   = filterTallas(TALLAS_ROPA_KID)
+  const hasAnyRopa = visibleTallasRopaH.length > 0 || visibleTallasRopaM.length > 0 ||
+    visibleTallasNum.length > 0 || visibleTallasKid.length > 0
+
+  // Talla calzado
+  const visibleTenisH   = filterTallas(TALLAS_TENIS_H)
+  const visibleTenisM   = filterTallas(TALLAS_TENIS_M)
+  const visibleTenisKid = filterTallas(TALLAS_TENIS_KID)
+  const hasAnyCalzado = visibleTenisH.length > 0 || visibleTenisM.length > 0 || visibleTenisKid.length > 0
+
+  // Talla pantalón
+  const visibleCintura = filterTallas(TALLAS_CINTURA)
+  const visibleLargo   = filterTallas(TALLAS_LARGO)
+  const hasAnyPantalon = visibleCintura.length > 0 || visibleLargo.length > 0
+
+  // Badge contadores
+  const allRopaTallas     = [...TALLAS_ROPA_H, ...TALLAS_ROPA_M, ...TALLAS_NUMERICAS, ...TALLAS_ROPA_KID]
+  const allTenisTallas    = [...TALLAS_TENIS_H, ...TALLAS_TENIS_M, ...TALLAS_TENIS_KID]
+  const allPantalonTallas = [...TALLAS_CINTURA, ...TALLAS_LARGO]
+
+  // Tiendas dinámicas (de facets)
+  const tiendas = facets?.tiendas ?? []
+  const filteredTiendas = tiendaSearch.trim()
+    ? tiendas.filter(t => t.toLowerCase().includes(tiendaSearch.toLowerCase()))
+    : tiendas
 
   const TallaBtn = ({ t }: { t: string }) => (
     <button onClick={() => toggleMulti('talla', currentTallas, t)}
@@ -294,8 +316,9 @@ export function MobileFilters({ priceRange, facets, basePath = '/buscar' }: { pr
             {/* Contenido */}
             <div className="flex-1 overflow-y-auto px-6">
 
+              {/* ── Género ── */}
               {visibleGeneros.length > 0 && (
-                <Section title="Género" defaultOpen badge={currentGeneros.length}>
+                <Section title="Género" badge={currentGeneros.length}>
                   <div className="flex flex-wrap gap-2">
                     {visibleGeneros.map((g) => (
                       <button key={g.value}
@@ -312,8 +335,9 @@ export function MobileFilters({ priceRange, facets, basePath = '/buscar' }: { pr
                 </Section>
               )}
 
+              {/* ── Categoría ── */}
               {visibleCatGroups.length > 0 && (
-                <Section title="Categoría" defaultOpen badge={currentCategorias.length}>
+                <Section title="Categoría" badge={currentCategorias.length}>
                   <div className="space-y-3">
                     {visibleCatGroups.map(group => (
                       <div key={group.group}>
@@ -337,6 +361,7 @@ export function MobileFilters({ priceRange, facets, basePath = '/buscar' }: { pr
                 </Section>
               )}
 
+              {/* ── Marca ── */}
               {facets?.marcas && facets.marcas.length > 0 && (
                 <Section title="Marca" badge={currentMarcas.length}>
                   <div className="max-h-52 space-y-1 overflow-y-auto">
@@ -355,7 +380,8 @@ export function MobileFilters({ priceRange, facets, basePath = '/buscar' }: { pr
                 </Section>
               )}
 
-              <Section title="Rango de precio" defaultOpen>
+              {/* ── Precio ── */}
+              <Section title="Rango de precio">
                 <div className="space-y-3 px-1 pt-1">
                   <div className="flex items-center justify-between">
                     <span className="rounded-lg bg-muted px-2.5 py-1 text-sm font-semibold tabular-nums">
@@ -379,11 +405,31 @@ export function MobileFilters({ priceRange, facets, basePath = '/buscar' }: { pr
                   />
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>${effectiveMin.toLocaleString('es-MX')}</span>
-                    <span>${effectiveMax.toLocaleString('es-MX')}+</span>
+                    <span>${effectiveMax.toLocaleString('es-MX')}</span>
                   </div>
                 </div>
               </Section>
 
+              {/* ── Descuento (solo si hay productos con descuento) ── */}
+              {facets?.tieneDescuentos !== false && (
+                <Section title="% de descuento" badge={currentDescuentos.length}>
+                  <div className="flex flex-wrap gap-2">
+                    {DESCUENTOS.map((d) => (
+                      <button key={d.value}
+                        onClick={() => toggleMulti('descuento', currentDescuentos, d.value)}
+                        className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                          currentDescuentos.includes(d.value)
+                            ? 'border-foreground bg-foreground text-background font-medium'
+                            : 'border-border text-foreground/80'
+                        }`}>
+                        <Percent className="h-3.5 w-3.5" />{d.label}
+                      </button>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
+              {/* ── Especiales ── */}
               <Section title="Especiales" badge={(currentSoloOfertas ? 1 : 0) + (currentMejorOpcion ? 1 : 0)}>
                 <div className="space-y-3">
                   <label className="flex cursor-pointer items-center gap-3 py-1">
@@ -397,22 +443,7 @@ export function MobileFilters({ priceRange, facets, basePath = '/buscar' }: { pr
                 </div>
               </Section>
 
-              <Section title="% de descuento" badge={currentDescuentos.length}>
-                <div className="flex flex-wrap gap-2">
-                  {DESCUENTOS.map((d) => (
-                    <button key={d.value}
-                      onClick={() => toggleMulti('descuento', currentDescuentos, d.value)}
-                      className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm transition-colors ${
-                        currentDescuentos.includes(d.value)
-                          ? 'border-foreground bg-foreground text-background font-medium'
-                          : 'border-border text-foreground/80'
-                      }`}>
-                      <Percent className="h-3.5 w-3.5" />{d.label}
-                    </button>
-                  ))}
-                </div>
-              </Section>
-
+              {/* ── Color ── */}
               {visibleColores.length > 0 && (
                 <Section title="Color" badge={currentColores.length}>
                   <div className="flex flex-wrap gap-3 py-1">
@@ -439,86 +470,117 @@ export function MobileFilters({ priceRange, facets, basePath = '/buscar' }: { pr
                 </Section>
               )}
 
-              {visibleTallasRopaH.length > 0 && (
-                <Section title="Talla — Hombre / Unisex" badge={currentTallas.filter(t => visibleTallasRopaH.includes(t)).length}>
-                  <div className="flex flex-wrap gap-2">{visibleTallasRopaH.map(t => <TallaBtn key={t} t={t} />)}</div>
+              {/* ── Talla ropa (unificada) ── */}
+              {hasAnyRopa && (
+                <Section title="Talla"
+                  badge={currentTallas.filter(t => allRopaTallas.includes(t)).length}>
+                  <div className="space-y-1">
+                    {visibleTallasRopaH.length > 0 && (
+                      <>
+                        <SubLabel>Hombre / Unisex</SubLabel>
+                        <div className="flex flex-wrap gap-2">{visibleTallasRopaH.map(t => <TallaBtn key={t} t={t} />)}</div>
+                      </>
+                    )}
+                    {(visibleTallasRopaM.length > 0 || visibleTallasNum.length > 0) && (
+                      <>
+                        <SubLabel>Mujer</SubLabel>
+                        <div className="flex flex-wrap gap-2">
+                          {visibleTallasRopaM.map(t => <TallaBtn key={t} t={t} />)}
+                          {visibleTallasNum.map(t => <TallaBtn key={t} t={t} />)}
+                        </div>
+                      </>
+                    )}
+                    {visibleTallasKid.length > 0 && (
+                      <>
+                        <SubLabel>Niño / Niña</SubLabel>
+                        <div className="flex flex-wrap gap-2">{visibleTallasKid.map(t => <TallaBtn key={t} t={t} />)}</div>
+                      </>
+                    )}
+                  </div>
                 </Section>
               )}
 
-              {(visibleTallasRopaM.length > 0 || visibleTallasNum.length > 0) && (
-                <Section title="Talla — Mujer" badge={currentTallas.filter(t => [...visibleTallasRopaM, ...visibleTallasNum].includes(t)).length}>
-                  {visibleTallasRopaM.length > 0 && (
-                    <><p className="mb-2 text-xs text-muted-foreground">Letras</p>
-                    <div className="flex flex-wrap gap-2 mb-3">{visibleTallasRopaM.map(t => <TallaBtn key={t} t={t} />)}</div></>
-                  )}
-                  {visibleTallasNum.length > 0 && (
-                    <><p className="mb-2 text-xs text-muted-foreground">Numéricas</p>
-                    <div className="flex flex-wrap gap-2">{visibleTallasNum.map(t => <TallaBtn key={t} t={t} />)}</div></>
-                  )}
+              {/* ── Talla Calzado (unificada) ── */}
+              {hasAnyCalzado && (
+                <Section title="Talla Calzado"
+                  badge={currentTallas.filter(t => allTenisTallas.includes(t)).length}>
+                  <div className="space-y-1">
+                    {visibleTenisH.length > 0 && (
+                      <>
+                        <SubLabel>Hombre (MX)</SubLabel>
+                        <div className="flex flex-wrap gap-2">{visibleTenisH.map(t => <TallaBtn key={t} t={t} />)}</div>
+                      </>
+                    )}
+                    {visibleTenisM.length > 0 && (
+                      <>
+                        <SubLabel>Mujer (MX)</SubLabel>
+                        <div className="flex flex-wrap gap-2">{visibleTenisM.map(t => <TallaBtn key={t} t={t} />)}</div>
+                      </>
+                    )}
+                    {visibleTenisKid.length > 0 && (
+                      <>
+                        <SubLabel>Niño / Niña (MX)</SubLabel>
+                        <div className="flex flex-wrap gap-2">{visibleTenisKid.map(t => <TallaBtn key={t} t={t} />)}</div>
+                      </>
+                    )}
+                  </div>
                 </Section>
               )}
 
-              {visibleTallasTenisH.length > 0 && (
-                <Section title="Talla tenis — Hombre (MX)" badge={currentTallas.filter(t => visibleTallasTenisH.includes(t)).length}>
-                  <div className="flex flex-wrap gap-2">{visibleTallasTenisH.map(t => <TallaBtn key={t} t={t} />)}</div>
+              {/* ── Talla Pantalón ── */}
+              {hasAnyPantalon && (
+                <Section title="Talla Pantalón"
+                  badge={currentTallas.filter(t => allPantalonTallas.includes(t)).length}>
+                  <div className="space-y-1">
+                    {visibleCintura.length > 0 && (
+                      <>
+                        <SubLabel>Cintura (pulgadas)</SubLabel>
+                        <div className="flex flex-wrap gap-2">{visibleCintura.map(t => <TallaBtn key={t} t={t} />)}</div>
+                      </>
+                    )}
+                    {visibleLargo.length > 0 && (
+                      <>
+                        <SubLabel>Largo (pulgadas)</SubLabel>
+                        <div className="flex flex-wrap gap-2">{visibleLargo.map(t => <TallaBtn key={t} t={t} />)}</div>
+                      </>
+                    )}
+                  </div>
                 </Section>
               )}
 
-              {visibleTallasTenisM.length > 0 && (
-                <Section title="Talla tenis — Mujer (MX)" badge={currentTallas.filter(t => visibleTallasTenisM.includes(t)).length}>
-                  <div className="flex flex-wrap gap-2">{visibleTallasTenisM.map(t => <TallaBtn key={t} t={t} />)}</div>
-                </Section>
-              )}
-
-              {visibleTallasTenisKid.length > 0 && (
-                <Section title="Talla tenis — Niño / Niña (MX)" badge={currentTallas.filter(t => visibleTallasTenisKid.includes(t)).length}>
-                  <div className="flex flex-wrap gap-2">{visibleTallasTenisKid.map(t => <TallaBtn key={t} t={t} />)}</div>
-                </Section>
-              )}
-
-              {visibleTallasPantalon.length > 0 && (
-                <Section title="Talla pantalón (cintura)" badge={currentTallas.filter(t => visibleTallasPantalon.includes(t)).length}>
-                  <div className="flex flex-wrap gap-2">{visibleTallasPantalon.map(t => <TallaBtn key={t} t={t} />)}</div>
-                </Section>
-              )}
-
-              <Section title="Vendedor" badge={currentTiendas.length}>
-                <div className="relative mb-3">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <input type="text" value={tiendaSearch} onChange={(e) => setTiendaSearch(e.target.value)}
-                    placeholder="Buscar vendedor..."
-                    className="h-9 w-full rounded-lg border border-border bg-muted/50 pl-9 pr-9 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground/30 focus:outline-none"
-                  />
-                  {tiendaSearch && (
-                    <button onClick={() => setTiendaSearch('')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
-                <div className="space-y-3">
-                  {Object.keys(tiendaGroups).sort().map((letter) => (
-                    <div key={letter}>
-                      <p className="mb-1 pl-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">{letter}</p>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {tiendaGroups[letter].map((store) => (
-                          <button key={store} onClick={() => toggleMulti('tienda', currentTiendas, store)}
-                            className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
-                              currentTiendas.includes(store)
-                                ? 'border-foreground bg-foreground text-background font-medium'
-                                : 'border-border text-foreground/80'
-                            }`}>{store}</button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+              {/* ── Vendedor (dinámico desde facets) ── */}
+              {tiendas.length > 0 && (
+                <Section title="Vendedor" badge={currentTiendas.length}>
+                  <div className="relative mb-3">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <input type="text" value={tiendaSearch} onChange={(e) => setTiendaSearch(e.target.value)}
+                      placeholder="Buscar vendedor..."
+                      className="h-9 w-full rounded-lg border border-border bg-muted/50 pl-9 pr-9 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground/30 focus:outline-none"
+                    />
+                    {tiendaSearch && (
+                      <button onClick={() => setTiendaSearch('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {filteredTiendas.map((store) => (
+                      <button key={store} onClick={() => toggleMulti('tienda', currentTiendas, store)}
+                        className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+                          currentTiendas.includes(store)
+                            ? 'border-foreground bg-foreground text-background font-medium'
+                            : 'border-border text-foreground/80'
+                        }`}>{store}</button>
+                    ))}
+                  </div>
                   {filteredTiendas.length === 0 && (
                     <p className="py-4 text-center text-sm text-muted-foreground">
                       Sin resultados para &ldquo;{tiendaSearch}&rdquo;
                     </p>
                   )}
-                </div>
-              </Section>
+                </Section>
+              )}
 
               <div className="h-4" />
             </div>
