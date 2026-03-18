@@ -141,7 +141,7 @@ export default async function OfertasPage({ searchParams }: OffersPageProps) {
   }
 
   const [priceRange, facets] = await Promise.all([
-    getOffersPriceRange({ ...baseFilters, genero: params.genero }),
+    getOffersPriceRange({ ...baseFilters, genero: params.genero, color: params.color, talla: params.talla, descuento: params.descuento, mejor: params.mejor }),
     getOffersFacets({ ...baseFilters, genero: params.genero }),
   ])
 

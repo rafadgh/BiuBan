@@ -150,7 +150,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   }
 
   const [priceRange, facets] = await Promise.all([
-    getPriceRange({ ...baseFilters, genero: params.genero }),
+    getPriceRange({ ...baseFilters, genero: params.genero, color: params.color, talla: params.talla, descuento: params.descuento, mejor: params.mejor }),
     getSearchFacets({ ...baseFilters, genero: params.genero }),
   ])
 

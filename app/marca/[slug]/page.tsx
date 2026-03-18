@@ -137,7 +137,7 @@ export default async function MarcaPage({ params, searchParams }: BrandPageProps
   }
 
   const [priceRange, facets] = await Promise.all([
-    getPriceRange(baseFilters),
+    getPriceRange({ ...baseFilters, color: sp.color, talla: sp.talla, descuento: sp.descuento, mejor: sp.mejor }),
     getSearchFacets(baseFilters),
   ])
 

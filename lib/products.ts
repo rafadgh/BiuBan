@@ -866,26 +866,78 @@ export async function getSearchFacets(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Rango de precio dinámico — dos queries indexadas (min y max) en paralelo
-// Antes: paginateAll con miles de filas. Ahora: 2 requests de 1 fila c/u
+// Rango de precio dinámico — totalmente basado en los filtros activos
+// Aplica query + categoria + marca + tienda + genero + color + talla + descuento + mejor
+// para que el slider refleje exactamente los productos que se están viendo.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function applyAllFiltersForPrice(q: any, filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda' | 'genero' | 'color' | 'talla' | 'descuento' | 'mejor'>): any {
+  q = applyBaseFilters(q, filters)
+
+  // Género: buscar términos equivalentes en columna gender
+  if (filters.genero) {
+    const generos = filters.genero.split(',').map(g => g.trim()).filter(Boolean)
+    const genConds = generos.flatMap(g => {
+      const terms = FACET_GENDER_TERMS[norm(g)] ?? [norm(g)]
+      return terms.map(t => `gender.ilike.%${t}%`)
+    }).join(',')
+    if (genConds) q = q.or(genConds)
+  }
+
+  // Color: buscar en color_primary
+  if (filters.color) {
+    const colors = filters.color.split(',').map(c => c.trim()).filter(Boolean)
+    if (colors.length > 0) {
+      const colorConds = colors.map(c => `color_primary.ilike.%${c}%`).join(',')
+      q = q.or(colorConds)
+    }
+  }
+
+  // Talla: overlap en array sizes_available
+  if (filters.talla) {
+    const tallas = filters.talla.split(',').map(t => t.trim()).filter(Boolean)
+    if (tallas.length > 0) q = q.overlaps('sizes_available', tallas)
+  }
+
+  // Descuento mínimo
+  if (filters.descuento) {
+    const vals = filters.descuento.split(',').map(Number).filter(n => !isNaN(n))
+    if (vals.length > 0) q = q.gte('discount', Math.min(...vals))
+  }
+
+  // Solo mejor opción
+  if (filters.mejor === '1') q = q.eq('best_option', true)
+
+  return q
+}
+
+function roundPriceRange(rawMin: number, rawMax: number): { min: number; max: number } {
+  const range = rawMax - rawMin
+  // Redondeo adaptativo según el rango real: no aplanar rangos pequeños
+  const roundTo = range <= 20 ? 1 : range <= 200 ? 5 : range <= 1000 ? 10 : range <= 5000 ? 50 : 100
+  return {
+    min: Math.floor(rawMin / roundTo) * roundTo,
+    max: Math.ceil(rawMax / roundTo) * roundTo,
+  }
+}
+
 export async function getPriceRange(
-  filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda' | 'genero'>
+  filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda' | 'genero' | 'color' | 'talla' | 'descuento' | 'mejor'>
 ): Promise<{ min: number; max: number }> {
-  const base = supabase.from('products').select('price').eq('available', true)
+  const makeQ = () => applyAllFiltersForPrice(
+    supabase.from('products').select('price').eq('available', true),
+    filters
+  )
 
   const [{ data: minData }, { data: maxData }] = await Promise.all([
-    applyBaseFilters(base, filters).order('price', { ascending: true }).limit(1),
-    applyBaseFilters(base, filters).order('price', { ascending: false }).limit(1),
+    makeQ().order('price', { ascending: true }).limit(1),
+    makeQ().order('price', { ascending: false }).limit(1),
   ])
 
-  const rawMin = minData?.[0]?.price ?? 0
-  const rawMax = maxData?.[0]?.price ?? 10000
-  return {
-    min: Math.floor(Number(rawMin) / 10) * 10,
-    max: Math.ceil(Number(rawMax) / 10) * 10,
-  }
+  const rawMin = Number(minData?.[0]?.price ?? 0)
+  const rawMax = Number(maxData?.[0]?.price ?? 10000)
+  return roundPriceRange(rawMin, rawMax)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -992,21 +1044,21 @@ export async function getOffersFacets(
 }
 
 export async function getOffersPriceRange(
-  filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda' | 'genero'>
+  filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda' | 'genero' | 'color' | 'talla' | 'descuento' | 'mejor'>
 ): Promise<{ min: number; max: number }> {
-  const base = supabase.from('products').select('price').eq('available', true).or('on_sale.eq.true,discount.gt.0')
+  const makeQ = () => applyAllFiltersForPrice(
+    supabase.from('products').select('price').eq('available', true).or('on_sale.eq.true,discount.gt.0'),
+    filters
+  )
 
   const [{ data: minData }, { data: maxData }] = await Promise.all([
-    applyBaseFilters(base, filters).order('price', { ascending: true }).limit(1),
-    applyBaseFilters(base, filters).order('price', { ascending: false }).limit(1),
+    makeQ().order('price', { ascending: true }).limit(1),
+    makeQ().order('price', { ascending: false }).limit(1),
   ])
 
-  const rawMin = minData?.[0]?.price ?? 0
-  const rawMax = maxData?.[0]?.price ?? 10000
-  return {
-    min: Math.floor(Number(rawMin) / 10) * 10,
-    max: Math.ceil(Number(rawMax) / 10) * 10,
-  }
+  const rawMin = Number(minData?.[0]?.price ?? 0)
+  const rawMax = Number(maxData?.[0]?.price ?? 10000)
+  return roundPriceRange(rawMin, rawMax)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
