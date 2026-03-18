@@ -12,8 +12,8 @@ const contactInfo = [
   {
     icon: Mail,
     label: 'Correo electrónico',
-    value: 'hola@biuban.mx',
-    href: 'mailto:hola@biuban.mx',
+    value: 'hola@biuban.com',
+    href: 'mailto:hola@biuban.com',
   },
   {
     icon: MapPin,
@@ -128,10 +128,10 @@ export default function ContactoPage() {
               <p className="text-sm text-muted-foreground">
                 Para reportar un producto incorrecto o un precio desactualizado, escríbenos a{' '}
                 <a
-                  href="mailto:reportes@biuban.mx"
+                  href="mailto:reportes@biuban.com"
                   className="font-medium text-foreground hover:underline"
                 >
-                  reportes@biuban.mx
+                  reportes@biuban.com
                 </a>
               </p>
             </div>

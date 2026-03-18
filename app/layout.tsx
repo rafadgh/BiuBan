@@ -13,7 +13,7 @@ const robotoSlab = Roboto_Slab({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://biuban.vercel.app'),
+  metadataBase: new URL('https://biuban.com'),
   title: 'BiuBan - Encuentra la mejor opción de moda',
   description:
     'Busca ropa, tenis y accesorios en un solo lugar. Compara precios entre Nike, Adidas, Zara, Liverpool, Amazon México y más tiendas.',

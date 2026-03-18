@@ -309,7 +309,7 @@ export default function PrivacidadPage() {
               </ul>
               <p className="mt-3">
                 Para ejercer tus derechos ARCO, envía tu solicitud a{' '}
-                <EmailLink>privacidad@biuban.mx</EmailLink> indicando tu nombre, el derecho que
+                <EmailLink>privacidad@biuban.com</EmailLink> indicando tu nombre, el derecho que
                 deseas ejercer y una descripción de tu solicitud. Atenderemos tu petición en un
                 plazo máximo de <strong className="text-[#0B0B0B]">20 días hábiles</strong>.
               </p>
@@ -387,7 +387,7 @@ export default function PrivacidadPage() {
               </div>
               <p className="mt-4">
                 Para ejercer cualquiera de estos derechos, contáctanos en{' '}
-                <EmailLink>privacidad@biuban.mx</EmailLink>. Responderemos en un plazo máximo de{' '}
+                <EmailLink>privacidad@biuban.com</EmailLink>. Responderemos en un plazo máximo de{' '}
                 <strong className="text-[#0B0B0B]">30 días</strong>.
               </p>
 
@@ -429,7 +429,7 @@ export default function PrivacidadPage() {
               </ul>
               <p className="mt-3">
                 Para ejercer tus derechos bajo la CCPA, contáctanos en{' '}
-                <EmailLink>privacidad@biuban.mx</EmailLink>. Verificaremos tu identidad antes de
+                <EmailLink>privacidad@biuban.com</EmailLink>. Verificaremos tu identidad antes de
                 procesar la solicitud.
               </p>
             </Section>
@@ -450,7 +450,7 @@ export default function PrivacidadPage() {
               <p className="mt-3">
                 Sin embargo, ningún método de transmisión por Internet o almacenamiento electrónico
                 es 100% seguro. Si sospechas de un acceso no autorizado a tu información, contáctanos
-                de inmediato en <EmailLink>privacidad@biuban.mx</EmailLink>.
+                de inmediato en <EmailLink>privacidad@biuban.com</EmailLink>.
               </p>
             </Section>
 
@@ -479,7 +479,7 @@ export default function PrivacidadPage() {
                 Este sitio web no está dirigido a personas menores de 13 años (o de 16 años en el
                 EEE). No recopilamos intencionalmente información personal de menores. Si eres
                 padre, madre o tutor y crees que tu hijo nos ha proporcionado información personal,
-                contáctanos en <EmailLink>privacidad@biuban.mx</EmailLink> para que podamos
+                contáctanos en <EmailLink>privacidad@biuban.com</EmailLink> para que podamos
                 eliminarla.
               </p>
             </Section>
@@ -512,15 +512,15 @@ export default function PrivacidadPage() {
                 <p className="font-semibold text-[#0B0B0B]">BiuBan</p>
                 <p className="mt-1 text-[#6B6B6B]">
                   📧 Email de privacidad:{' '}
-                  <EmailLink>privacidad@biuban.mx</EmailLink>
+                  <EmailLink>privacidad@biuban.com</EmailLink>
                 </p>
                 <p className="mt-1 text-[#6B6B6B]">
                   📧 Contacto general:{' '}
-                  <EmailLink>hola@biuban.mx</EmailLink>
+                  <EmailLink>hola@biuban.com</EmailLink>
                 </p>
                 <p className="mt-1 text-[#6B6B6B]">
                   🌐 Sitio web:{' '}
-                  <ExternalLink href="https://biuban.vercel.app">biuban.vercel.app</ExternalLink>
+                  <ExternalLink href="https://biuban.com">biuban.com</ExternalLink>
                 </p>
                 <p className="mt-1 text-[#6B6B6B]">
                   📍 Dirección: Ciudad de México, México (solo operaciones en línea)

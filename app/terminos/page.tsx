@@ -148,9 +148,9 @@ export default function TerminosPage() {
               <p>Si tiene preguntas sobre estos Términos de Uso, puede contactarnos a través de:</p>
               <p className="mt-3">
                 <strong className="text-[#0B0B0B]">Correo electrónico:</strong>{' '}
-                <a href="mailto:hola@biuban.mx"
+                <a href="mailto:hola@biuban.com"
                   className="text-[#31470B] hover:text-[#586E26]">
-                  hola@biuban.mx
+                  hola@biuban.com
                 </a>
               </p>
               <p className="mt-1 text-xs text-[#6B6B6B]">
