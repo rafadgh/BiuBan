@@ -6,8 +6,7 @@ const categories = [
   {
     name:  'Tenis',
     href:  '/categoria/tenis',
-    // Cambia a /categorias/tenis.jpg cuando lo tengas listo
-    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
+    image: '/categorias/tenis.jpg',
   },
   {
     name:  'Playeras',

@@ -23,7 +23,7 @@ interface CategorySection {
   title:      string
   subtitle:   string
   items:      CategoryItem[]
-  layout:     'large' | 'medium' | 'small'
+  layout:     'large' | 'medium' | 'small' | 'featured'
 }
 
 // ── Datos ─────────────────────────────────────────────────────────────────────
@@ -39,7 +39,7 @@ const sections: CategorySection[] = [
         name:  'Tenis / Sneakers',
         desc:  'Lifestyle, running y basketball',
         href:  '/categoria/tenis',
-        image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&h=700&fit=crop',
+        image: '/categorias/tenis.jpg',
       },
       {
         name:  'Botas / Botines',
@@ -215,32 +215,14 @@ const sections: CategorySection[] = [
   {
     id:       'accesorios',
     title:    'Accesorios',
-    subtitle: 'El detalle que completa el look',
-    layout:   'medium',
+    subtitle: 'Gorras, mochilas, bolsos, calcetines y más — en un solo lugar',
+    layout:   'featured',
     items: [
       {
         name:  'Accesorios',
-        desc:  'Gorras, mochilas, calcetines y más',
+        desc:  'Gorras, mochilas, bolsos, calcetines y más',
         href:  '/buscar?categoria=gorras,mochilas,calcetines,accesorios',
         image: '/categorias/accesorios.jpg',
-      },
-      {
-        name:  'Gorras / Sombreros',
-        desc:  'Snapbacks, bucket hats y viseras',
-        href:  '/categoria/gorras',
-        image: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=500&h=500&fit=crop',
-      },
-      {
-        name:  'Mochilas / Bolsas',
-        desc:  'Backpacks, totes y bolsos de mano',
-        href:  '/categoria/mochilas',
-        image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=500&fit=crop',
-      },
-      {
-        name:  'Calcetines',
-        desc:  'Deportivos, estampados y de moda',
-        href:  '/categoria/calcetines',
-        image: 'https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?w=500&h=500&fit=crop',
       },
     ],
   },
@@ -329,6 +311,32 @@ export default function CategoriasPage() {
                     <CategoryCard key={item.name} item={item} size="sm" />
                   ))}
                 </div>
+              )}
+
+              {section.layout === 'featured' && section.items[0] && (
+                <Link
+                  href={section.items[0].href}
+                  className="group relative block overflow-hidden rounded-2xl bg-[#EBEBEB] transition-all hover:shadow-xl"
+                >
+                  <div className="relative aspect-[21/6] overflow-hidden sm:aspect-[21/7]">
+                    <Image
+                      src={section.items[0].image}
+                      alt={section.items[0].name}
+                      fill
+                      className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                      sizes="100vw"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#0B0B0B]/70 via-[#0B0B0B]/30 to-transparent" />
+                  </div>
+                  <div className="absolute inset-0 flex flex-col justify-center px-8 sm:px-12">
+                    <p className="text-xs font-medium uppercase tracking-widest text-white/70">Explorar</p>
+                    <p className="mt-1 text-2xl font-bold text-white sm:text-3xl">{section.items[0].name}</p>
+                    <p className="mt-1 text-sm text-white/80">{section.items[0].desc}</p>
+                    <span className="mt-4 inline-flex w-fit items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-1.5 text-sm font-medium text-white backdrop-blur-sm transition-all group-hover:bg-white/20">
+                      Ver todos →
+                    </span>
+                  </div>
+                </Link>
               )}
             </section>
           ))}
