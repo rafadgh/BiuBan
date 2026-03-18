@@ -76,4 +76,8 @@ export const CATEGORIA_LABELS: Record<string, string> = {
   mochilas:       'Mochilas / Bolsas',
   gorras:         'Gorras / Sombreros',
   calcetines:     'Calcetines',
+  cinturones:     'Cinturones',
+  carteras:       'Carteras / Billeteras',
+  bufandas:       'Bufandas / Gorros',
+  lentes:         'Lentes / Gafas',
 }

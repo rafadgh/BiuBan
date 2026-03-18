@@ -741,7 +741,14 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
 const CATEGORIA_EXPANSION: Record<string, string[]> = {
   accesorios: ['accesorio', 'mochila', 'bolsa', 'bolso', 'gorra', 'sombrero',
                'calcetin', 'calcetín', 'cinturon', 'cinturón', 'cartera',
-               'billetera', 'lentes', 'bufanda', 'guante', 'accesorio'],
+               'billetera', 'lente', 'gafa', 'bufanda', 'gorro', 'guante'],
+  mochilas:   ['mochila', 'bolsa', 'bolso'],
+  gorras:     ['gorra', 'sombrero'],
+  calcetines: ['calcetin', 'calcetín', 'sock'],
+  cinturones: ['cinturon', 'cinturón', 'belt'],
+  carteras:   ['cartera', 'billetera', 'wallet'],
+  bufandas:   ['bufanda', 'gorro', 'scarf'],
+  lentes:     ['lente', 'gafa', 'sunglass', 'anteojos'],
 }
 
 function expandCategoria(slug: string): string[] {

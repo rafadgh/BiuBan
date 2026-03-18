@@ -45,9 +45,13 @@ const CATEGORIA_GROUPS: { group: string; items: { value: string; label: string }
   {
     group: 'Accesorios',
     items: [
-      { value: 'mochilas',   label: 'Mochilas / Bolsas'    },
-      { value: 'gorras',     label: 'Gorras / Sombreros'   },
-      { value: 'calcetines', label: 'Calcetines'           },
+      { value: 'mochilas',   label: 'Mochilas / Bolsas'     },
+      { value: 'gorras',     label: 'Gorras / Sombreros'    },
+      { value: 'calcetines', label: 'Calcetines'            },
+      { value: 'cinturones', label: 'Cinturones'            },
+      { value: 'carteras',   label: 'Carteras / Billeteras' },
+      { value: 'bufandas',   label: 'Bufandas / Gorros'     },
+      { value: 'lentes',     label: 'Lentes / Gafas'        },
     ],
   },
 ]
@@ -128,10 +132,28 @@ function hasFacetTalla(facets: SearchFacets | undefined, value: string): boolean
   if (facets.tallas.length === 0) return false  // cargados pero sin tallas → ocultar todo
   return facets.tallas.includes(value)
 }
+// Alias de búsqueda por catValue: si alguno de estos términos aparece en
+// facets.subcategorias, se muestra el item. Incluye 'accesorios' como comodín
+// para que los sub-items de accesorios aparezcan cuando haya productos genéricos.
+const CATGROUP_ALIASES: Record<string, string[]> = {
+  mochilas:   ['mochila', 'bolsa', 'bolso', 'accesorios', 'accesorio'],
+  gorras:     ['gorra', 'sombrero', 'accesorios', 'accesorio'],
+  calcetines: ['calcetin', 'sock', 'accesorios', 'accesorio'],
+  cinturones: ['cinturon', 'belt', 'accesorios', 'accesorio'],
+  carteras:   ['cartera', 'billetera', 'wallet', 'accesorios', 'accesorio'],
+  bufandas:   ['bufanda', 'gorro', 'scarf', 'accesorios', 'accesorio'],
+  lentes:     ['lente', 'gafa', 'sunglass', 'accesorios', 'accesorio'],
+  running:    ['running', 'atletismo', 'correr'],
+  gym:        ['gym', 'fitness', 'crossfit', 'yoga'],
+  futbol:     ['futbol', 'soccer'],
+}
+
 function hasFacetSubcat(facets: SearchFacets | undefined, catValue: string): boolean {
   if (!facets || facets.subcategorias.length === 0) return true
-  const v = nrm(catValue)
-  return facets.subcategorias.some(s => s === v || s.includes(v) || v.includes(s))
+  const aliases = CATGROUP_ALIASES[catValue] ?? [nrm(catValue)]
+  return aliases.some(alias =>
+    facets.subcategorias.some(s => s === alias || s.includes(alias) || alias.includes(s))
+  )
 }
 
 // ── Componente Section (cerrado por defecto) ───────────────────────────────────
