@@ -72,7 +72,7 @@ const sections: CategorySection[] = [
         name:  'Playeras',
         desc:  'T-shirts, camisetas y básicos',
         href:  '/categoria/playeras',
-        image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&h=500&fit=crop',
+        image: '/categorias/playeras.jpg',
       },
       {
         name:  'Camisas / Blusas',
@@ -90,13 +90,13 @@ const sections: CategorySection[] = [
         name:  'Sudaderas / Hoodies',
         desc:  'Oversized, zip-up y pullover',
         href:  '/categoria/sudaderas',
-        image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500&h=500&fit=crop',
+        image: '/categorias/sudaderas.jpg',
       },
       {
         name:  'Chamarras / Jackets',
         desc:  'Bomber, denim y puffer jackets',
         href:  '/categoria/chamarras',
-        image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=500&h=500&fit=crop',
+        image: '/categorias/chamarras.jpg',
       },
       {
         name:  'Abrigos',
@@ -114,7 +114,7 @@ const sections: CategorySection[] = [
         name:  'Jeans / Mezclilla',
         desc:  'Skinny, wide leg, straight y baggy',
         href:  '/categoria/jeans',
-        image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=500&h=500&fit=crop',
+        image: '/categorias/jeans.jpg',
       },
       {
         name:  'Pantalones',
@@ -222,7 +222,7 @@ const sections: CategorySection[] = [
         name:  'Accesorios',
         desc:  'Gorras, mochilas, calcetines y más',
         href:  '/buscar?categoria=gorras,mochilas,calcetines,accesorios',
-        image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500&h=500&fit=crop',
+        image: '/categorias/accesorios.jpg',
       },
       {
         name:  'Gorras / Sombreros',

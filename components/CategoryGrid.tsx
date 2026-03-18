@@ -6,33 +6,33 @@ const categories = [
   {
     name:  'Tenis',
     href:  '/categoria/tenis',
+    // Cambia a /categorias/tenis.jpg cuando lo tengas listo
     image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
   },
   {
     name:  'Playeras',
     href:  '/categoria/playeras',
-    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
+    image: '/categorias/playeras.jpg',
   },
   {
     name:  'Sudaderas',
     href:  '/categoria/sudaderas',
-    image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=400&fit=crop',
+    image: '/categorias/sudaderas.jpg',
   },
   {
     name:  'Jeans',
     href:  '/categoria/jeans',
-    image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop',
+    image: '/categorias/jeans.jpg',
   },
   {
     name:  'Chamarras',
     href:  '/categoria/chamarras',
-    image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&h=400&fit=crop',
+    image: '/categorias/chamarras.jpg',
   },
   {
     name:  'Accesorios',
-    // Busca en múltiples subcategorías de accesorios
     href:  '/buscar?categoria=gorras,mochilas,calcetines,accesorios',
-    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop',
+    image: '/categorias/accesorios.jpg',
   },
 ]
 
