@@ -516,7 +516,7 @@ export default function PrivacidadPage() {
                 </p>
                 <p className="mt-1 text-[#6B6B6B]">
                   📧 Contacto general:{' '}
-                  <EmailLink>hola@biuban.com</EmailLink>
+                  <EmailLink>contacto@biuban.com</EmailLink>
                 </p>
                 <p className="mt-1 text-[#6B6B6B]">
                   🌐 Sitio web:{' '}

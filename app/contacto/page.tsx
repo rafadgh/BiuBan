@@ -12,8 +12,8 @@ const contactInfo = [
   {
     icon: Mail,
     label: 'Correo electrónico',
-    value: 'hola@biuban.com',
-    href: 'mailto:hola@biuban.com',
+    value: 'contacto@biuban.com',
+    href: 'mailto:contacto@biuban.com',
   },
   {
     icon: MapPin,
