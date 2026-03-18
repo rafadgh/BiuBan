@@ -92,7 +92,7 @@ async function CatResults({
 
       {products.length > 0 ? (
         <>
-          <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {products.map(p => <ProductCard key={p.id} product={p} />)}
           </div>
           <Suspense fallback={null}>
@@ -171,7 +171,7 @@ export default async function CategoriaPage({ params, searchParams }: CatPagePro
             <div className="mx-auto max-w-5xl">
               <Suspense
                 fallback={
-                  <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {Array.from({ length: 6 }).map((_, i) => (
                       <div key={i} className="aspect-[3/4] animate-pulse rounded-2xl bg-[#E5E5E5]" />
                     ))}

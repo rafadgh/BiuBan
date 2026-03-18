@@ -13,8 +13,8 @@ const categories = [
     image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
   },
   {
-    name: 'Hoodies',
-    slug: 'hoodies',
+    name: 'Sudaderas',
+    slug: 'sudaderas',
     image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=400&fit=crop',
   },
   {

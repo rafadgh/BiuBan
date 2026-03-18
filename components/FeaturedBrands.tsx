@@ -23,15 +23,15 @@ export function FeaturedBrands() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
-              Tiendas disponibles
+              Marcas disponibles
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Comparamos precios en más de 25 tiendas y marcas
+              Comparamos precios en más de 25 marcas
             </p>
           </div>
           <Link
             href="/marcas"
-            className="flex items-center gap-1.5 text-sm font-medium text-foreground/70 transition-colors hover:text-foreground"
+            className="flex items-center gap-1.5 rounded-full border border-transparent px-3 py-1.5 text-sm font-medium text-foreground/70 transition-all hover:border-[#586E26] hover:bg-[#F0F5E8] hover:text-[#31470B]"
           >
             Ver todas
             <ArrowRight className="h-3.5 w-3.5" />
@@ -42,17 +42,17 @@ export function FeaturedBrands() {
           {featuredBrands.map((brand) => (
             <Link
               key={brand.slug}
-              href={`/buscar?q=${encodeURIComponent(brand.name)}`}
-              className="rounded-full border border-border/50 bg-card px-4 py-2 text-sm text-foreground transition-all hover:border-foreground/30 hover:bg-muted"
+              href={`/marca/${brand.slug}`}
+              className="rounded-full border border-border/50 bg-card px-4 py-2 text-sm text-foreground transition-all hover:border-[#586E26] hover:bg-[#F0F5E8] hover:text-[#31470B]"
             >
               {brand.name}
             </Link>
           ))}
 
-          {/* Chip que lleva a /marcas */}
+          {/* Chip "y muchas más" → /marcas */}
           <Link
             href="/marcas"
-            className="flex items-center gap-1.5 rounded-full border border-dashed border-border/60 px-4 py-2 text-sm text-muted-foreground transition-all hover:border-foreground/40 hover:text-foreground"
+            className="flex items-center gap-1.5 rounded-full border border-dashed border-border/60 px-4 py-2 text-sm text-muted-foreground transition-all hover:border-[#586E26] hover:bg-[#F0F5E8] hover:text-[#31470B]"
           >
             y muchas más
             <ArrowRight className="h-3.5 w-3.5" />

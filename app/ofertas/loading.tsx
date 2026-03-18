@@ -46,7 +46,7 @@ export default function OfertasLoading() {
                 <div className="h-5 w-40 animate-pulse rounded bg-[#E5E5E5]" />
                 <div className="h-9 w-36 animate-pulse rounded-lg bg-[#E5E5E5]" />
               </div>
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className="overflow-hidden rounded-2xl bg-white">
                     <div className="aspect-[3/4] animate-pulse bg-[#E5E5E5]" />

@@ -47,7 +47,7 @@ export function ProductCard({ product }: ProductCardProps) {
         />
       </div>
 
-      <div className="flex flex-1 flex-col p-5">
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wide text-[#0B0B0B]">
             {product.marca}
