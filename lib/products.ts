@@ -851,18 +851,34 @@ const EMPTY_FACETS: SearchFacets = { colores: [], generos: [], tallas: [], subca
 export async function getSearchFacets(
   filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda' | 'genero'>
 ): Promise<SearchFacets> {
-  const baseQ = supabase
+  const mkBase = () => supabase
     .from('products')
     .select('color_primary, gender, sizes_available, subcategory, brand, store, discount, on_sale')
     .eq('available', true)
 
-  // Una sola request con límite alto — no loop de paginación
-  const { data, error } = await applyBaseFilters(baseQ, filters).limit(10000)
+  // Dos queries en paralelo:
+  // 1. Con todos los filtros → para colores, tallas, subcategorias, descuentos
+  // 2. Sin marca NI tienda → para las listas de marcas/tiendas disponibles,
+  //    así el usuario puede seleccionar MÚLTIPLES marcas/vendedores sin que
+  //    la lista se quede vacía después de elegir el primero
+  const filtersForLists = { query: filters.query, categoria: filters.categoria }
+  const [{ data, error }, { data: listData }] = await Promise.all([
+    applyBaseFilters(mkBase(), filters).limit(10000),
+    applyBaseFilters(mkBase(), filtersForLists).limit(5000),
+  ])
+
   if (error) { console.error('[BiuBan] getSearchFacets:', error.message); return EMPTY_FACETS }
   if (!data || data.length === 0) return EMPTY_FACETS
 
   const queryGenderWords = filters.query?.trim() ? splitQuery(filters.query.trim()).genderWords : []
-  return computeFacetsFromRows(data as FacetRow[], filters.genero, queryGenderWords)
+  const facets = computeFacetsFromRows(data as FacetRow[], filters.genero, queryGenderWords)
+
+  // Sobreescribir marcas y tiendas con la lista sin filtro de marca/tienda
+  const listRows = (listData ?? []) as FacetRow[]
+  const allMarcas = [...new Set(listRows.map(r => r.brand).filter(Boolean) as string[])].sort()
+  const allTiendas = [...new Set(listRows.map(r => r.store).filter(Boolean) as string[])].sort()
+
+  return { ...facets, marcas: allMarcas, tiendas: allTiendas }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1029,18 +1045,29 @@ export async function searchOffersFromDB(filters: SearchFilters): Promise<Produc
 export async function getOffersFacets(
   filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda' | 'genero'>
 ): Promise<SearchFacets> {
-  const baseQ = supabase
+  const mkBase = () => supabase
     .from('products')
     .select('color_primary, gender, sizes_available, subcategory, brand, store, discount, on_sale')
     .eq('available', true)
     .or('on_sale.eq.true,discount.gt.0')
 
-  const { data, error } = await applyBaseFilters(baseQ, filters).limit(10000)
+  const filtersForLists = { query: filters.query, categoria: filters.categoria }
+  const [{ data, error }, { data: listData }] = await Promise.all([
+    applyBaseFilters(mkBase(), filters).limit(10000),
+    applyBaseFilters(mkBase(), filtersForLists).limit(5000),
+  ])
+
   if (error) { console.error('[BiuBan] getOffersFacets:', error.message); return EMPTY_FACETS }
   if (!data || data.length === 0) return EMPTY_FACETS
 
   const queryGenderWords = filters.query?.trim() ? splitQuery(filters.query.trim()).genderWords : []
-  return computeFacetsFromRows(data as FacetRow[], filters.genero, queryGenderWords)
+  const facets = computeFacetsFromRows(data as FacetRow[], filters.genero, queryGenderWords)
+
+  const listRows = (listData ?? []) as FacetRow[]
+  const allMarcas = [...new Set(listRows.map(r => r.brand).filter(Boolean) as string[])].sort()
+  const allTiendas = [...new Set(listRows.map(r => r.store).filter(Boolean) as string[])].sort()
+
+  return { ...facets, marcas: allMarcas, tiendas: allTiendas }
 }
 
 export async function getOffersPriceRange(

@@ -258,9 +258,14 @@ export function MobileFilters({ priceRange, facets, basePath = '/buscar' }: { pr
   const visibleGeneros   = GENEROS.filter(g => hasFacetGenero(facets, g.value))
   const visibleColores   = COLORES.filter(c => hasFacetColor(facets, c.value))
   const filterTallas     = (arr: string[]) => arr.filter(t => hasFacetTalla(facets, t))
+  // Grupos de categoría: si AL MENOS UN item del grupo tiene datos en facetas,
+  // se muestra el grupo COMPLETO para que el usuario pueda explorar todos los sub-items
   const visibleCatGroups = CATEGORIA_GROUPS
-    .map(g => ({ ...g, items: g.items.filter(cat => hasFacetSubcat(facets, cat.value)) }))
-    .filter(g => g.items.length > 0)
+    .filter(g =>
+      !facets ||
+      facets.subcategorias.length === 0 ||
+      g.items.some(item => hasFacetSubcat(facets, item.value))
+    )
 
   // Talla ropa
   const visibleTallasRopaH = filterTallas(TALLAS_ROPA_H)
