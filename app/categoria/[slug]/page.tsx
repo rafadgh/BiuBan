@@ -49,6 +49,7 @@ export async function generateMetadata({ params }: CatPageProps): Promise<Metada
   return {
     title,
     description,
+    alternates: { canonical: `https://biuban.com/categoria/${slug}` },
     openGraph: { title, description, type: 'website' },
     twitter:   { card: 'summary', title, description },
   }

@@ -29,12 +29,23 @@ export const metadata: Metadata = {
     ],
     apple: '/apple-icon.png',
   },
+  alternates: {
+    canonical: 'https://biuban.com',
+  },
   openGraph: {
     title: 'BiuBan - Encuentra la mejor opción de moda',
     description:
       'Busca ropa, tenis y accesorios en un solo lugar. Compara precios entre distintas tiendas en México.',
     siteName: 'BiuBan',
     type: 'website',
+    images: [
+      {
+        url: '/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'BiuBan — Compara precios de moda en México',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
@@ -43,6 +54,7 @@ export const metadata: Metadata = {
     title: 'BiuBan - Encuentra la mejor opción de moda',
     description:
       'Compara ropa, tenis y accesorios entre distintas tiendas en un solo lugar.',
+    images: ['/opengraph-image'],
   },
 }
 

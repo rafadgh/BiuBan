@@ -58,6 +58,7 @@ export async function generateMetadata({ params }: BrandPageProps): Promise<Meta
   return {
     title,
     description,
+    alternates: { canonical: `https://biuban.com/marca/${slug}` },
     openGraph: { title, description, type: 'website' },
     twitter:   { card: 'summary', title, description },
   }

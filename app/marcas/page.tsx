@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: 'Marcas - BiuBan',
   description:
     'Explora todas las marcas disponibles en BiuBan. Nike, Adidas, Zara, Puma y más.',
+  alternates: { canonical: 'https://biuban.com/marcas' },
 }
 
 export default async function MarcasPage() {

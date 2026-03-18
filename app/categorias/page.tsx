@@ -8,6 +8,7 @@ import { Footer } from '@/components/Footer'
 export const metadata: Metadata = {
   title: 'Categorías — BiuBan',
   description: 'Explora toda la moda: ropa, calzado, deporte y accesorios. Compara precios entre las mejores tiendas de México.',
+  alternates: { canonical: 'https://biuban.com/categorias' },
 }
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────

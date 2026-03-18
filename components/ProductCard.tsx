@@ -6,6 +6,7 @@ import { ExternalLink } from 'lucide-react'
 import { Product } from '@/types/product'
 import { CompareButton } from './CompareButton'
 import { ProductDetailModal } from './ProductDetailModal'
+import { addUtmParams } from '@/lib/utils'
 
 interface ProductCardProps {
   product: Product
@@ -101,7 +102,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
 
           <a
-            href={product.url}
+            href={addUtmParams(product.url)}
             target="_blank"
             rel="noopener noreferrer"
             className="flex w-full items-center justify-center gap-2 rounded-full bg-[#0B0B0B] py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1A1A1A]"

@@ -2,12 +2,23 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
 import { ExternalLink, X, TrendingDown, TrendingUp, Minus, Package, Truck, Tag } from 'lucide-react'
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, ReferenceLine,
-} from 'recharts'
 import type { Product } from '@/types/product'
+import { addUtmParams } from '@/lib/utils'
+
+// Recharts se carga de forma lazy — no entra al bundle inicial
+const PriceChart = dynamic(
+  () => import('./PriceChart').then(m => m.PriceChart),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[140px] items-center justify-center">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#E5E5E5] border-t-[#31470B]" />
+      </div>
+    ),
+  }
+)
 
 interface PriceRecord {
   price: number
@@ -52,21 +63,11 @@ function PriceTrend({ history }: { history: PriceRecord[] }) {
   )
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function CustomTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null
-  return (
-    <div className="rounded-xl border border-[#E5E5E5] bg-white px-3 py-2 shadow-lg text-xs">
-      <p className="font-semibold text-[#0B0B0B]">{label}</p>
-      <p className="text-[#31470B] font-bold">${payload[0].value.toLocaleString('es-MX')}</p>
-    </div>
-  )
-}
-
 export function ProductDetailModal({ product, open, onClose }: ProductDetailModalProps) {
   const [history, setHistory] = useState<PriceRecord[]>([])
   const [loading, setLoading] = useState(false)
 
+  // Fetch price history when modal opens
   useEffect(() => {
     if (!open) return
     setLoading(true)
@@ -76,6 +77,16 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
       .catch(() => setHistory([]))
       .finally(() => setLoading(false))
   }, [open, product.id])
+
+  // Cerrar con tecla Escape
+  useEffect(() => {
+    if (!open) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [open, onClose])
 
   if (!open) return null
 
@@ -96,12 +107,17 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
 
       {/* Modal */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Detalles de ${product.nombre}`}
         className="relative z-10 w-full sm:max-w-2xl max-h-[92dvh] overflow-y-auto rounded-t-3xl sm:rounded-2xl bg-white shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         {/* Close button */}
         <button
           onClick={onClose}
+          autoFocus
+          aria-label="Cerrar"
           className="absolute right-4 top-4 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F5F5] text-[#6B6B6B] hover:text-[#0B0B0B] transition-colors"
         >
           <X className="h-4 w-4" />
@@ -199,7 +215,7 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
             )}
 
             <a
-              href={product.url}
+              href={addUtmParams(product.url)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex w-full items-center justify-center gap-2 rounded-full bg-[#0B0B0B] py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1A1A1A]"
@@ -230,41 +246,7 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#E5E5E5] border-t-[#31470B]" />
             </div>
           ) : chartData.length >= 2 ? (
-            <ResponsiveContainer width="100%" height={140}>
-              <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 10, fill: '#6B6B6B' }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 10, fill: '#6B6B6B' }}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={v => `$${(v / 1000).toFixed(0)}k`}
-                  width={36}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                {minPrice && (
-                  <ReferenceLine
-                    y={minPrice}
-                    stroke="#10b981"
-                    strokeDasharray="4 2"
-                    strokeWidth={1}
-                  />
-                )}
-                <Line
-                  type="monotone"
-                  dataKey="price"
-                  stroke="#31470B"
-                  strokeWidth={2}
-                  dot={{ fill: '#31470B', r: 3 }}
-                  activeDot={{ r: 5, fill: '#31470B' }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <PriceChart data={chartData} minPrice={minPrice} />
           ) : (
             <div className="flex h-[100px] items-center justify-center rounded-xl bg-[#F9F9F9]">
               <div className="text-center">

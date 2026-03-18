@@ -61,9 +61,14 @@ export async function generateMetadata({ searchParams }: SearchPageProps): Promi
     description = `Todos los productos de ${tienda} disponibles en BiuBan.`
   }
 
+  const canonical = query
+    ? `https://biuban.com/buscar?q=${encodeURIComponent(query)}`
+    : 'https://biuban.com/buscar'
+
   return {
     title,
     description,
+    alternates: { canonical },
     openGraph: { title, description, type: 'website' },
     twitter:   { card: 'summary', title, description },
   }

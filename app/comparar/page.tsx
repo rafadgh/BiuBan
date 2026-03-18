@@ -4,6 +4,7 @@ import { ExternalLink, Check, X, ArrowLeft } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { getProductsByIds } from '@/lib/products'
+import { addUtmParams } from '@/lib/utils'
 import type { Product } from '@/types/product'
 
 export const metadata = {
@@ -129,7 +130,7 @@ export default async function ComparePage({
                           {p.nombre}
                         </p>
                         <a
-                          href={p.url}
+                          href={addUtmParams(p.url)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex w-full items-center justify-center gap-1.5 rounded-full bg-[#0B0B0B] py-2 text-xs font-semibold text-white hover:bg-[#1A1A1A] transition-colors"
