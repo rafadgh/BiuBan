@@ -97,6 +97,55 @@ async function paginateAll(buildQ: () => any): Promise<Record<string, unknown>[]
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Corrección de errores tipográficos y deletreo común
+// Los términos aquí mapean a su forma correcta; en expandMainTerms se agregan
+// AMBOS (el original y la corrección) para maximizar resultados.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const MISSPELLINGS: Record<string, string> = {
+  // Hoodies / Sudaderas
+  hudi:          'hoodie',    hudie:        'hoodie',    hudis:       'hoodies',
+  huddie:        'hoodie',    hoodi:        'hoodie',    soudadera:   'sudadera',
+  sudader:       'sudadera',
+  // Oversize
+  oversise:      'oversized', oversaiz:     'oversized', overse:      'oversized',
+  oversize:      'oversized',
+  // Tenis / Sneakers
+  teniz:         'tenis',     tenniz:       'tenis',     tenes:       'tenis',
+  sniker:        'sneaker',   snikers:      'sneakers',  sneacker:    'sneaker',
+  sneackers:     'sneakers',  sneekers:     'sneakers',  sneiker:     'sneaker',
+  // Playera / Camiseta
+  plyera:        'playera',   camizeta:     'camiseta',
+  tshirt:        't-shirt',   tshirts:      't-shirt',
+  // Chamarra / Jacket
+  chamara:       'chamarra',  jaket:        'jacket',    jakets:      'jacket',
+  // Jeans / Pantalón
+  yins:          'jeans',     gin:          'jeans',     gins:        'jeans',
+  mezklilla:     'mezclilla', mezcilla:     'mezclilla',
+  // Running / Deporte
+  runnig:        'running',   runnin:       'running',   runin:       'running',
+  // Calzado
+  calsado:       'calzado',   zapatila:     'zapatillas',
+  // Accesorios
+  cachucha:      'gorra',     cachuchas:    'gorras',    goras:       'gorras',
+  mochilla:      'mochila',   mochillas:    'mochilas',
+  // Shorts / Calcetines
+  shoort:        'short',     shors:        'shorts',    bermuda:     'bermudas',
+  calsetines:    'calcetines', calcetine:   'calcetines',
+  // Marcas
+  adiddas:       'adidas',    adidass:      'adidas',    adids:       'adidas',
+  addidas:       'adidas',    adidaas:      'adidas',
+  nikey:         'nike',      nikee:        'nike',      nkee:        'nike',
+  rebook:        'reebok',    ribok:        'reebok',    rebok:       'reebok',
+  jordam:        'jordan',    convers:      'converse',  converce:    'converse',
+  newbalance:    'new balance', vanz:       'vans',
+  // Colores
+  blaco:         'blanco',    asul:         'azul',      griss:       'gris',
+  // Deporte
+  basquetbol:    'basketball', basquet:     'basketball', soccer:     'futbol',
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Sinónimos de términos generales (ropa, calzado, etc.)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -295,7 +344,7 @@ function splitQuery(query: string): {
   return { mainWords, colorWords, genderWords }
 }
 
-// Expande palabras principales usando sinónimos de producto
+// Expande palabras principales usando sinónimos + corrección de typos
 function expandMainTerms(words: string[]): string[] {
   const all = new Set<string>()
 
@@ -303,6 +352,16 @@ function expandMainTerms(words: string[]): string[] {
     const t = norm(w)
     all.add(t)
 
+    // Corrección de deletreo: si hay una versión correcta, la agrega TAMBIÉN
+    const corrected = MISSPELLINGS[t]
+    if (corrected) {
+      all.add(norm(corrected))
+      // Expande sinónimos de la forma corregida también
+      const corrSyns = SINONIMOS[norm(corrected)]
+      if (corrSyns) corrSyns.forEach(s => all.add(norm(s)))
+    }
+
+    // Sinónimos del término original
     const syns = SINONIMOS[t]
     if (syns) syns.forEach(s => all.add(norm(s)))
 
