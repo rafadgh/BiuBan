@@ -57,7 +57,7 @@ export function Header() {
         <div className="hidden md:block">
           <Link
             href="/buscar"
-            className="flex items-center gap-2 rounded-full border border-[#2A2A2A] bg-white px-4 py-2 text-sm font-semibold text-[#0B0B0B] transition-all hover:bg-[#F3F4F6]"
+            className="flex items-center gap-2 rounded-full border border-[#2A2A2A] bg-white px-4 py-2 text-sm font-semibold text-[#0B0B0B] transition-all hover:border-[#586E26] hover:bg-[#F0F5E8] hover:text-[#31470B]"
           >
             <Search className="h-4 w-4" />
             Buscar

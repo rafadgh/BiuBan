@@ -5,7 +5,7 @@ const suggestions = [
   'Tenis blancos',
   'Hoodie oversize',
   'Playera blanca',
-  'Jeans Levi\'s',
+  "Jeans Levi's",
   'Vestido negro',
 ]
 
@@ -20,7 +20,7 @@ export function SearchSuggestions({ className = '' }: SearchSuggestionsProps) {
         <Link
           key={suggestion}
           href={`/buscar?q=${encodeURIComponent(suggestion)}`}
-          className="rounded-full bg-muted px-3.5 py-1.5 text-sm text-foreground/80 transition-colors hover:bg-muted/80 hover:text-foreground"
+          className="rounded-full border border-border/50 bg-card px-3.5 py-1.5 text-sm text-foreground/80 transition-all hover:border-[#586E26] hover:bg-[#F0F5E8] hover:text-[#31470B]"
         >
           {suggestion}
         </Link>

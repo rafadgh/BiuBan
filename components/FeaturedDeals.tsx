@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
 import { getDiscountedProducts } from '@/lib/products'
 import { ProductCard } from './ProductCard'
 
@@ -17,9 +18,10 @@ export async function FeaturedDeals() {
 
           <Link
             href="/ofertas"
-            className="text-sm font-medium text-foreground/70 transition-colors hover:text-foreground"
+            className="flex items-center gap-1.5 rounded-full border border-transparent px-3 py-1.5 text-sm font-medium text-foreground/70 transition-all hover:border-[#586E26] hover:bg-[#F0F5E8] hover:text-[#31470B]"
           >
-            Ver todas →
+            Ver todas
+            <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 

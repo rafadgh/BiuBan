@@ -6,15 +6,19 @@ export function HeroSection() {
     <section className="bg-background py-20 sm:py-28 lg:py-36">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          {/* Headline */}
-          <h1 className="text-balance text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl lg:text-6xl">
-            Encuentra la mejor opción
-            <span className="mt-1 block text-muted-foreground">entre todas las tiendas</span>
+          {/* Headline — 3 tonos: negro / verde / gris */}
+          <h1 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
+            <span className="text-foreground">Encuentra</span>{' '}
+            <span className="text-[#586E26]">la mejor opción</span>
+            <span className="mt-1 block text-muted-foreground">
+              entre todas las tiendas.
+            </span>
           </h1>
 
           {/* Subheadline */}
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg md:text-xl">
-            Busca ropa, tenis y accesorios en un solo lugar. Compara precios y elige mejor.
+            Busca ropa, tenis y accesorios en un solo lugar.{' '}
+            Compara precios y elige mejor.
           </p>
 
           {/* Search Bar */}
