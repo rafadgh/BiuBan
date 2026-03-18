@@ -1,7 +1,15 @@
 import type { Metadata } from 'next'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
-import { Mail, Instagram, Twitter, Facebook, MapPin, Clock } from 'lucide-react'
+import { Mail, Instagram, Facebook, MapPin, Clock } from 'lucide-react'
+
+function XIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+    </svg>
+  )
+}
 
 function TikTokIcon({ className }: { className?: string }) {
   return (
@@ -12,8 +20,9 @@ function TikTokIcon({ className }: { className?: string }) {
 }
 
 export const metadata: Metadata = {
-  title: 'Contacto - BiuBan',
+  title: 'Contacto — BiuBan',
   description: 'Contáctanos para dudas, sugerencias o reportar algún problema con BiuBan.',
+  alternates: { canonical: 'https://biuban.com/contacto' },
 }
 
 const contactInfo = [
@@ -46,10 +55,17 @@ const socialLinks = [
     color: 'hover:text-pink-500',
   },
   {
-    icon: Twitter,
-    label: 'X (Twitter)',
+    icon: XIcon,
+    label: 'X',
     handle: '@BiuBan_mx',
     href: 'https://x.com/BiuBan_mx',
+    color: 'hover:text-foreground',
+  },
+  {
+    icon: TikTokIcon,
+    label: 'TikTok',
+    handle: '@biubanmx',
+    href: 'https://tiktok.com/@biubanmx',
     color: 'hover:text-foreground',
   },
   {
@@ -58,13 +74,6 @@ const socialLinks = [
     handle: 'BiuBan MX',
     href: 'https://facebook.com/BiuBanMX',
     color: 'hover:text-blue-500',
-  },
-  {
-    icon: TikTokIcon,
-    label: 'TikTok',
-    handle: '@biubanmx',
-    href: 'https://tiktok.com/@biubanmx',
-    color: 'hover:text-foreground',
   },
 ]
 
@@ -96,15 +105,10 @@ export default function ContactoPage() {
                       <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
                         <item.icon className="h-4 w-4 text-foreground" />
                       </div>
-
                       <div>
                         <p className="text-xs text-muted-foreground">{item.label}</p>
-
                         {item.href ? (
-                          <a
-                            href={item.href}
-                            className="text-sm font-medium text-foreground hover:underline"
-                          >
+                          <a href={item.href} className="text-sm font-medium text-foreground hover:underline">
                             {item.value}
                           </a>
                         ) : (
@@ -142,10 +146,7 @@ export default function ContactoPage() {
             <div className="mt-6 rounded-xl border border-border/50 bg-muted/40 p-5 text-center">
               <p className="text-sm text-muted-foreground">
                 Para reportar un producto incorrecto o un precio desactualizado, escríbenos a{' '}
-                <a
-                  href="mailto:reportes@biuban.com"
-                  className="font-medium text-foreground hover:underline"
-                >
+                <a href="mailto:reportes@biuban.com" className="font-medium text-foreground hover:underline">
                   reportes@biuban.com
                 </a>
               </p>

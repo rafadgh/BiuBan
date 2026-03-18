@@ -1,5 +1,13 @@
 import Link from 'next/link'
-import { Instagram, Twitter, Facebook } from 'lucide-react'
+import { Instagram, Facebook } from 'lucide-react'
+
+function XIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+    </svg>
+  )
+}
 
 function TikTokIcon({ className }: { className?: string }) {
   return (
@@ -35,9 +43,15 @@ const socialLinks = [
     color: 'hover:text-pink-400',
   },
   {
-    icon: Twitter,
+    icon: XIcon,
     label: 'X',
     href: 'https://x.com/BiuBan_mx',
+    color: 'hover:text-white',
+  },
+  {
+    icon: TikTokIcon,
+    label: 'TikTok',
+    href: 'https://tiktok.com/@biubanmx',
     color: 'hover:text-white',
   },
   {
@@ -45,12 +59,6 @@ const socialLinks = [
     label: 'Facebook',
     href: 'https://facebook.com/BiuBanMX',
     color: 'hover:text-blue-400',
-  },
-  {
-    icon: TikTokIcon,
-    label: 'TikTok',
-    href: 'https://tiktok.com/@biubanmx',
-    color: 'hover:text-white',
   },
 ]
 
@@ -133,9 +141,12 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 border-t border-[#1A1A1A] pt-6">
-          <p className="text-center text-xs text-[#6B6B6B]">
+        <div className="mt-10 border-t border-[#1A1A1A] pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-[#6B6B6B]">
             © {new Date().getFullYear()} BiuBan. No vendemos productos directamente.
+          </p>
+          <p className="text-xs text-[#444444]">
+            Hecho en México 🇲🇽
           </p>
         </div>
       </div>
