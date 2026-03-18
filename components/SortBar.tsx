@@ -34,9 +34,9 @@ export function SortBar({ resultCount, query, basePath = '/buscar' }: SortBarPro
 
       {/* Contador */}
       <p className="text-sm text-[#6B6B6B]">
-        <span className="font-semibold text-[#0B0B0B]">{resultCount}</span>{' '}
+        <span className="font-semibold text-[#0B0B0B]">{resultCount.toLocaleString('es-MX')}</span>{' '}
         {resultCount === 1 ? 'resultado' : 'resultados'} para{' '}
-        <span className="font-semibold text-[#0B0B0B]">&ldquo;{query}&rdquo;</span>
+        <span className="font-semibold text-[#0B0B0B] capitalize">{query}</span>
       </p>
 
       {/* Ordenar — botones tipo toggle, sin select */}

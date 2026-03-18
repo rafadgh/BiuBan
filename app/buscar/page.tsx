@@ -70,6 +70,17 @@ export async function generateMetadata({ searchParams }: SearchPageProps): Promi
 }
 
 
+/** Construye una etiqueta legible a partir de los filtros activos */
+function buildLabel(p: {
+  q?: string; marca?: string; categoria?: string; tienda?: string
+  genero?: string; color?: string; talla?: string
+}): string {
+  if (p.q) return p.q
+  const parts = [p.genero, p.color, p.talla, p.categoria, p.marca, p.tienda ? `en ${p.tienda}` : '']
+    .filter(Boolean) as string[]
+  return parts.length > 0 ? parts.join(' ') : 'todos los productos'
+}
+
 async function SearchResults({ searchParams }: SearchPageProps) {
   const params = await searchParams
   const query  = params.q || ''
@@ -93,10 +104,11 @@ async function SearchResults({ searchParams }: SearchPageProps) {
 
   const total    = allProducts.length
   const products = allProducts.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+  const label    = buildLabel(params)
 
   return (
     <>
-      <SortBar resultCount={total} query={query || 'todo'} />
+      <SortBar resultCount={total} query={label} />
 
       {products.length > 0 ? (
         <>

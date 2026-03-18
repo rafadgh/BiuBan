@@ -60,6 +60,16 @@ export async function generateMetadata({ searchParams }: OffersPageProps, _paren
   }
 }
 
+function buildOfferLabel(p: {
+  q?: string; marca?: string; categoria?: string; tienda?: string
+  genero?: string; color?: string; talla?: string
+}): string {
+  if (p.q) return `ofertas de ${p.q}`
+  const parts = [p.genero, p.color, p.talla, p.categoria, p.marca, p.tienda ? `en ${p.tienda}` : '']
+    .filter(Boolean) as string[]
+  return parts.length > 0 ? `ofertas de ${parts.join(' ')}` : 'todas las ofertas'
+}
+
 async function OffersResults({ searchParams }: OffersPageProps) {
   const params = await searchParams
   const page   = Math.max(1, parseInt(params.pagina || '1'))
@@ -81,12 +91,13 @@ async function OffersResults({ searchParams }: OffersPageProps) {
 
   const total    = allProducts.length
   const products = allProducts.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+  const label    = buildOfferLabel(params)
 
   return (
     <>
       <SortBar
         resultCount={total}
-        query={params.q || 'todas las ofertas'}
+        query={label}
         basePath="/ofertas"
       />
 
