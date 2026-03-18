@@ -2,10 +2,11 @@ import Link from 'next/link'
 
 const footerLinks = {
   navegacion: [
-    { href: '/',               label: 'Inicio' },
-    { href: '/buscar',         label: 'Buscar' },
-    { href: '/ofertas',        label: 'Ofertas' },
-    { href: '/marcas',         label: 'Marcas' },
+    { href: '/',            label: 'Inicio' },
+    { href: '/buscar',      label: 'Buscar' },
+    { href: '/ofertas',     label: 'Ofertas' },
+    { href: '/categorias',  label: 'Categorías' },
+    { href: '/marcas',      label: 'Marcas' },
   ],
   empresa: [
     { href: '/sobre-nosotros', label: 'Sobre nosotros' },

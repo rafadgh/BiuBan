@@ -737,6 +737,17 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Expansión de meta-categorías → términos que se buscan en category/subcategory
+const CATEGORIA_EXPANSION: Record<string, string[]> = {
+  accesorios: ['accesorio', 'mochila', 'bolsa', 'bolso', 'gorra', 'sombrero',
+               'calcetin', 'calcetín', 'cinturon', 'cinturón', 'cartera',
+               'billetera', 'lentes', 'bufanda', 'guante', 'accesorio'],
+}
+
+function expandCategoria(slug: string): string[] {
+  return CATEGORIA_EXPANSION[slug] ?? [slug]
+}
+
 // Helper: aplica filtros base a una query de Supabase (sin género, eso va en memoria)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -744,7 +755,8 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
 function applyBaseFilters(q: any, filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda'>): any {
   if (filters.categoria) {
     const cats = filters.categoria.split(',').map(c => c.trim()).filter(Boolean)
-    const catConds = cats.flatMap(c => [`category.ilike.%${c}%`, `subcategory.ilike.%${c}%`])
+    const expanded = cats.flatMap(expandCategoria)
+    const catConds = expanded.flatMap(c => [`category.ilike.%${c}%`, `subcategory.ilike.%${c}%`])
     q = q.or(catConds.join(','))
   }
   if (filters.marca) {

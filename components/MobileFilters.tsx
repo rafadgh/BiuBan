@@ -121,7 +121,8 @@ function hasFacetGenero(facets: SearchFacets | undefined, value: string): boolea
   return facets.generos.includes(nrm(value))
 }
 function hasFacetTalla(facets: SearchFacets | undefined, value: string): boolean {
-  if (!facets || facets.tallas.length === 0) return true
+  if (!facets) return true                      // facets aún no cargados → mostrar todo
+  if (facets.tallas.length === 0) return false  // cargados pero sin tallas → ocultar todo
   return facets.tallas.includes(value)
 }
 function hasFacetSubcat(facets: SearchFacets | undefined, catValue: string): boolean {

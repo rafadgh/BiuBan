@@ -227,7 +227,7 @@ const sections: CategorySection[] = [
       {
         name:  'Accesorios',
         desc:  'Gorras, mochilas, bolsos, calcetines y más',
-        href:  '/buscar?categoria=gorras,mochilas,calcetines,accesorios',
+        href:  '/categoria/accesorios',
         image: '/categorias/accesorios.jpg',
       },
     ],
