@@ -3,18 +3,18 @@ import { Search, Star, ShoppingBag } from 'lucide-react'
 const valueProps = [
   {
     icon: Search,
-    title: 'Busca en varias tiendas a la vez',
-    description: 'Encuentra productos de Nike, Adidas, Zara, Liverpool, Amazon y muchas más en un solo lugar.',
+    title: 'Busca en varios vendedores a la vez',
+    description: 'Encuentra productos de Nike, Adidas, Zara, Liverpool, Amazon y muchos más en un solo lugar.',
   },
   {
     icon: Star,
     title: 'Encuentra la mejor opción',
-    description: 'Te mostramos cuál es la mejor opción basándonos en precio, disponibilidad y tienda.',
+    description: 'Te mostramos cuál es la mejor opción basándonos en precio, disponibilidad y vendedor.',
   },
   {
     icon: ShoppingBag,
     title: 'Compara precios rápido',
-    description: 'Ahorra tiempo comparando precios sin tener que visitar cada tienda por separado.',
+    description: 'Ahorra tiempo comparando precios sin tener que visitar cada vendedor por separado.',
   },
 ]
 

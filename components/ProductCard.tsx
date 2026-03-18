@@ -84,7 +84,7 @@ export function ProductCard({ product }: ProductCardProps) {
           rel="noopener noreferrer"
           className="flex w-full items-center justify-center gap-2 rounded-full bg-[#0B0B0B] py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1A1A1A]"
         >
-          Ver tienda
+          Ver vendedor
           <ExternalLink className="h-3.5 w-3.5" />
         </a>
       </div>

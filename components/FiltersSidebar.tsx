@@ -571,13 +571,13 @@ export function FiltersSidebar({
 
         {/* ── Tiendas (solo las que tienen productos en el contexto actual) ── */}
         {tiendas.length > 0 && (
-          <Section title="Tienda" defaultOpen={false} badge={currentTiendas.length}>
+          <Section title="Vendedor" defaultOpen={false} badge={currentTiendas.length}>
             {tiendas.length > 8 && (
               <div className="relative mb-3">
                 <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 <input type="text" value={tiendaSearch}
                   onChange={(e) => setTiendaSearch(e.target.value)}
-                  placeholder="Buscar tienda..."
+                  placeholder="Buscar vendedor..."
                   className="h-8 w-full rounded-lg border border-border bg-muted/50 pl-8 pr-8 text-xs text-foreground placeholder:text-muted-foreground focus:border-foreground/30 focus:outline-none"
                 />
                 {tiendaSearch && (

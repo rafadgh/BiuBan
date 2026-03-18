@@ -3,16 +3,16 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 
 const featuredBrands = [
-  { name: 'Nike',          slug: 'nike' },
-  { name: 'Adidas',        slug: 'adidas' },
-  { name: 'Zara',          slug: 'zara' },
-  { name: 'H&M',           slug: 'hm' },
-  { name: 'Liverpool',     slug: 'liverpool' },
-  { name: 'Mercado Libre', slug: 'mercado-libre' },
-  { name: 'Lacoste',       slug: 'lacoste' },
-  { name: "Levi's",        slug: 'levis' },
-  { name: 'New Balance',   slug: 'new-balance' },
-  { name: 'Puma',          slug: 'puma' },
+  { name: 'Nike',        slug: 'nike' },
+  { name: 'Adidas',      slug: 'adidas' },
+  { name: 'Zara',        slug: 'zara' },
+  { name: 'H&M',         slug: 'hm' },
+  { name: 'Lacoste',     slug: 'lacoste' },
+  { name: "Levi's",      slug: 'levis' },
+  { name: 'New Balance', slug: 'new-balance' },
+  { name: 'Puma',        slug: 'puma' },
+  { name: 'Tommy Hilfiger', slug: 'tommy-hilfiger' },
+  { name: 'Calvin Klein', slug: 'calvin-klein' },
 ]
 
 export function FeaturedBrands() {

@@ -45,13 +45,13 @@ export async function generateMetadata({ searchParams }: SearchPageProps): Promi
   if (query) {
     const cap = query.charAt(0).toUpperCase() + query.slice(1)
     title       = `${cap} — BiuBan`
-    description = `Resultados para "${query}" en BiuBan. Compara precios entre las mejores tiendas de México.`
+    description = `Resultados para "${query}" en BiuBan. Compara precios entre los mejores vendedores de México.`
   } else if (marca && categoria) {
     title       = `${marca} ${categoria} — BiuBan`
     description = `${categoria} de ${marca} en BiuBan. Compara precios y encuentra la mejor opción.`
   } else if (marca) {
     title       = `${marca} — BiuBan`
-    description = `Todos los productos ${marca} en BiuBan. Compara precios entre las mejores tiendas de México.`
+    description = `Todos los productos ${marca} en BiuBan. Compara precios entre los mejores vendedores de México.`
   } else if (categoria) {
     const cap = categoria.charAt(0).toUpperCase() + categoria.slice(1)
     title       = `${cap}${genero ? ` ${genero}` : ''} — BiuBan`

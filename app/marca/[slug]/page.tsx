@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: BrandPageProps): Promise<Meta
   if (!brandName) return { title: 'Marca no encontrada — BiuBan' }
 
   const title       = `${brandName} — BiuBan`
-  const description = `Toda la ropa y calzado ${brandName} en BiuBan. Compara precios entre las mejores tiendas de México.`
+  const description = `Toda la ropa y calzado ${brandName} en BiuBan. Compara precios entre los mejores vendedores de México.`
 
   return {
     title,
