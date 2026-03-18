@@ -33,22 +33,46 @@ export function slugToQuery(slug: string): string {
 
 // Mapeo de slug de categoría → label para mostrar en UI / SEO
 export const CATEGORIA_LABELS: Record<string, string> = {
-  tenis:        'Tenis / Sneakers',
-  botas:        'Botas / Botines',
-  playeras:     'Playeras',
-  sudaderas:    'Sudaderas / Hoodies',
-  chamarras:    'Chamarras / Jackets',
-  jeans:        'Jeans / Pantalones',
-  shorts:       'Shorts',
-  vestidos:     'Vestidos',
-  running:      'Running / Atletismo',
-  gym:          'Gym / Fitness',
-  futbol:       'Fútbol',
-  basketball:   'Basketball',
-  golf:         'Golf',
-  beisbol:      'Béisbol',
-  outdoor:      'Outdoor / Senderismo',
-  mochilas:     'Mochilas / Bolsas',
-  gorras:       'Gorras / Sombreros',
-  calcetines:   'Calcetines',
+  // ── Calzado ────────────────────────────────────────────────────────────────
+  tenis:          'Tenis / Sneakers',
+  botas:          'Botas / Botines',
+  sandalias:      'Sandalias / Flats',
+  zapatos:        'Zapatos / Formales',
+
+  // ── Ropa superior ──────────────────────────────────────────────────────────
+  playeras:       'Playeras',
+  camisas:        'Camisas / Blusas',
+  sudaderas:      'Sudaderas / Hoodies',
+  chamarras:      'Chamarras / Jackets',
+  abrigos:        'Abrigos / Coats',
+  sacos:          'Sacos / Blazers',
+  'crop-tops':    'Crop Tops',
+
+  // ── Ropa inferior / completa ───────────────────────────────────────────────
+  jeans:          'Jeans / Mezclilla',
+  pantalones:     'Pantalones / Chinos',
+  shorts:         'Shorts / Bermudas',
+  faldas:         'Faldas',
+  vestidos:       'Vestidos',
+  leggings:       'Leggings / Mallas',
+  conjuntos:      'Conjuntos / Sets',
+
+  // ── Básicos y lifestyle ────────────────────────────────────────────────────
+  pijamas:        'Pijamas / Loungewear',
+  'trajes-de-bano': 'Trajes de baño',
+
+  // ── Deporte ────────────────────────────────────────────────────────────────
+  running:        'Running / Atletismo',
+  gym:            'Gym / Fitness',
+  futbol:         'Fútbol',
+  basketball:     'Basketball',
+  golf:           'Golf',
+  beisbol:        'Béisbol',
+  outdoor:        'Outdoor / Senderismo',
+
+  // ── Accesorios ─────────────────────────────────────────────────────────────
+  accesorios:     'Accesorios',
+  mochilas:       'Mochilas / Bolsas',
+  gorras:         'Gorras / Sombreros',
+  calcetines:     'Calcetines',
 }

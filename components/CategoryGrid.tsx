@@ -4,33 +4,34 @@ import { ArrowRight } from 'lucide-react'
 
 const categories = [
   {
-    name: 'Tenis',
-    slug: 'tenis',
+    name:  'Tenis',
+    href:  '/categoria/tenis',
     image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
   },
   {
-    name: 'Playeras',
-    slug: 'playeras',
+    name:  'Playeras',
+    href:  '/categoria/playeras',
     image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
   },
   {
-    name: 'Sudaderas',
-    slug: 'sudaderas',
+    name:  'Sudaderas',
+    href:  '/categoria/sudaderas',
     image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=400&fit=crop',
   },
   {
-    name: 'Jeans',
-    slug: 'jeans',
+    name:  'Jeans',
+    href:  '/categoria/jeans',
     image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop',
   },
   {
-    name: 'Chamarras',
-    slug: 'chamarras',
+    name:  'Chamarras',
+    href:  '/categoria/chamarras',
     image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&h=400&fit=crop',
   },
   {
-    name: 'Accesorios',
-    slug: 'gorras',
+    name:  'Accesorios',
+    // Busca en múltiples subcategorías de accesorios
+    href:  '/buscar?categoria=gorras,mochilas,calcetines,accesorios',
     image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop',
   },
 ]
@@ -56,8 +57,8 @@ export function CategoryGrid() {
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {categories.map((category) => (
             <Link
-              key={category.slug}
-              href={`/categoria/${category.slug}`}
+              key={category.name}
+              href={category.href}
               className="group relative aspect-square overflow-hidden rounded-xl bg-card transition-all hover:shadow-lg"
             >
               <Image

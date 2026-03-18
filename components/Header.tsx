@@ -7,6 +7,7 @@ import { Menu, X, Search, ChevronLeft } from 'lucide-react'
 
 const navLinks = [
   { href: '/ofertas',        label: 'Ofertas' },
+  { href: '/categorias',     label: 'Categorías' },
   { href: '/marcas',         label: 'Marcas' },
   { href: '/sobre-nosotros', label: 'Sobre nosotros' },
 ]
