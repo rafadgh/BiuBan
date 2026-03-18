@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { getBrandsFromDB } from '@/lib/products'
+import { toSlug } from '@/lib/slug'
 
 export const metadata: Metadata = {
   title: 'Marcas - BiuBan',
@@ -67,7 +68,7 @@ export default async function MarcasPage() {
                   {grouped[letter].map((brand) => (
                     <Link
                       key={brand.nombre}
-                      href={`/buscar?marca=${encodeURIComponent(brand.nombre)}`}
+                      href={`/marca/${toSlug(brand.nombre)}`}
                       className="group flex items-center gap-3 rounded-xl border border-[#E5E5E5] bg-white px-4 py-3 transition-all hover:border-[#586E26] hover:shadow-sm"
                     >
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#F5F5F5] text-sm font-bold text-[#0B0B0B] transition-colors group-hover:bg-[#31470B] group-hover:text-white">
