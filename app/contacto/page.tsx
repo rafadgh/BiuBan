@@ -3,6 +3,14 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { Mail, Instagram, Twitter, Facebook, MapPin, Clock } from 'lucide-react'
 
+function TikTokIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z"/>
+    </svg>
+  )
+}
+
 export const metadata: Metadata = {
   title: 'Contacto - BiuBan',
   description: 'Contáctanos para dudas, sugerencias o reportar algún problema con BiuBan.',
@@ -33,23 +41,30 @@ const socialLinks = [
   {
     icon: Instagram,
     label: 'Instagram',
-    handle: '@biuban.mx',
-    href: 'https://instagram.com/biuban.mx',
+    handle: '@BiuBan_mx',
+    href: 'https://instagram.com/BiuBan_mx',
     color: 'hover:text-pink-500',
   },
   {
     icon: Twitter,
     label: 'X (Twitter)',
-    handle: '@biuban_mx',
-    href: 'https://x.com/biuban_mx',
+    handle: '@BiuBan_mx',
+    href: 'https://x.com/BiuBan_mx',
     color: 'hover:text-foreground',
   },
   {
     icon: Facebook,
     label: 'Facebook',
-    handle: 'BiuBan México',
-    href: 'https://facebook.com/biuban',
+    handle: 'BiuBan MX',
+    href: 'https://facebook.com/BiuBanMX',
     color: 'hover:text-blue-500',
+  },
+  {
+    icon: TikTokIcon,
+    label: 'TikTok',
+    handle: '@biubanmx',
+    href: 'https://tiktok.com/@biubanmx',
+    color: 'hover:text-foreground',
   },
 ]
 
@@ -103,7 +118,7 @@ export default function ContactoPage() {
 
               <div className="rounded-xl border border-border/50 bg-card p-6 sm:p-8">
                 <h2 className="mb-6 text-lg font-bold text-foreground">Redes sociales</h2>
-                <ul className="space-y-4">
+                <ul className="space-y-3">
                   {socialLinks.map((social) => (
                     <li key={social.label}>
                       <a

@@ -38,6 +38,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
+    site: '@BiuBan_mx',
+    creator: '@BiuBan_mx',
     title: 'BiuBan - Encuentra la mejor opción de moda',
     description:
       'Compara ropa, tenis y accesorios entre distintas tiendas en un solo lugar.',
