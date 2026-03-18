@@ -1171,3 +1171,27 @@ export async function getBrandsFromDB(): Promise<BrandInfo[]> {
     .map(([nombre, total]) => ({ nombre, total }))
     .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }))
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Obtener productos por IDs (para comparador)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function getProductsByIds(ids: string[]): Promise<Product[]> {
+  if (!ids.length) return []
+
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .in('id', ids)
+
+  if (error || !data) return []
+
+  // Mantener el orden original de los IDs
+  const map = new Map<string, Product>()
+  for (const row of data) {
+    const p = mapRow(row as Record<string, unknown>)
+    map.set(p.id, p)
+  }
+
+  return ids.map(id => map.get(id)).filter(Boolean) as Product[]
+}

@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { Roboto_Slab } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { NavigationProgress } from '@/components/NavigationProgress'
+import { CompareProvider } from '@/context/compare'
+import { CompareBar } from '@/components/CompareBar'
 import './globals.css'
 
 const robotoSlab = Roboto_Slab({
@@ -48,8 +50,11 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`${robotoSlab.variable} font-sans antialiased`}>
-        <NavigationProgress />
-        {children}
+        <CompareProvider>
+          <NavigationProgress />
+          {children}
+          <CompareBar />
+        </CompareProvider>
         <Analytics />
       </body>
     </html>

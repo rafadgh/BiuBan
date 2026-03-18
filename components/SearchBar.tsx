@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, ArrowRight, Tag, LayoutGrid, X } from 'lucide-react'
+import { Search, ArrowRight, Tag, LayoutGrid, X, Camera } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import type { Suggestion } from '@/app/api/suggestions/route'
 
@@ -21,15 +21,17 @@ export function SearchBar({
   basePath     = '/buscar',
   placeholder,
 }: SearchBarProps) {
-  const [query,       setQuery]       = useState(initialQuery)
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
-  const [open,        setOpen]        = useState(false)
-  const [activeIdx,   setActiveIdx]   = useState(-1)
-  const [loading,     setLoading]     = useState(false)
-  const containerRef  = useRef<HTMLDivElement>(null)
-  const debounceRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const router        = useRouter()
-  const isLarge       = size === 'large'
+  const [query,        setQuery]        = useState(initialQuery)
+  const [suggestions,  setSuggestions]  = useState<Suggestion[]>([])
+  const [open,         setOpen]         = useState(false)
+  const [activeIdx,    setActiveIdx]    = useState(-1)
+  const [loading,      setLoading]      = useState(false)
+  const [imgLoading,   setImgLoading]   = useState(false)
+  const containerRef   = useRef<HTMLDivElement>(null)
+  const debounceRef    = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const fileInputRef   = useRef<HTMLInputElement>(null)
+  const router         = useRouter()
+  const isLarge        = size === 'large'
 
   // ── Debounced fetch de sugerencias ────────────────────────────────────────
   const fetchSuggestions = useCallback((q: string) => {
@@ -105,6 +107,32 @@ export function SearchBar({
     setOpen(false)
   }
 
+  // ── Búsqueda por imagen ───────────────────────────────────────────────────
+  const handleImageSearch = useCallback(async (file: File) => {
+    setImgLoading(true)
+    try {
+      const reader = new FileReader()
+      reader.onloadend = async () => {
+        const base64 = reader.result as string
+        const res = await fetch('/api/buscar-imagen', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64 }),
+        })
+        const { query: q } = await res.json()
+        if (q) {
+          setQuery(q)
+          setOpen(false)
+          router.push(`${basePath}?q=${encodeURIComponent(q)}`)
+        }
+        setImgLoading(false)
+      }
+      reader.readAsDataURL(file)
+    } catch {
+      setImgLoading(false)
+    }
+  }, [basePath, router])
+
   // ── Icono por tipo de sugerencia ──────────────────────────────────────────
   const SuggestionIcon = ({ type }: { type: Suggestion['type'] }) => {
     if (type === 'marca')     return <Tag        className="h-3.5 w-3.5 shrink-0 text-[#586E26]" />
@@ -118,6 +146,19 @@ export function SearchBar({
 
   return (
     <div ref={containerRef} className={`relative w-full ${className}`}>
+      {/* Hidden file input for image search */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={e => {
+          const file = e.target.files?.[0]
+          if (file) handleImageSearch(file)
+          e.target.value = ''
+        }}
+      />
+
       <form onSubmit={handleSubmit} className="relative w-full">
         <div className="relative">
           <Search className={`absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground ${isLarge ? 'h-5 w-5' : 'h-4 w-4'}`} />
@@ -131,8 +172,8 @@ export function SearchBar({
             placeholder={placeholder ?? defaultPlaceholder}
             autoComplete="off"
             className={`w-full rounded-full border-border/50 bg-card pl-11 shadow-sm transition-all focus:border-foreground/30 focus:shadow-md ${
-              isLarge ? 'h-14 pr-20 text-base sm:h-16 sm:pr-24 sm:text-lg' : 'h-10 pr-16'
-            }`}
+              isLarge ? 'h-14 text-base sm:h-16 sm:text-lg' : 'h-10'
+            } ${isLarge ? 'pr-28 sm:pr-32' : 'pr-20'}`}
           />
 
           {/* Botón limpiar — solo cuando hay texto */}
@@ -141,13 +182,30 @@ export function SearchBar({
               type="button"
               onClick={clearQuery}
               className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors ${
-                isLarge ? 'right-14 sm:right-16' : 'right-10'
+                isLarge ? 'right-24 sm:right-28' : 'right-16'
               }`}
               aria-label="Limpiar"
             >
               <X className={isLarge ? 'h-5 w-5' : 'h-4 w-4'} />
             </button>
           )}
+
+          {/* Botón buscar por imagen */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={imgLoading}
+            title="Buscar por imagen"
+            className={`absolute top-1/2 -translate-y-1/2 flex items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50 ${
+              isLarge ? 'right-14 sm:right-16 h-9 w-9' : 'right-9 h-7 w-7'
+            }`}
+            aria-label="Buscar por imagen"
+          >
+            {imgLoading
+              ? <span className={`animate-spin rounded-full border-2 border-muted border-t-foreground ${isLarge ? 'h-4 w-4' : 'h-3.5 w-3.5'}`} />
+              : <Camera className={isLarge ? 'h-5 w-5' : 'h-4 w-4'} />
+            }
+          </button>
 
           {/* Botón submit */}
           <button
