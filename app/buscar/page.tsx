@@ -1,4 +1,5 @@
 // app/buscar/page.tsx
+import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { Header } from '@/components/Header'
 import { FiltersSidebar } from '@/components/FiltersSidebar'
@@ -29,6 +30,45 @@ interface SearchPageProps {
     pagina?:    string
   }>
 }
+
+export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
+  const params = await searchParams
+  const query     = params.q?.trim() || ''
+  const marca     = params.marca?.trim() || ''
+  const categoria = params.categoria?.trim() || ''
+  const tienda    = params.tienda?.trim() || ''
+  const genero    = params.genero?.trim() || ''
+
+  let title       = 'Buscar — BiuBan'
+  let description = 'Encuentra ropa, tenis y accesorios. Compara precios entre Nike, Adidas, Zara, Liverpool, Amazon México y más tiendas.'
+
+  if (query) {
+    const cap = query.charAt(0).toUpperCase() + query.slice(1)
+    title       = `${cap} — BiuBan`
+    description = `Resultados para "${query}" en BiuBan. Compara precios entre las mejores tiendas de México.`
+  } else if (marca && categoria) {
+    title       = `${marca} ${categoria} — BiuBan`
+    description = `${categoria} de ${marca} en BiuBan. Compara precios y encuentra la mejor opción.`
+  } else if (marca) {
+    title       = `${marca} — BiuBan`
+    description = `Todos los productos ${marca} en BiuBan. Compara precios entre las mejores tiendas de México.`
+  } else if (categoria) {
+    const cap = categoria.charAt(0).toUpperCase() + categoria.slice(1)
+    title       = `${cap}${genero ? ` ${genero}` : ''} — BiuBan`
+    description = `Los mejores ${categoria} en BiuBan. Filtra por talla, color, marca y precio.`
+  } else if (tienda) {
+    title       = `${tienda} — BiuBan`
+    description = `Todos los productos de ${tienda} disponibles en BiuBan.`
+  }
+
+  return {
+    title,
+    description,
+    openGraph: { title, description, type: 'website' },
+    twitter:   { card: 'summary', title, description },
+  }
+}
+
 
 async function SearchResults({ searchParams }: SearchPageProps) {
   const params = await searchParams

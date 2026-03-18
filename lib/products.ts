@@ -50,6 +50,19 @@ function mapRow(row: Record<string, unknown>): Product {
     stockStatus:        row.stock_status ? String(row.stock_status) : undefined,
     envioGratis:        Boolean(row.free_shipping ?? false),
     tags:               parseTextArray(row.tags),
+    // Catalogación extendida
+    sku:                row.sku ? String(row.sku) : undefined,
+    ocasion:            row.occasion ? String(row.occasion) : undefined,
+    temporada:          row.season ? String(row.season) : undefined,
+    coleccion:          row.collection ? String(row.collection) : undefined,
+    instruccionesCuido: row.care_instructions ? String(row.care_instructions) : undefined,
+    paisOrigen:         row.country_of_origin ? String(row.country_of_origin) : undefined,
+    esSustentable:      Boolean(row.is_sustainable ?? false),
+    caracteristicas:    parseTextArray(row.features),
+    collab:             row.collab ? String(row.collab) : undefined,
+    calificacion:       row.rating != null ? Number(row.rating) : undefined,
+    numResenas:         row.review_count != null ? Number(row.review_count) : undefined,
+    imagenesAdicionales: parseTextArray(row.additional_images),
   }
 }
 
@@ -602,157 +615,130 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Helper: aplica filtros base a una query de Supabase (sin género, eso va en memoria)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function applyBaseFilters(q: any, filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda'>): any {
+  if (filters.categoria) {
+    const cats = filters.categoria.split(',').map(c => c.trim()).filter(Boolean)
+    const catConds = cats.flatMap(c => [`category.ilike.%${c}%`, `subcategory.ilike.%${c}%`])
+    q = q.or(catConds.join(','))
+  }
+  if (filters.marca) {
+    const marcas = filters.marca.split(',').map(m => m.trim()).filter(Boolean)
+    q = marcas.length === 1 ? q.ilike('brand', `%${marcas[0]}%`) : q.or(marcas.map((m: string) => `brand.ilike.%${m}%`).join(','))
+  }
+  if (filters.tienda) {
+    const tiendas = filters.tienda.split(',').map(t => t.trim()).filter(Boolean)
+    q = tiendas.length === 1 ? q.ilike('store', `%${tiendas[0]}%`) : q.or(tiendas.map((t: string) => `store.ilike.%${t}%`).join(','))
+  }
+  if (filters.query?.trim()) {
+    const { mainWords } = splitQuery(filters.query.trim())
+    const filteredWords = mainWords.filter(w => w.length > 1)
+    if (filteredWords.length > 0) {
+      const terms = expandMainTerms(filteredWords)
+      const orConds = terms.flatMap(t => [
+        `name.ilike.%${t}%`, `brand.ilike.%${t}%`,
+        `category.ilike.%${t}%`, `subcategory.ilike.%${t}%`,
+      ]).join(',')
+      q = q.or(orConds)
+    }
+  }
+  return q
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Facetas dinámicas para los filtros del sidebar
+// Una sola query (sin loop de paginación) — mucho más rápido
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface SearchFacets {
-  colores:       string[]  // valores de color_primary normalizados
-  generos:       string[]  // valores de gender normalizados
-  tallas:        string[]  // valores únicos de sizes_available
-  subcategorias: string[]  // valores de subcategory normalizados
-  marcas:        string[]  // marcas disponibles en resultados
-  tiendas:       string[]  // tiendas disponibles en resultados
+  colores:       string[]
+  generos:       string[]
+  tallas:        string[]
+  subcategorias: string[]
+  marcas:        string[]
+  tiendas:       string[]
 }
 
-export async function getSearchFacets(
-  filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda' | 'genero'>
-): Promise<SearchFacets> {
-  const buildQ = () => {
-    let q = supabase
-      .from('products')
-      .select('color_primary, gender, sizes_available, subcategory, brand, store')
-      .eq('available', true)
+const FACET_GENDER_TERMS: Record<string, string[]> = {
+  hombre: ['hombre', 'male', 'men', 'man', 'masculino'],
+  mujer:  ['mujer', 'female', 'women', 'woman', 'femenino', 'dama'],
+  nino:   ['nino', 'niño', 'boy', 'kids', 'kid', 'infantil', 'junior'],
+  nina:   ['nina', 'niña', 'girl', 'kids', 'kid', 'infantil'],
+  unisex: ['unisex'],
+}
 
-    if (filters.categoria) {
-      const cats = filters.categoria.split(',').map(c => c.trim()).filter(Boolean)
-      const catConds = cats.flatMap(c => [`category.ilike.%${c}%`, `subcategory.ilike.%${c}%`])
-      q = q.or(catConds.join(','))
-    }
-    if (filters.marca) {
-      const marcas = filters.marca.split(',').map(m => m.trim()).filter(Boolean)
-      q = marcas.length === 1
-        ? q.ilike('brand', `%${marcas[0]}%`)
-        : q.or(marcas.map(m => `brand.ilike.%${m}%`).join(','))
-    }
-    if (filters.tienda) {
-      const tiendas = filters.tienda.split(',').map(t => t.trim()).filter(Boolean)
-      q = tiendas.length === 1
-        ? q.ilike('store', `%${tiendas[0]}%`)
-        : q.or(tiendas.map(t => `store.ilike.%${t}%`).join(','))
-    }
-    if (filters.query?.trim()) {
-      const { mainWords } = splitQuery(filters.query.trim())
-      const filteredWords = mainWords.filter(w => w.length > 1)
-      if (filteredWords.length > 0) {
-        const terms = expandMainTerms(filteredWords)
-        const orConds = terms.flatMap(t => [
-          `name.ilike.%${t}%`,
-          `brand.ilike.%${t}%`,
-          `category.ilike.%${t}%`,
-          `subcategory.ilike.%${t}%`,
-        ]).join(',')
-        q = q.or(orConds)
-      }
-    }
-    return q
-  }
+type FacetRow = { color_primary: string | null; gender: string | null; sizes_available: string[] | null; subcategory: string | null; brand: string | null; store: string | null }
 
-  const rawData = await paginateAll(buildQ)
-  if (rawData.length === 0) return { colores: [], generos: [], tallas: [], subcategorias: [], marcas: [], tiendas: [] }
+function computeFacetsFromRows(rows: FacetRow[], generoFilter?: string, queryGenero?: string[]): SearchFacets {
+  const allGenderWords = [
+    ...(queryGenero ?? []),
+    ...(generoFilter ? generoFilter.split(',').map(g => g.trim()).filter(Boolean) : []),
+  ]
 
-  type Row = { color_primary: string | null; gender: string | null; sizes_available: string[] | null; subcategory: string | null; brand: string | null; store: string | null }
-  let rows = rawData as unknown as Row[]
-
-  // Aplicar filtro de género en memoria
-  const genderTerms: Record<string, string[]> = {
-    hombre: ['hombre', 'male', 'men', 'man', 'masculino'],
-    mujer:  ['mujer', 'female', 'women', 'woman', 'femenino', 'dama'],
-    nino:   ['nino', 'niño', 'boy', 'kids', 'kid', 'infantil', 'junior'],
-    nina:   ['nina', 'niña', 'girl', 'kids', 'kid', 'infantil'],
-    unisex: ['unisex'],
-  }
-
-  const queryGenderWords = filters.query?.trim() ? splitQuery(filters.query.trim()).genderWords : []
-  const paramGenderWords = filters.genero ? filters.genero.split(',').map(g => g.trim()).filter(Boolean) : []
-  const allGenderWords = [...queryGenderWords, ...paramGenderWords]
-
+  let filtered = rows
   if (allGenderWords.length > 0) {
-    rows = rows.filter(r => {
+    filtered = rows.filter(r => {
       if (!r.gender) return false
       const g = norm(r.gender)
       return allGenderWords.some(gw => {
-        const terms = genderTerms[norm(gw)] ?? [norm(gw)]
+        const terms = FACET_GENDER_TERMS[norm(gw)] ?? [norm(gw)]
         return terms.some(t => g === t || g.includes(t))
       })
     })
   }
 
   return {
-    colores:       [...new Set(rows.map(r => r.color_primary).filter(Boolean) as string[])].map(norm),
-    generos:       [...new Set(rows.map(r => r.gender).filter(Boolean) as string[])].map(norm),
-    tallas:        [...new Set(rows.flatMap(r => r.sizes_available ?? []))],
-    subcategorias: [...new Set(rows.map(r => r.subcategory).filter(Boolean) as string[])].map(norm),
-    marcas:        [...new Set(rows.map(r => r.brand).filter(Boolean) as string[])].sort(),
-    tiendas:       [...new Set(rows.map(r => r.store).filter(Boolean) as string[])].sort(),
+    colores:       [...new Set(filtered.map(r => r.color_primary).filter(Boolean) as string[])].map(norm),
+    generos:       [...new Set(filtered.map(r => r.gender).filter(Boolean) as string[])].map(norm),
+    tallas:        [...new Set(filtered.flatMap(r => r.sizes_available ?? []))],
+    subcategorias: [...new Set(filtered.map(r => r.subcategory).filter(Boolean) as string[])].map(norm),
+    marcas:        [...new Set(filtered.map(r => r.brand).filter(Boolean) as string[])].sort(),
+    tiendas:       [...new Set(filtered.map(r => r.store).filter(Boolean) as string[])].sort(),
   }
 }
 
+const EMPTY_FACETS: SearchFacets = { colores: [], generos: [], tallas: [], subcategorias: [], marcas: [], tiendas: [] }
+
+export async function getSearchFacets(
+  filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda' | 'genero'>
+): Promise<SearchFacets> {
+  const baseQ = supabase
+    .from('products')
+    .select('color_primary, gender, sizes_available, subcategory, brand, store')
+    .eq('available', true)
+
+  // Una sola request con límite alto — no loop de paginación
+  const { data, error } = await applyBaseFilters(baseQ, filters).limit(10000)
+  if (error) { console.error('[BiuBan] getSearchFacets:', error.message); return EMPTY_FACETS }
+  if (!data || data.length === 0) return EMPTY_FACETS
+
+  const queryGenderWords = filters.query?.trim() ? splitQuery(filters.query.trim()).genderWords : []
+  return computeFacetsFromRows(data as FacetRow[], filters.genero, queryGenderWords)
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
-// Rango de precio dinámico para el slider del sidebar
+// Rango de precio dinámico — dos queries indexadas (min y max) en paralelo
+// Antes: paginateAll con miles de filas. Ahora: 2 requests de 1 fila c/u
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function getPriceRange(
   filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda' | 'genero'>
 ): Promise<{ min: number; max: number }> {
-  const buildQ = () => {
-    let q = supabase.from('products').select('price').eq('available', true)
+  const base = supabase.from('products').select('price').eq('available', true)
 
-    if (filters.categoria) {
-      const cats = filters.categoria.split(',').map(c => c.trim()).filter(Boolean)
-      const catConds = cats.flatMap(c => [`category.ilike.%${c}%`, `subcategory.ilike.%${c}%`])
-      q = q.or(catConds.join(','))
-    }
-    if (filters.marca) {
-      const marcas = filters.marca.split(',').map(m => m.trim()).filter(Boolean)
-      q = marcas.length === 1
-        ? q.ilike('brand', `%${marcas[0]}%`)
-        : q.or(marcas.map(m => `brand.ilike.%${m}%`).join(','))
-    }
-    if (filters.tienda) {
-      const tiendas = filters.tienda.split(',').map(t => t.trim()).filter(Boolean)
-      q = tiendas.length === 1
-        ? q.ilike('store', `%${tiendas[0]}%`)
-        : q.or(tiendas.map(t => `store.ilike.%${t}%`).join(','))
-    }
-    if (filters.query?.trim()) {
-      const { mainWords } = splitQuery(filters.query.trim())
-      if (mainWords.length > 0) {
-        const terms = expandMainTerms(mainWords)
-        const orConds = terms.flatMap(t => [
-          `name.ilike.%${t}%`,
-          `brand.ilike.%${t}%`,
-          `category.ilike.%${t}%`,
-          `subcategory.ilike.%${t}%`,
-        ]).join(',')
-        q = q.or(orConds)
-      }
-    }
-    return q
-  }
+  const [{ data: minData }, { data: maxData }] = await Promise.all([
+    applyBaseFilters(base, filters).order('price', { ascending: true }).limit(1),
+    applyBaseFilters(base, filters).order('price', { ascending: false }).limit(1),
+  ])
 
-  const rawData = await paginateAll(buildQ)
-  if (rawData.length === 0) return { min: 0, max: 10000 }
-
-  const prices = (rawData as { price: number }[])
-    .map(r => Number(r.price))
-    .filter(p => !isNaN(p) && p > 0)
-  if (prices.length === 0) return { min: 0, max: 10000 }
-
-  const rawMin = Math.min(...prices)
-  const rawMax = Math.max(...prices)
+  const rawMin = minData?.[0]?.price ?? 0
+  const rawMax = maxData?.[0]?.price ?? 10000
   return {
-    min: Math.floor(rawMin / 100) * 100,
-    max: Math.ceil(rawMax / 100) * 100,
+    min: Math.floor(Number(rawMin) / 100) * 100,
+    max: Math.ceil(Number(rawMax) / 100) * 100,
   }
 }
 
@@ -841,119 +827,35 @@ export async function searchOffersFromDB(filters: SearchFilters): Promise<Produc
 export async function getOffersFacets(
   filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda' | 'genero'>
 ): Promise<SearchFacets> {
-  const buildQ = () => {
-    let q = supabase
-      .from('products')
-      .select('color_primary, gender, sizes_available, subcategory, brand, store')
-      .eq('available', true)
-      .or('on_sale.eq.true,discount.gt.0')
+  const baseQ = supabase
+    .from('products')
+    .select('color_primary, gender, sizes_available, subcategory, brand, store')
+    .eq('available', true)
+    .or('on_sale.eq.true,discount.gt.0')
 
-    if (filters.categoria) {
-      const cats = filters.categoria.split(',').map(c => c.trim()).filter(Boolean)
-      const catConds = cats.flatMap(c => [`category.ilike.%${c}%`, `subcategory.ilike.%${c}%`])
-      q = q.or(catConds.join(','))
-    }
-    if (filters.marca) {
-      const marcas = filters.marca.split(',').map(m => m.trim()).filter(Boolean)
-      q = marcas.length === 1 ? q.ilike('brand', `%${marcas[0]}%`) : q.or(marcas.map(m => `brand.ilike.%${m}%`).join(','))
-    }
-    if (filters.tienda) {
-      const tiendas = filters.tienda.split(',').map(t => t.trim()).filter(Boolean)
-      q = tiendas.length === 1 ? q.ilike('store', `%${tiendas[0]}%`) : q.or(tiendas.map(t => `store.ilike.%${t}%`).join(','))
-    }
-    if (filters.query?.trim()) {
-      const { mainWords } = splitQuery(filters.query.trim())
-      if (mainWords.length > 0) {
-        const terms = expandMainTerms(mainWords)
-        const orConds = terms.flatMap(t => [
-          `name.ilike.%${t}%`, `brand.ilike.%${t}%`,
-          `category.ilike.%${t}%`, `subcategory.ilike.%${t}%`,
-        ]).join(',')
-        q = q.or(orConds)
-      }
-    }
-    return q
-  }
+  const { data, error } = await applyBaseFilters(baseQ, filters).limit(10000)
+  if (error) { console.error('[BiuBan] getOffersFacets:', error.message); return EMPTY_FACETS }
+  if (!data || data.length === 0) return EMPTY_FACETS
 
-  const rawData = await paginateAll(buildQ)
-  if (rawData.length === 0) return { colores: [], generos: [], tallas: [], subcategorias: [], marcas: [], tiendas: [] }
-
-  type Row = { color_primary: string | null; gender: string | null; sizes_available: string[] | null; subcategory: string | null; brand: string | null; store: string | null }
-  let rows = rawData as unknown as Row[]
-
-  const genderTerms: Record<string, string[]> = {
-    hombre: ['hombre', 'male', 'men', 'man', 'masculino'],
-    mujer:  ['mujer', 'female', 'women', 'woman', 'femenino', 'dama'],
-    nino:   ['nino', 'niño', 'boy', 'kids', 'kid', 'infantil', 'junior'],
-    nina:   ['nina', 'niña', 'girl', 'kids', 'kid', 'infantil'],
-    unisex: ['unisex'],
-  }
   const queryGenderWords = filters.query?.trim() ? splitQuery(filters.query.trim()).genderWords : []
-  const paramGenderWords = filters.genero ? filters.genero.split(',').map(g => g.trim()).filter(Boolean) : []
-  const allGenderWords = [...queryGenderWords, ...paramGenderWords]
-  if (allGenderWords.length > 0) {
-    rows = rows.filter(r => {
-      if (!r.gender) return false
-      const g = norm(r.gender)
-      return allGenderWords.some(gw => {
-        const terms = genderTerms[norm(gw)] ?? [norm(gw)]
-        return terms.some(t => g === t || g.includes(t))
-      })
-    })
-  }
-
-  return {
-    colores:       [...new Set(rows.map(r => r.color_primary).filter(Boolean) as string[])].map(norm),
-    generos:       [...new Set(rows.map(r => r.gender).filter(Boolean) as string[])].map(norm),
-    tallas:        [...new Set(rows.flatMap(r => r.sizes_available ?? []))],
-    subcategorias: [...new Set(rows.map(r => r.subcategory).filter(Boolean) as string[])].map(norm),
-    marcas:        [...new Set(rows.map(r => r.brand).filter(Boolean) as string[])].sort(),
-    tiendas:       [...new Set(rows.map(r => r.store).filter(Boolean) as string[])].sort(),
-  }
+  return computeFacetsFromRows(data as FacetRow[], filters.genero, queryGenderWords)
 }
 
 export async function getOffersPriceRange(
   filters: Pick<SearchFilters, 'query' | 'categoria' | 'marca' | 'tienda' | 'genero'>
 ): Promise<{ min: number; max: number }> {
-  const buildQ = () => {
-    let q = supabase.from('products').select('price').eq('available', true).or('on_sale.eq.true,discount.gt.0')
+  const base = supabase.from('products').select('price').eq('available', true).or('on_sale.eq.true,discount.gt.0')
 
-    if (filters.categoria) {
-      const cats = filters.categoria.split(',').map(c => c.trim()).filter(Boolean)
-      const catConds = cats.flatMap(c => [`category.ilike.%${c}%`, `subcategory.ilike.%${c}%`])
-      q = q.or(catConds.join(','))
-    }
-    if (filters.marca) {
-      const marcas = filters.marca.split(',').map(m => m.trim()).filter(Boolean)
-      q = marcas.length === 1 ? q.ilike('brand', `%${marcas[0]}%`) : q.or(marcas.map(m => `brand.ilike.%${m}%`).join(','))
-    }
-    if (filters.tienda) {
-      const tiendas = filters.tienda.split(',').map(t => t.trim()).filter(Boolean)
-      q = tiendas.length === 1 ? q.ilike('store', `%${tiendas[0]}%`) : q.or(tiendas.map(t => `store.ilike.%${t}%`).join(','))
-    }
-    if (filters.query?.trim()) {
-      const { mainWords } = splitQuery(filters.query.trim())
-      if (mainWords.length > 0) {
-        const terms = expandMainTerms(mainWords)
-        const orConds = terms.flatMap(t => [
-          `name.ilike.%${t}%`, `brand.ilike.%${t}%`,
-          `category.ilike.%${t}%`, `subcategory.ilike.%${t}%`,
-        ]).join(',')
-        q = q.or(orConds)
-      }
-    }
-    return q
-  }
+  const [{ data: minData }, { data: maxData }] = await Promise.all([
+    applyBaseFilters(base, filters).order('price', { ascending: true }).limit(1),
+    applyBaseFilters(base, filters).order('price', { ascending: false }).limit(1),
+  ])
 
-  const rawData = await paginateAll(buildQ)
-  if (rawData.length === 0) return { min: 0, max: 10000 }
-
-  const prices = (rawData as { price: number }[]).map(r => Number(r.price)).filter(p => !isNaN(p) && p > 0)
-  if (prices.length === 0) return { min: 0, max: 10000 }
-
+  const rawMin = minData?.[0]?.price ?? 0
+  const rawMax = maxData?.[0]?.price ?? 10000
   return {
-    min: Math.floor(Math.min(...prices) / 100) * 100,
-    max: Math.ceil(Math.max(...prices) / 100) * 100,
+    min: Math.floor(Number(rawMin) / 100) * 100,
+    max: Math.ceil(Number(rawMax) / 100) * 100,
   }
 }
 
@@ -1021,14 +923,18 @@ export interface BrandInfo {
 }
 
 export async function getBrandsFromDB(): Promise<BrandInfo[]> {
-  const buildQ = () =>
-    supabase.from('products').select('brand').eq('available', true)
+  // Una sola request con limit alto — sin loop de paginación
+  const { data, error } = await supabase
+    .from('products')
+    .select('brand')
+    .eq('available', true)
+    .limit(10000)
 
-  const rawData = await paginateAll(buildQ)
+  if (error) { console.error('[BiuBan] getBrandsFromDB:', error.message); return [] }
 
   const counts: Record<string, number> = {}
-  for (const row of rawData) {
-    const b = String(row.brand ?? '').trim()
+  for (const row of (data ?? [])) {
+    const b = String((row as Record<string, unknown>).brand ?? '').trim()
     if (b) counts[b] = (counts[b] ?? 0) + 1
   }
 

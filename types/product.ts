@@ -33,6 +33,19 @@ export interface Product {
   stockStatus?:        string
   envioGratis:         boolean
   tags?:               string[]
+  // Catalogación extendida
+  sku?:                string
+  ocasion?:            string
+  temporada?:          string
+  coleccion?:          string
+  instruccionesCuido?: string
+  paisOrigen?:         string
+  esSustentable?:      boolean
+  caracteristicas?:    string[]
+  collab?:             string
+  calificacion?:       number
+  numResenas?:         number
+  imagenesAdicionales?: string[]
 }
 
 export type SortOption = 'relevancia' | 'precio-asc' | 'precio-desc' | 'descuento'

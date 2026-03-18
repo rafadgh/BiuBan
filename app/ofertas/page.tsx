@@ -1,5 +1,5 @@
 // app/ofertas/page.tsx
-import type { Metadata } from 'next'
+import type { Metadata, ResolvingMetadata } from 'next'
 import { Suspense } from 'react'
 import { Header } from '@/components/Header'
 import { FiltersSidebar } from '@/components/FiltersSidebar'
@@ -11,11 +11,6 @@ import { searchOffersFromDB, getOffersPriceRange, getOffersFacets } from '@/lib/
 import { Pagination } from '@/components/Pagination'
 
 const PER_PAGE = 24
-
-export const metadata: Metadata = {
-  title: 'Ofertas - BiuBan',
-  description: 'Las mejores ofertas y descuentos en ropa, tenis y accesorios. Filtra por categoría, talla, color y más.',
-}
 
 interface OffersPageProps {
   searchParams: Promise<{
@@ -33,6 +28,36 @@ interface OffersPageProps {
     ordenar?:   string
     pagina?:    string
   }>
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function generateMetadata({ searchParams }: OffersPageProps, _parent: ResolvingMetadata): Promise<Metadata> {
+  const params    = await searchParams
+  const query     = params.q?.trim() || ''
+  const marca     = params.marca?.trim() || ''
+  const categoria = params.categoria?.trim() || ''
+
+  let title       = 'Ofertas — BiuBan'
+  let description = 'Las mejores ofertas y descuentos en ropa, tenis y accesorios. Filtra por categoría, talla, color y más.'
+
+  if (query) {
+    title       = `Ofertas de "${query}" — BiuBan`
+    description = `Las mejores ofertas para "${query}" en BiuBan. Compara descuentos entre tiendas de México.`
+  } else if (marca) {
+    title       = `Ofertas ${marca} — BiuBan`
+    description = `Los mejores descuentos en productos ${marca}. Encuentra ofertas en BiuBan.`
+  } else if (categoria) {
+    const cap = categoria.charAt(0).toUpperCase() + categoria.slice(1)
+    title       = `Ofertas en ${cap} — BiuBan`
+    description = `Los mejores descuentos en ${categoria} en BiuBan. Filtra por talla, color y marca.`
+  }
+
+  return {
+    title,
+    description,
+    openGraph: { title, description, type: 'website' },
+    twitter:   { card: 'summary', title, description },
+  }
 }
 
 async function OffersResults({ searchParams }: OffersPageProps) {
