@@ -9,7 +9,7 @@ export function HeroSection() {
           {/* Headline */}
           <h1 className="text-balance text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl lg:text-6xl">
             Encuentra la mejor opción
-            <span className="mt-1 block text-muted-foreground">entre todos los vendedores</span>
+            <span className="mt-1 block text-muted-foreground">entre todas las tiendas</span>
           </h1>
 
           {/* Subheadline */}

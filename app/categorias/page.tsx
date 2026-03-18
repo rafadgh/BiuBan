@@ -81,6 +81,12 @@ const sections: CategorySection[] = [
         image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500&h=500&fit=crop',
       },
       {
+        name:  'Camisas de Vestir',
+        desc:  'Dress shirts, Oxford y camisas de vestir',
+        href:  '/categoria/camisas-formales',
+        image: 'https://images.unsplash.com/photo-1603252109303-2751441dd157?w=500&h=500&fit=crop',
+      },
+      {
         name:  'Crop Tops',
         desc:  'Tops cortos y diseños atrevidos',
         href:  '/categoria/crop-tops',

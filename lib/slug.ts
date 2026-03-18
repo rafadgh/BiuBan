@@ -41,7 +41,8 @@ export const CATEGORIA_LABELS: Record<string, string> = {
 
   // ── Ropa superior ──────────────────────────────────────────────────────────
   playeras:       'Playeras',
-  camisas:        'Camisas / Blusas',
+  camisas:           'Camisas / Blusas',
+  'camisas-formales': 'Camisas de Vestir',
   sudaderas:      'Sudaderas / Hoodies',
   chamarras:      'Chamarras / Jackets',
   abrigos:        'Abrigos / Coats',
