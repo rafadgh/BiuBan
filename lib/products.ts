@@ -464,6 +464,66 @@ export interface SearchFilters {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Algoritmo "Mejor Opción" dinámico
+// Agrupa por subcategoría, puntúa precio + descuento y marca los mejores
+// ─────────────────────────────────────────────────────────────────────────────
+
+function computeMejorOpcion(products: Product[]): Product[] {
+  if (products.length === 0) return products
+
+  // Agrupar por subcategoría (o categoría si no hay subcategoría)
+  const groups = new Map<string, Product[]>()
+  for (const p of products) {
+    const key = (p.subcategoria || p.categoria || 'otros').toLowerCase().trim()
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key)!.push(p)
+  }
+
+  // Calcular score de valor por grupo
+  const scores = new Map<string, number>() // id → score
+
+  for (const [, group] of groups) {
+    if (group.length < 2) continue // grupo de 1: no hay con qué comparar
+
+    const prices = group.map(p => p.precio).filter(v => v > 0)
+    if (prices.length === 0) continue
+
+    const minPrice = Math.min(...prices)
+    const maxPrice = Math.max(...prices)
+    const priceRange = maxPrice - minPrice
+
+    for (const p of group) {
+      // Precio normalizado: 0 = más caro, 100 = más barato
+      const priceScore = priceRange > 0
+        ? ((maxPrice - p.precio) / priceRange) * 50
+        : 50
+
+      // Descuento: % directo o calculado desde precio original
+      const discountPct = typeof p.descuento === 'number' && p.descuento > 0
+        ? p.descuento
+        : (typeof p.precioOriginal === 'number' && p.precioOriginal > p.precio && p.precioOriginal > 0)
+          ? ((p.precioOriginal - p.precio) / p.precioOriginal) * 100
+          : 0
+
+      const discountScore = Math.min(discountPct, 80) * (50 / 80) // cap a 50 puntos
+
+      scores.set(p.id, priceScore + discountScore)
+    }
+  }
+
+  // Determinar el umbral: top ~15% o mínimo score de 55/100
+  const allScores = Array.from(scores.values()).sort((a, b) => b - a)
+  const topN = Math.max(1, Math.ceil(allScores.length * 0.15))
+  const threshold = allScores[topN - 1] ?? 55
+
+  // Re-mapear mejorOpcion dinámicamente
+  return products.map(p => ({
+    ...p,
+    mejorOpcion: (scores.get(p.id) ?? 0) >= threshold && (scores.get(p.id) ?? 0) >= 40,
+  }))
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Función principal de búsqueda
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -492,19 +552,22 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
     const filteredMainWords = mainWords.filter(w => w.length > 1)
 
     if (filteredMainWords.length > 0) {
-      const expandedTerms = expandMainTerms(filteredMainWords)
-
-      const orConditions = expandedTerms.flatMap(t => [
-        `name.ilike.%${t}%`,
-        `brand.ilike.%${t}%`,
-        `category.ilike.%${t}%`,
-        `subcategory.ilike.%${t}%`,
-      ]).join(',')
+      // Una condición OR por palabra → chained .or() = AND entre palabras, OR dentro de sinónimos
+      // "adidas tenis" → .or(adidas...).or(tenis|sneakers|...) = sólo productos que tienen AMBAS palabras
+      const wordConditions = filteredMainWords.map(word => {
+        const terms = expandMainTerms([word])
+        return terms.flatMap(t => [
+          `name.ilike.%${t}%`,
+          `brand.ilike.%${t}%`,
+          `category.ilike.%${t}%`,
+          `subcategory.ilike.%${t}%`,
+        ]).join(',')
+      })
 
       // Factory function: reconstruye la query idéntica en cada llamada (para paginación)
       const buildQ = () => {
         let q = supabase.from('products').select('*').eq('available', true)
-        q = q.or(orConditions)
+        for (const cond of wordConditions) q = q.or(cond)
 
         if (categoria) {
           const cats = categoria.split(',').map(c => c.trim()).filter(Boolean)
@@ -578,7 +641,7 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
         })
       }
 
-      return products
+      return computeMejorOpcion(products)
 
     } else if (queryColorWords.length > 0 || queryGenderWords.length > 0) {
       // La query es SOLO colores/género (ej: "blanco", "hombre") → traer todo y filtrar en memoria
@@ -670,7 +733,7 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
     })
   }
 
-  return products
+  return computeMejorOpcion(products)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -696,12 +759,15 @@ function applyBaseFilters(q: any, filters: Pick<SearchFilters, 'query' | 'catego
     const { mainWords } = splitQuery(filters.query.trim())
     const filteredWords = mainWords.filter(w => w.length > 1)
     if (filteredWords.length > 0) {
-      const terms = expandMainTerms(filteredWords)
-      const orConds = terms.flatMap(t => [
-        `name.ilike.%${t}%`, `brand.ilike.%${t}%`,
-        `category.ilike.%${t}%`, `subcategory.ilike.%${t}%`,
-      ]).join(',')
-      q = q.or(orConds)
+      // AND entre palabras: cada palabra es un .or() separado
+      for (const word of filteredWords) {
+        const terms = expandMainTerms([word])
+        const orConds = terms.flatMap(t => [
+          `name.ilike.%${t}%`, `brand.ilike.%${t}%`,
+          `category.ilike.%${t}%`, `subcategory.ilike.%${t}%`,
+        ]).join(',')
+        q = q.or(orConds)
+      }
     }
   }
   return q
@@ -814,15 +880,19 @@ export async function searchOffersFromDB(filters: SearchFilters): Promise<Produc
 
     if (query?.trim()) {
       const { mainWords } = splitQuery(query.trim())
-      if (mainWords.length > 0) {
-        const terms = expandMainTerms(mainWords)
-        const orConds = terms.flatMap(t => [
-          `name.ilike.%${t}%`,
-          `brand.ilike.%${t}%`,
-          `category.ilike.%${t}%`,
-          `subcategory.ilike.%${t}%`,
-        ]).join(',')
-        q = q.or(orConds)
+      const filteredMainWordsOffers = mainWords.filter(w => w.length > 1)
+      if (filteredMainWordsOffers.length > 0) {
+        // AND entre palabras: cada palabra como .or() separado
+        for (const word of filteredMainWordsOffers) {
+          const terms = expandMainTerms([word])
+          const orConds = terms.flatMap(t => [
+            `name.ilike.%${t}%`,
+            `brand.ilike.%${t}%`,
+            `category.ilike.%${t}%`,
+            `subcategory.ilike.%${t}%`,
+          ]).join(',')
+          q = q.or(orConds)
+        }
       }
     }
     if (categoria) {
