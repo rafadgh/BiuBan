@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
-import { ExternalLink, X, TrendingDown, TrendingUp, Minus, Package, Truck, Tag } from 'lucide-react'
+import { ExternalLink, X, TrendingDown, TrendingUp, Minus, Package, Truck, Tag, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Product } from '@/types/product'
 import { addUtmParams } from '@/lib/utils'
 
@@ -63,11 +63,129 @@ function PriceTrend({ history }: { history: PriceRecord[] }) {
   )
 }
 
+// ─── Galería de imágenes ─────────────────────────────────────────────────────
+interface ImageGalleryProps {
+  images: string[]
+  productName: string
+  hasDiscount: boolean
+  discountPct?: number
+}
+
+function ImageGallery({ images, productName, hasDiscount, discountPct }: ImageGalleryProps) {
+  const [current, setCurrent] = useState(0)
+  const [imgError, setImgError] = useState<Record<number, boolean>>({})
+
+  const prev = useCallback(() => setCurrent(i => (i - 1 + images.length) % images.length), [images.length])
+  const next = useCallback(() => setCurrent(i => (i + 1) % images.length), [images.length])
+
+  // Reset cuando cambia el producto
+  useEffect(() => { setCurrent(0); setImgError({}) }, [images[0]])
+
+  // Navegar con teclas dentro del modal
+  useEffect(() => {
+    if (images.length < 2) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') prev()
+      if (e.key === 'ArrowRight') next()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [images.length, prev, next])
+
+  const validImages = images.filter((_, i) => !imgError[i])
+  const safeCurrent = Math.min(current, validImages.length - 1)
+  const displaySrc = validImages[safeCurrent] ?? images[0]
+
+  return (
+    <div className="w-full sm:w-52 sm:shrink-0">
+      {/* Imagen principal */}
+      <div className="relative aspect-square overflow-hidden rounded-xl bg-[#F5F5F5]">
+        <Image
+          key={displaySrc}
+          src={displaySrc}
+          alt={productName}
+          fill
+          className="object-cover transition-opacity duration-200"
+          sizes="(max-width: 640px) 100vw, 208px"
+          onError={() => setImgError(prev => ({ ...prev, [safeCurrent]: true }))}
+        />
+
+        {/* Badge descuento */}
+        {hasDiscount && discountPct && (
+          <div className="absolute left-2 top-2 rounded-full bg-[#0B0B0B] px-2 py-1 text-xs font-semibold text-white">
+            -{discountPct}%
+          </div>
+        )}
+
+        {/* Contador de imagen */}
+        {validImages.length > 1 && (
+          <div className="absolute bottom-2 right-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-medium text-white">
+            {safeCurrent + 1}/{validImages.length}
+          </div>
+        )}
+
+        {/* Flechas navegación */}
+        {validImages.length > 1 && (
+          <>
+            <button
+              onClick={prev}
+              aria-label="Imagen anterior"
+              className="absolute left-1.5 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-white/80 shadow-sm text-[#0B0B0B] hover:bg-white transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              onClick={next}
+              aria-label="Imagen siguiente"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-white/80 shadow-sm text-[#0B0B0B] hover:bg-white transition-colors"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Miniaturas */}
+      {validImages.length > 1 && (
+        <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+          {validImages.map((img, i) => (
+            <button
+              key={img + i}
+              onClick={() => setCurrent(i)}
+              aria-label={`Ver imagen ${i + 1}`}
+              className={`relative h-11 w-11 shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
+                i === safeCurrent
+                  ? 'border-[#31470B] opacity-100'
+                  : 'border-transparent opacity-60 hover:opacity-90'
+              }`}
+            >
+              <Image
+                src={img}
+                alt={`${productName} ${i + 1}`}
+                fill
+                className="object-cover"
+                sizes="44px"
+              />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Modal principal ─────────────────────────────────────────────────────────
 export function ProductDetailModal({ product, open, onClose }: ProductDetailModalProps) {
   const [history, setHistory] = useState<PriceRecord[]>([])
   const [loading, setLoading] = useState(false)
 
-  // Fetch price history when modal opens
+  // Construir array completo de imágenes: portada + adicionales
+  const allImages = [
+    product.imagen,
+    ...(product.imagenesAdicionales ?? []),
+  ].filter(Boolean)
+
+  // Fetch historial de precio cuando abre el modal
   useEffect(() => {
     if (!open) return
     setLoading(true)
@@ -78,7 +196,7 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
       .finally(() => setLoading(false))
   }, [open, product.id])
 
-  // Cerrar con tecla Escape
+  // Cerrar con Escape
   useEffect(() => {
     if (!open) return
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -113,7 +231,7 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
         className="relative z-10 w-full sm:max-w-2xl max-h-[92dvh] overflow-y-auto rounded-t-3xl sm:rounded-2xl bg-white shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
-        {/* Close button */}
+        {/* Botón cerrar */}
         <button
           onClick={onClose}
           autoFocus
@@ -124,23 +242,15 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
         </button>
 
         <div className="flex flex-col sm:flex-row gap-0 sm:gap-6 p-5 sm:p-6">
-          {/* Image */}
-          <div className="relative aspect-square w-full sm:w-48 sm:shrink-0 overflow-hidden rounded-xl bg-[#F5F5F5]">
-            <Image
-              src={product.imagen}
-              alt={product.nombre}
-              fill
-              className="object-cover"
-              sizes="(max-width: 640px) 100vw, 192px"
-            />
-            {hasDiscount && (
-              <div className="absolute left-2 top-2 rounded-full bg-[#0B0B0B] px-2 py-1 text-xs font-semibold text-white">
-                -{product.descuento}%
-              </div>
-            )}
-          </div>
+          {/* Galería */}
+          <ImageGallery
+            images={allImages}
+            productName={product.nombre}
+            hasDiscount={hasDiscount}
+            discountPct={product.descuento}
+          />
 
-          {/* Details */}
+          {/* Detalles */}
           <div className="flex flex-1 flex-col pt-4 sm:pt-0">
             <div className="mb-1 flex items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-[#31470B]">
@@ -155,7 +265,7 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
               {product.nombre}
             </h2>
 
-            {/* Price */}
+            {/* Precio */}
             <div className="mb-4 flex items-baseline gap-2">
               <span className={`text-3xl font-bold ${hasDiscount ? 'text-[#31470B]' : 'text-[#0B0B0B]'}`}>
                 ${product.precio.toLocaleString('es-MX')}
@@ -193,7 +303,7 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
               )}
             </div>
 
-            {/* Sizes */}
+            {/* Tallas */}
             {product.tallasDisponibles && product.tallasDisponibles.length > 0 && (
               <div className="mb-4">
                 <p className="mb-1.5 text-xs font-semibold text-[#6B6B6B] uppercase tracking-wide">
@@ -226,7 +336,7 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
           </div>
         </div>
 
-        {/* Price History */}
+        {/* Historial de precio */}
         <div className="border-t border-[#F0F0F0] px-5 pb-6 pt-4 sm:px-6">
           <div className="mb-3 flex items-center justify-between">
             <div>
