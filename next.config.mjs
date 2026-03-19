@@ -11,8 +11,6 @@ const nextConfig = {
       // MercadoLibre
       { protocol: 'https', hostname: 'http2.mlstatic.com' },
       { protocol: 'http',  hostname: 'http2.mlstatic.com' },
-      // Unsplash (categorias/page.tsx)
-      { protocol: 'https', hostname: 'images.unsplash.com' },
       // Supabase Storage
       { protocol: 'https', hostname: '*.supabase.co' },
       // Futuras tiendas
