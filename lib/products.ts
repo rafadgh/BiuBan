@@ -862,21 +862,23 @@ export async function getSearchFacets(
   //    así el usuario puede seleccionar MÚLTIPLES marcas/vendedores sin que
   //    la lista se quede vacía después de elegir el primero
   const filtersForLists = { query: filters.query, categoria: filters.categoria }
-  const [{ data, error }, { data: listData }] = await Promise.all([
-    applyBaseFilters(mkBase(), filters).limit(10000),
-    applyBaseFilters(mkBase(), filtersForLists).limit(5000),
+
+  // Paginamos ambas queries para no perdernos productos cuando hay >1000 en total
+  const [data, listData] = await Promise.all([
+    paginateAll(() => applyBaseFilters(mkBase(), filters)),
+    paginateAll(() => applyBaseFilters(mkBase(), filtersForLists)),
   ])
 
-  if (error) { console.error('[BiuBan] getSearchFacets:', error.message); return EMPTY_FACETS }
   if (!data || data.length === 0) return EMPTY_FACETS
+  const error = null // paginateAll maneja errores internamente
 
   const queryGenderWords = filters.query?.trim() ? splitQuery(filters.query.trim()).genderWords : []
-  const facets = computeFacetsFromRows(data as FacetRow[], filters.genero, queryGenderWords)
+  const facets = computeFacetsFromRows(data as unknown as FacetRow[], filters.genero, queryGenderWords)
 
   // Sobreescribir marcas y tiendas con la lista sin filtro de marca/tienda
-  const listRows = (listData ?? []) as FacetRow[]
-  const allMarcas = [...new Set(listRows.map(r => r.brand).filter(Boolean) as string[])].sort()
-  const allTiendas = [...new Set(listRows.map(r => r.store).filter(Boolean) as string[])].sort()
+  const listRows = (listData ?? []) as unknown as FacetRow[]
+  const allMarcas = [...new Set(listRows.map((r: FacetRow) => r.brand).filter(Boolean) as string[])].sort()
+  const allTiendas = [...new Set(listRows.map((r: FacetRow) => r.store).filter(Boolean) as string[])].sort()
 
   return { ...facets, marcas: allMarcas, tiendas: allTiendas }
 }
@@ -1052,12 +1054,13 @@ export async function getOffersFacets(
     .or('on_sale.eq.true,discount.gt.0')
 
   const filtersForLists = { query: filters.query, categoria: filters.categoria }
-  const [{ data, error }, { data: listData }] = await Promise.all([
-    applyBaseFilters(mkBase(), filters).limit(10000),
-    applyBaseFilters(mkBase(), filtersForLists).limit(5000),
+
+  // Paginamos para no perdernos tiendas/marcas cuando hay >1000 productos
+  const [data, listData] = await Promise.all([
+    paginateAll(() => applyBaseFilters(mkBase(), filters)),
+    paginateAll(() => applyBaseFilters(mkBase(), filtersForLists)),
   ])
 
-  if (error) { console.error('[BiuBan] getOffersFacets:', error.message); return EMPTY_FACETS }
   if (!data || data.length === 0) return EMPTY_FACETS
 
   const queryGenderWords = filters.query?.trim() ? splitQuery(filters.query.trim()).genderWords : []
