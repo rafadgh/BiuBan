@@ -154,10 +154,10 @@ const sections: CategorySection[] = [
         image: '/categorias/leggings.jpg',
       },
       {
-        name:  'Conjuntos / Sets',
-        desc:  'Looks coordinados en un solo clic',
-        href:  '/categoria/conjuntos',
-        image: '/categorias/sudaderas.jpg',
+        name:  'Lentes',
+        desc:  'Lentes de sol, de vista y deportivos',
+        href:  '/categoria/lentes',
+        image: '/categorias/lentes.jpg',
       },
       {
         name:  'Pijamas / Loungewear',
