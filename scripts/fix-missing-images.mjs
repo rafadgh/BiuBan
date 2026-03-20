@@ -20,21 +20,20 @@ const supabase = createClient(env['NEXT_PUBLIC_SUPABASE_URL'], env['SUPABASE_SER
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
 
-async function fetchOgImage(url) {
-  const r = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-      'Accept': 'text/html,application/xhtml+xml',
-      'Accept-Language': 'es-MX,es;q=0.9',
-      'Referer': 'https://www.mercadolibre.com.mx/',
-    },
-    signal: AbortSignal.timeout(12000),
-  })
-  if (!r.ok) return null
-  const html = await r.text()
-  const og = html.match(/property="og:image"\s+content="([^"]+)"/) ||
-             html.match(/content="([^"]+)"\s+property="og:image"/)
-  return og?.[1]?.replace('http://','https://') || null
+import { execSync } from 'child_process'
+
+function fetchOgImage(url) {
+  try {
+    const html = execSync(
+      `curl -s -L --max-time 12 -A "Googlebot/2.1 (+http://www.google.com/bot.html)" "${url}"`,
+      { encoding: 'utf8', timeout: 14000 }
+    )
+    const og = html.match(/og:image[^>]+content="([^"]+)"/) ||
+               html.match(/content="([^"]+)"[^>]+og:image/)
+    return og?.[1]?.replace('http://','https://') || null
+  } catch {
+    return null
+  }
 }
 
 // Obtener productos sin imagen
@@ -59,7 +58,7 @@ for (const prod of products) {
   process.stdout.write(`⏳ ${prod.sku} — ${prod.name.slice(0, 40)}... `)
 
   try {
-    const image = await fetchOgImage(mlUrl)
+    const image = fetchOgImage(mlUrl)
     if (image) {
       const { error: upErr } = await supabase
         .from('products')
