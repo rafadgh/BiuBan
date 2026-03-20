@@ -56,6 +56,7 @@ const QUERIES: Array<{
   genero?: string
   pages: number   // cuántas páginas de 50 productos
 }> = [
+  // ── Categorías generales ─────────────────────────────────────────────────────
   { q: 'vestido mujer',        categoria: 'Mujer',     subcategoria: 'Vestidos',     genero: 'Mujer',   pages: 3 },
   { q: 'blusa mujer moda',     categoria: 'Mujer',     subcategoria: 'Blusas',       genero: 'Mujer',   pages: 2 },
   { q: 'pantalon mujer',       categoria: 'Mujer',     subcategoria: 'Pantalones',   genero: 'Mujer',   pages: 2 },
@@ -76,6 +77,63 @@ const QUERIES: Array<{
   { q: 'conjunto deportivo',   categoria: 'Deportes',  subcategoria: 'Conjuntos',                       pages: 2 },
   { q: 'pijama mujer',         categoria: 'Mujer',     subcategoria: 'Pijamas',      genero: 'Mujer',   pages: 1 },
   { q: 'uniforme medico',      categoria: 'Trabajo',   subcategoria: 'Uniformes',                       pages: 1 },
+
+  // ── Nike ─────────────────────────────────────────────────────────────────────
+  { q: 'nike tenis hombre',    categoria: 'Calzado',   subcategoria: 'Tenis',        genero: 'Hombre',  pages: 3 },
+  { q: 'nike tenis mujer',     categoria: 'Calzado',   subcategoria: 'Tenis',        genero: 'Mujer',   pages: 3 },
+  { q: 'nike ropa hombre',     categoria: 'Hombre',    subcategoria: 'Deportivo',    genero: 'Hombre',  pages: 2 },
+  { q: 'nike ropa mujer',      categoria: 'Mujer',     subcategoria: 'Deportivo',    genero: 'Mujer',   pages: 2 },
+  { q: 'nike sudadera',        categoria: 'Hombre',    subcategoria: 'Sudaderas',                       pages: 2 },
+  { q: 'nike mochila',         categoria: 'Accesorios',subcategoria: 'Mochilas',                        pages: 1 },
+
+  // ── Adidas ───────────────────────────────────────────────────────────────────
+  { q: 'adidas tenis hombre',  categoria: 'Calzado',   subcategoria: 'Tenis',        genero: 'Hombre',  pages: 3 },
+  { q: 'adidas tenis mujer',   categoria: 'Calzado',   subcategoria: 'Tenis',        genero: 'Mujer',   pages: 3 },
+  { q: 'adidas ropa hombre',   categoria: 'Hombre',    subcategoria: 'Deportivo',    genero: 'Hombre',  pages: 2 },
+  { q: 'adidas ropa mujer',    categoria: 'Mujer',     subcategoria: 'Deportivo',    genero: 'Mujer',   pages: 2 },
+  { q: 'adidas sudadera',      categoria: 'Hombre',    subcategoria: 'Sudaderas',                       pages: 1 },
+
+  // ── Zara ─────────────────────────────────────────────────────────────────────
+  { q: 'zara vestido mujer',   categoria: 'Mujer',     subcategoria: 'Vestidos',     genero: 'Mujer',   pages: 2 },
+  { q: 'zara ropa mujer',      categoria: 'Mujer',     subcategoria: 'Blusas',       genero: 'Mujer',   pages: 2 },
+  { q: 'zara pantalon hombre', categoria: 'Hombre',    subcategoria: 'Pantalones',   genero: 'Hombre',  pages: 1 },
+  { q: 'zara camisa hombre',   categoria: 'Hombre',    subcategoria: 'Camisas',      genero: 'Hombre',  pages: 1 },
+
+  // ── H&M ──────────────────────────────────────────────────────────────────────
+  { q: 'hm ropa mujer',        categoria: 'Mujer',     subcategoria: 'Blusas',       genero: 'Mujer',   pages: 2 },
+  { q: 'hm ropa hombre',       categoria: 'Hombre',    subcategoria: 'Camisas',      genero: 'Hombre',  pages: 1 },
+  { q: 'hm vestido',           categoria: 'Mujer',     subcategoria: 'Vestidos',     genero: 'Mujer',   pages: 1 },
+
+  // ── Levi's ───────────────────────────────────────────────────────────────────
+  { q: 'levis jeans hombre',   categoria: 'Hombre',    subcategoria: 'Jeans',        genero: 'Hombre',  pages: 2 },
+  { q: 'levis jeans mujer',    categoria: 'Mujer',     subcategoria: 'Jeans',        genero: 'Mujer',   pages: 2 },
+
+  // ── Tommy Hilfiger ───────────────────────────────────────────────────────────
+  { q: 'tommy hilfiger polo',  categoria: 'Hombre',    subcategoria: 'Polos',        genero: 'Hombre',  pages: 1 },
+  { q: 'tommy hilfiger mujer', categoria: 'Mujer',     subcategoria: 'Blusas',       genero: 'Mujer',   pages: 1 },
+
+  // ── Under Armour ─────────────────────────────────────────────────────────────
+  { q: 'under armour tenis',   categoria: 'Calzado',   subcategoria: 'Tenis',                           pages: 2 },
+  { q: 'under armour ropa',    categoria: 'Deportes',  subcategoria: 'Deportivo',                       pages: 2 },
+
+  // ── Puma ─────────────────────────────────────────────────────────────────────
+  { q: 'puma tenis hombre',    categoria: 'Calzado',   subcategoria: 'Tenis',        genero: 'Hombre',  pages: 2 },
+  { q: 'puma tenis mujer',     categoria: 'Calzado',   subcategoria: 'Tenis',        genero: 'Mujer',   pages: 1 },
+  { q: 'puma ropa deportiva',  categoria: 'Deportes',  subcategoria: 'Deportivo',                       pages: 1 },
+
+  // ── New Balance ──────────────────────────────────────────────────────────────
+  { q: 'new balance tenis',    categoria: 'Calzado',   subcategoria: 'Tenis',                           pages: 2 },
+
+  // ── Vans ─────────────────────────────────────────────────────────────────────
+  { q: 'vans tenis',           categoria: 'Calzado',   subcategoria: 'Tenis',                           pages: 2 },
+
+  // ── Converse ─────────────────────────────────────────────────────────────────
+  { q: 'converse tenis',       categoria: 'Calzado',   subcategoria: 'Tenis',                           pages: 2 },
+
+  // ── Guess / Calvin Klein / Michael Kors ──────────────────────────────────────
+  { q: 'guess bolsa mujer',    categoria: 'Accesorios',subcategoria: 'Bolsas',       genero: 'Mujer',   pages: 1 },
+  { q: 'calvin klein ropa',    categoria: 'Hombre',    subcategoria: 'Camisas',                         pages: 1 },
+  { q: 'michael kors bolsa',   categoria: 'Accesorios',subcategoria: 'Bolsas',       genero: 'Mujer',   pages: 1 },
 ]
 
 // ─── Utilidades ───────────────────────────────────────────────────────────────
@@ -198,7 +256,10 @@ async function fetchMLProducts(q: string, offset = 0): Promise<MLSearchResponse>
   }
 
   const res = await fetch(url, { headers, next: { revalidate: 0 } })
-  if (!res.ok) throw new Error(`ML API error ${res.status} for q="${q}"`)
+  if (!res.ok) {
+    const body = await res.text()
+    throw new Error(`ML API error ${res.status} for q="${q}" | body: ${body}`)
+  }
   return res.json()
 }
 
