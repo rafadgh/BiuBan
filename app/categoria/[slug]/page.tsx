@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 // app/categoria/[slug]/page.tsx
 // URL limpia: /categoria/tenis, /categoria/sudaderas, /categoria/running, etc.
 import type { Metadata } from 'next'

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 // app/marca/[slug]/page.tsx
 // URL limpia: /marca/adidas-mx, /marca/nike-mx, /marca/zara, etc.
 import type { Metadata } from 'next'

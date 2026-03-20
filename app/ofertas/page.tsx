@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 // app/ofertas/page.tsx
 import type { Metadata, ResolvingMetadata } from 'next'
 import { Suspense } from 'react'

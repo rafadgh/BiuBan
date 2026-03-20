@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 // app/buscar/page.tsx
 import type { Metadata } from 'next'
 import { Suspense } from 'react'

@@ -5,6 +5,8 @@ import { Footer } from '@/components/Footer'
 import { getBrandsFromDB } from '@/lib/products'
 import { toSlug } from '@/lib/slug'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Marcas - BiuBan',
   description:
