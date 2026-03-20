@@ -56,13 +56,22 @@ export function ProductCard({ product }: ProductCardProps) {
           className="relative aspect-square w-full overflow-hidden bg-[#F5F5F5] text-left"
           aria-label={`Ver detalles de ${product.nombre}`}
         >
-          <Image
-            src={product.imagen}
-            alt={product.nombre}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          />
+          {product.imagen ? (
+            <Image
+              src={product.imagen}
+              alt={product.nombre}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <span className="text-4xl font-bold text-[#D0D0D0]">
+                {product.nombre.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
         </button>
 
         <div className="flex flex-1 flex-col p-3 sm:p-4">
