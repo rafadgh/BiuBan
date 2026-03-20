@@ -175,6 +175,45 @@ const sections: CategorySection[] = [
   },
   // ────────────────────────────────────────────────────────────────────────────
   {
+    id:       'ropa-interior',
+    title:    'Ropa Interior',
+    subtitle: 'Bóxers, brasieres, fajas, medias y más',
+    layout:   'small',
+    items: [
+      {
+        name:  'Ropa Interior',
+        desc:  'Bóxers, brasieres, fajas y más',
+        href:  '/categoria/ropa-interior',
+        image: '/categorias/ropa-interior.jpg',
+      },
+      {
+        name:  'Bóxers / Calzoncillos',
+        desc:  'Algodón, microfibra y packs',
+        href:  '/categoria/boxers',
+        image: '/categorias/boxers.jpg',
+      },
+      {
+        name:  'Brasieres / Sujetadores',
+        desc:  'Push-up, sin tirantes y deportivos',
+        href:  '/categoria/brasieres',
+        image: '/categorias/brasieres.jpg',
+      },
+      {
+        name:  'Fajas / Moldeadores',
+        desc:  'Reductoras, modeladoras y bodys',
+        href:  '/categoria/fajas',
+        image: '/categorias/fajas.jpg',
+      },
+      {
+        name:  'Medias / Pantis',
+        desc:  'Pantimedia, medias y calcetines',
+        href:  '/categoria/medias',
+        image: '/categorias/medias.jpg',
+      },
+    ],
+  },
+  // ────────────────────────────────────────────────────────────────────────────
+  {
     id:       'deporte',
     title:    'Deporte',
     subtitle: 'Ropa técnica para cada disciplina',

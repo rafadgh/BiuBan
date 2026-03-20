@@ -62,6 +62,13 @@ export const CATEGORIA_LABELS: Record<string, string> = {
   pijamas:        'Pijamas / Loungewear',
   'trajes-de-bano': 'Trajes de baño',
 
+  // ── Ropa interior ──────────────────────────────────────────────────────────
+  'ropa-interior': 'Ropa Interior',
+  boxers:          'Bóxers / Calzoncillos',
+  brasieres:       'Brasieres / Sujetadores',
+  fajas:           'Fajas / Moldeadores',
+  medias:          'Medias / Pantis',
+
   // ── Deporte ────────────────────────────────────────────────────────────────
   running:        'Running / Atletismo',
   gym:            'Gym / Fitness',

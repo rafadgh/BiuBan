@@ -43,6 +43,16 @@ const CATEGORIA_GROUPS: { group: string; items: { value: string; label: string }
     ],
   },
   {
+    group: 'Ropa Interior',
+    items: [
+      { value: 'ropa-interior', label: 'Todo Ropa Interior' },
+      { value: 'boxers',        label: 'Bóxers / Calzoncillos' },
+      { value: 'brasieres',     label: 'Brasieres / Sujetadores' },
+      { value: 'fajas',         label: 'Fajas / Moldeadores' },
+      { value: 'medias',        label: 'Medias / Pantis' },
+    ],
+  },
+  {
     group: 'Accesorios',
     items: [
       { value: 'mochilas',   label: 'Mochilas / Bolsas'     },

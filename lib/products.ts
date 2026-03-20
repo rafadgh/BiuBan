@@ -749,6 +749,13 @@ const CATEGORIA_EXPANSION: Record<string, string[]> = {
   carteras:   ['cartera', 'billetera', 'wallet'],
   bufandas:   ['bufanda', 'gorro', 'scarf'],
   lentes:     ['lente', 'gafa', 'sunglass', 'anteojos'],
+  // Ropa interior
+  'ropa-interior': ['ropa interior', 'boxer', 'bóxer', 'calzoncillo', 'brasier',
+                    'sujetador', 'faja', 'moldeador', 'panty', 'media', 'panti'],
+  boxers:          ['boxer', 'bóxer', 'calzoncillo', 'calzon', 'calzón'],
+  brasieres:       ['brasier', 'bra', 'sujetador', 'top interior'],
+  fajas:           ['faja', 'moldeador', 'body reductor', 'panty faja'],
+  medias:          ['media', 'pantimedia', 'panti', 'calcetin largo', 'calcetín largo'],
 }
 
 function expandCategoria(slug: string): string[] {
