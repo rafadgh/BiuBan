@@ -5,6 +5,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createHash } from 'crypto'
 
+// Extender timeout de Vercel a 60s (necesario para sync de muchos productos)
+export const maxDuration = 60
+
 const AFFILIATE_ID  = 'diezrafa20230122100014'
 const ML_SITE       = 'MLM'  // México
 const LIMIT_PER_REQ = 50     // Max permitido por ML API
@@ -289,6 +292,7 @@ export async function GET(req: NextRequest) {
     total_inserted: 0,
     total_errors:   0,
     categories:     [] as string[],
+    errors_detail:  [] as string[],
   }
 
   for (const target of targets) {
@@ -298,7 +302,10 @@ export async function GET(req: NextRequest) {
       const offset = page * LIMIT_PER_REQ
       try {
         const data = await fetchMLProducts(target.q, offset)
-        if (!data.results?.length) break
+        if (!data.results?.length) {
+          console.log(`[ML Sync] 0 resultados para "${target.q}" p${page}`)
+          break
+        }
 
         const rows = data.results.map(item =>
           transformProduct(item, target.categoria, target.subcategoria, target.genero)
@@ -315,8 +322,10 @@ export async function GET(req: NextRequest) {
           })
 
         if (error) {
-          console.error(`[ML Sync] Error insertando "${target.q}" offset ${offset}:`, error.message)
+          const msg = `Supabase "${target.q}": ${error.message} (${error.code})`
+          console.error(`[ML Sync] ${msg}`)
           stats.total_errors++
+          stats.errors_detail.push(msg)
         } else {
           stats.total_inserted += rows.length
           if (!stats.categories.includes(target.categoria)) {
@@ -324,12 +333,13 @@ export async function GET(req: NextRequest) {
           }
         }
 
-        // Pequeña pausa para no saturar la API
-        await new Promise(r => setTimeout(r, 300))
+        await new Promise(r => setTimeout(r, 200))
 
-      } catch (err) {
-        console.error(`[ML Sync] Fetch error "${target.q}":`, err)
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err)
+        console.error(`[ML Sync] Error "${target.q}" p${page}:`, msg)
         stats.total_errors++
+        stats.errors_detail.push(`ML "${target.q}": ${msg}`)
       }
     }
   }
