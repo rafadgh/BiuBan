@@ -57,6 +57,9 @@ export const metadata: Metadata = {
       'Compara ropa, tenis y accesorios entre distintas tiendas en un solo lugar.',
     images: ['/opengraph-image'],
   },
+  other: {
+    'verify-admitad': '674ad4a807',
+  },
 }
 
 export default function RootLayout({
