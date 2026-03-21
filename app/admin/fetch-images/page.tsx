@@ -48,16 +48,14 @@ export default function FetchImagesPage() {
       const p = PRODUCTS[i]
       setProgress(i + 1)
       try {
-        const res  = await fetch(p.url)
-        const html = await res.text()
-        const og   = html.match(/property="og:image"\s+content="([^"]+)"/) ||
-                     html.match(/content="([^"]+)"\s+property="og:image"/)
-        const img  = og?.[1]?.replace('http://', 'https://')
+        const res  = await fetch(`/api/ml-image?secret=biuban-sync-2026&url=${encodeURIComponent(p.url)}`)
+        const data = await res.json()
+        const img  = data.image ?? null
         if (img) {
           patches.push({ sku: p.sku, image: img })
           setLogs(l => [...l, { sku: p.sku, ok: true, msg: '✅ imagen lista' }])
         } else {
-          setLogs(l => [...l, { sku: p.sku, ok: false, msg: '⚠️ sin imagen' }])
+          setLogs(l => [...l, { sku: p.sku, ok: false, msg: `⚠️ ${data.error ?? 'sin imagen'}` }])
         }
       } catch (e: unknown) {
         setLogs(l => [...l, { sku: p.sku, ok: false, msg: `❌ ${e instanceof Error ? e.message : 'error'}` }])
