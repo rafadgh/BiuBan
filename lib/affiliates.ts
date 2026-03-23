@@ -20,6 +20,12 @@ const ADMITAD_PROGRAMS: Record<string, AffiliateProgram> = {
   'samsonite.com': {
     baseUrl: 'https://xmknb.com/g/cj6zaw6m9p674ad4a807a68f2598b9/',
   },
+  'levis.com': {
+    baseUrl: 'https://heqgr.com/g/31ueucbr2o674ad4a8071cdb375fa2/',
+  },
+  'www.levis.com': {
+    baseUrl: 'https://heqgr.com/g/31ueucbr2o674ad4a8071cdb375fa2/',
+  },
 }
 
 /**

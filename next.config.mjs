@@ -18,6 +18,10 @@ const nextConfig = {
       { protocol: 'https', hostname: '*.liverpool.com.mx' },
       { protocol: 'https', hostname: '*.adidas.com' },
       { protocol: 'https', hostname: '*.zara.com' },
+      // Levi's México (VTEX)
+      { protocol: 'https', hostname: 'levimx.vteximg.com.br' },
+      { protocol: 'https', hostname: '*.vteximg.com.br' },
+      { protocol: 'https', hostname: '*.vtexassets.com' },
       // Imágenes de prueba (Unsplash)
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'source.unsplash.com' },

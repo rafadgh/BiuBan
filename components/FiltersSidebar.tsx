@@ -109,8 +109,9 @@ const TALLAS_TENIS_M   = ['22', '22.5', '23', '23.5', '24', '24.5', '25', '25.5'
 const TALLAS_TENIS_KID = ['12', '13', '14', '15', '16', '17', '18', '19', '20', '21']
 
 // ── Tallas pantalón ───────────────────────────────────────────────────────────
-const TALLAS_CINTURA = ['28', '30', '32', '34', '36', '38', '40', '42']
-const TALLAS_LARGO   = ['28', '30', '32', '34']
+// Incluye todos los waist reales de Levi's MX (24–44)
+const TALLAS_CINTURA = ['24','25','26','27','28','29','30','31','32','33','34','35','36','38','40','42','44']
+const TALLAS_LARGO   = ['27','28','29','30','31','32','34','36']
 
 const DESCUENTOS = [
   { value: '10', label: '10% o más' },
@@ -138,9 +139,10 @@ function hasFacetGenero(facets: SearchFacets | undefined, value: string): boolea
   return facets.generos.includes(nrm(value))
 }
 function hasFacetTalla(facets: SearchFacets | undefined, value: string): boolean {
-  if (!facets) return true                   // facets aún no cargados → mostrar todo
+  if (!facets) return true                      // facets aún no cargados → mostrar todo
   if (facets.tallas.length === 0) return false  // cargados pero sin tallas → ocultar todo
-  return facets.tallas.includes(value)
+  // Exact match O prefijo de cintura (ej: "28" → encuentra "28x32")
+  return facets.tallas.some(t => t === value || t.startsWith(value + 'x'))
 }
 // Alias de búsqueda por catValue: si alguno de estos términos aparece en
 // facets.subcategorias, se muestra el item. Incluye 'accesorios' como comodín
