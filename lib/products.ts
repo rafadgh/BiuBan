@@ -27,7 +27,7 @@ function mapRow(row: Record<string, unknown>): Product {
     precio:             Number(row.price ?? 0),
     precioOriginal:     row.original_price != null ? Number(row.original_price) : undefined,
     descuento:          row.discount != null ? Number(row.discount) : undefined,
-    imagen:             String(row.image ?? ''),
+    imagen:             row.image ? String(row.image) : undefined,
     url:                String(row.url ?? ''),
     categoria:          String(row.category ?? ''),
     subcategoria:       row.subcategory ? String(row.subcategory) : undefined,
@@ -842,10 +842,13 @@ function computeFacetsFromRows(rows: FacetRow[], generoFilter?: string, queryGen
     })
   }
 
+  // Tallas: extraer de TODOS los rows (no filtrados por género)
+  // para que al buscar "jeans hombre" sigan apareciendo todas las tallas
+  // disponibles en los resultados completos, no solo las del género seleccionado.
   return {
     colores:          [...new Set(filtered.map(r => r.color_primary).filter(Boolean) as string[])].map(norm),
-    generos:          [...new Set(filtered.map(r => r.gender).filter(Boolean) as string[])].map(norm),
-    tallas:           [...new Set(filtered.flatMap(r => r.sizes_available ?? []))],
+    generos:          [...new Set(rows.map(r => r.gender).filter(Boolean) as string[])].map(norm),
+    tallas:           [...new Set(rows.flatMap(r => r.sizes_available ?? []))],
     subcategorias:    [...new Set(filtered.map(r => r.subcategory).filter(Boolean) as string[])].map(norm),
     marcas:           [...new Set(filtered.map(r => r.brand).filter(Boolean) as string[])].sort(),
     tiendas:          [...new Set(filtered.map(r => r.store).filter(Boolean) as string[])].sort(),

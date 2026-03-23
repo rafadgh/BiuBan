@@ -1,12 +1,33 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 import { ExternalLink } from 'lucide-react'
 import { Product } from '@/types/product'
 import { CompareButton } from './CompareButton'
 import { ProductDetailModal } from './ProductDetailModal'
 import { addUtmParams } from '@/lib/utils'
+
+// Imagen con fallback a letra — usa <img> directo para evitar
+// que el optimizador de Next.js bloquee dominios externos (VTEX, etc.)
+function ImageWithFallback({ src, alt, fallback }: { src: string; alt: string; fallback: string }) {
+  const [failed, setFailed] = useState(false)
+  if (failed) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <span className="text-4xl font-bold text-[#D0D0D0]">{fallback}</span>
+      </div>
+    )
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt={alt}
+      onError={() => setFailed(true)}
+      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+    />
+  )
+}
 
 interface ProductCardProps {
   product: Product
@@ -57,13 +78,10 @@ export function ProductCard({ product }: ProductCardProps) {
           aria-label={`Ver detalles de ${product.nombre}`}
         >
           {product.imagen ? (
-            <Image
+            <ImageWithFallback
               src={product.imagen}
               alt={product.nombre}
-              fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+              fallback={product.nombre.charAt(0).toUpperCase()}
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
