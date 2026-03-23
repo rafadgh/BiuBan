@@ -18,6 +18,9 @@ const nextConfig = {
       { protocol: 'https', hostname: '*.liverpool.com.mx' },
       { protocol: 'https', hostname: '*.adidas.com' },
       { protocol: 'https', hostname: '*.zara.com' },
+      // Imágenes de prueba
+      { protocol: 'https', hostname: 'loremflickr.com' },
+      { protocol: 'https', hostname: 'placehold.co' },
     ],
   },
 }

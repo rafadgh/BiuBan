@@ -20,8 +20,6 @@ const ADMITAD_PROGRAMS: Record<string, AffiliateProgram> = {
   'samsonite.com': {
     baseUrl: 'https://xmknb.com/g/cj6zaw6m9p674ad4a807a68f2598b9/',
   },
-  // Agrega aquí más tiendas cuando las aprueben en Admitad:
-  // 'americaneagle.com': { baseUrl: 'https://xmknb.com/g/XXXXXX/' },
 }
 
 /**
