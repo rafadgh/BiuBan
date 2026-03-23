@@ -18,12 +18,10 @@ const nextConfig = {
       { protocol: 'https', hostname: '*.liverpool.com.mx' },
       { protocol: 'https', hostname: '*.adidas.com' },
       { protocol: 'https', hostname: '*.zara.com' },
-      // Imágenes de prueba
-      { protocol: 'https', hostname: 'loremflickr.com' },
-      { protocol: 'https', hostname: 'live.staticflickr.com' },
-      { protocol: 'https', hostname: '*.staticflickr.com' },
-      { protocol: 'https', hostname: 'placehold.co' },
-      { protocol: 'https', hostname: 'picsum.photos' },
+      // Imágenes de prueba (Unsplash)
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'source.unsplash.com' },
+      { protocol: 'https', hostname: 'plus.unsplash.com' },
     ],
   },
 }
