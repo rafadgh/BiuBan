@@ -12,6 +12,7 @@ import { MobileFilters } from '@/components/MobileFilters'
 import { SortBar } from '@/components/SortBar'
 import { ProductCard } from '@/components/ProductCard'
 import { Pagination } from '@/components/Pagination'
+import { SearchBar } from '@/components/SearchBar'
 import { searchProductsFromDB, getPriceRange, getSearchFacets } from '@/lib/products'
 import { CATEGORIA_LABELS } from '@/lib/slug'
 
@@ -20,6 +21,7 @@ const PER_PAGE = 24
 interface CatPageProps {
   params: Promise<{ slug: string }>
   searchParams: Promise<{
+    q?:         string
     color?:     string
     talla?:     string
     marca?:     string
@@ -37,6 +39,12 @@ interface CatPageProps {
 function resolveCategory(slug: string): { slug: string; label: string } | null {
   const label = CATEGORIA_LABELS[slug]
   return label ? { slug, label } : null
+}
+
+function getSizeContext(slug: string): 'calzado' | 'accesorios' | 'ropa' {
+  if (['tenis','botas','sandalias','zapatos'].includes(slug)) return 'calzado'
+  if (['mochilas','gorras','calcetines','cinturones','carteras','bufandas','lentes'].includes(slug)) return 'accesorios'
+  return 'ropa'
 }
 
 // ── SEO dinámico ─────────────────────────────────────────────────────────────
@@ -73,6 +81,7 @@ async function CatResults({
   const page = Math.max(1, parseInt(sp.pagina || '1'))
 
   const allProducts = await searchProductsFromDB({
+    query:     sp.q,
     categoria: catSlug,
     marca:     sp.marca,
     tienda:    sp.tienda,
@@ -123,8 +132,9 @@ export default async function CategoriaPage({ params, searchParams }: CatPagePro
   const cat = resolveCategory(slug)
   if (!cat) notFound()
 
-  const sp       = await searchParams
-  const basePath = `/categoria/${slug}`
+  const sp          = await searchParams
+  const basePath    = `/categoria/${slug}`
+  const sizeContext = getSizeContext(slug)
 
   const baseFilters = {
     categoria: cat.slug,
@@ -145,8 +155,8 @@ export default async function CategoriaPage({ params, searchParams }: CatPagePro
       <main className="flex min-h-0 flex-1 flex-col">
         {/* Cabecera de categoría */}
         <div className="shrink-0 border-b border-[#E5E5E5] bg-white px-4 py-3 sm:px-6 lg:px-8">
-          <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
-            <div>
+          <div className="mx-auto flex max-w-7xl items-center gap-4">
+            <div className="shrink-0">
               <div className="flex items-center gap-2 text-xs text-[#6B6B6B]">
                 <Link href="/" className="hover:text-[#0B0B0B]">Inicio</Link>
                 <span>/</span>
@@ -154,8 +164,11 @@ export default async function CategoriaPage({ params, searchParams }: CatPagePro
               </div>
               <h1 className="mt-0.5 text-xl font-bold text-[#0B0B0B]">{cat.label}</h1>
             </div>
+            <div className="flex-1">
+              <SearchBar initialQuery={sp.q || ''} basePath={basePath} placeholder={`Buscar en ${cat.label}...`} />
+            </div>
             <Suspense fallback={null}>
-              <MobileFilters priceRange={priceRange} facets={facets} basePath={basePath} />
+              <MobileFilters priceRange={priceRange} facets={facets} basePath={basePath} sizeContext={sizeContext} />
             </Suspense>
           </div>
         </div>
@@ -165,7 +178,7 @@ export default async function CategoriaPage({ params, searchParams }: CatPagePro
           {/* Sidebar desktop */}
           <div className="hidden w-72 shrink-0 overflow-y-auto border-r border-[#E5E5E5] bg-white p-4 lg:block xl:w-80">
             <Suspense fallback={null}>
-              <FiltersSidebar className="h-full" priceRange={priceRange} facets={facets} basePath={basePath} />
+              <FiltersSidebar className="h-full" priceRange={priceRange} facets={facets} basePath={basePath} sizeContext={sizeContext} />
             </Suspense>
           </div>
 

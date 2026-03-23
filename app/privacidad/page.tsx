@@ -21,7 +21,7 @@ export default function PrivacidadPage() {
           {/* Encabezado */}
           <div className="mb-10 border-b border-[#E5E5E5] pb-8">
             <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[#586E26]">
-              Documento Legal · Publisher CJ Affiliates
+              Documento Legal · BiuBan
             </p>
             <h1 className="text-2xl font-bold text-[#0B0B0B] sm:text-3xl">
               Política de Privacidad
@@ -56,25 +56,27 @@ export default function PrivacidadPage() {
             </p>
             <ol className="space-y-1.5 text-sm text-[#6B6B6B]">
               {[
-                'Información que recopilamos',
-                'Cookies y tecnología de rastreo',
-                'CJ Affiliate — Divulgación de relación de afiliado',
-                'Cómo usamos tu información',
-                'Bases legales para el procesamiento (GDPR)',
-                'Compartir información con terceros',
-                'Tus derechos como usuario',
-                'Usuarios de California — CCPA',
-                'Seguridad de los datos',
-                'Retención de datos',
-                'Menores de edad',
-                'Cambios a esta política',
-                'Contacto',
-              ].map((item, i) => (
-                <li key={i} className="flex items-start gap-2">
+                { id: 'informacion',  label: 'Información que recopilamos' },
+                { id: 'cookies',      label: 'Cookies y tecnología de rastreo' },
+                { id: 'afiliados',    label: 'Programas de afiliados' },
+                { id: 'uso',          label: 'Cómo usamos tu información' },
+                { id: 'gdpr',         label: 'Bases legales para el procesamiento (GDPR)' },
+                { id: 'terceros',     label: 'Compartir información con terceros' },
+                { id: 'derechos',     label: 'Tus derechos como usuario' },
+                { id: 'ccpa',         label: 'Usuarios de California — CCPA' },
+                { id: 'seguridad',    label: 'Seguridad de los datos' },
+                { id: 'retencion',    label: 'Retención de datos' },
+                { id: 'menores',      label: 'Menores de edad' },
+                { id: 'cambios',      label: 'Cambios a esta política' },
+                { id: 'contacto',     label: 'Contacto' },
+              ].map(({ id, label }, i) => (
+                <li key={id} className="flex items-start gap-2">
                   <span className="shrink-0 text-xs font-bold text-[#586E26]">
                     {String(i + 1).padStart(2, '0')}
                   </span>
-                  <span>{item}</span>
+                  <a href={`#${id}`} className="hover:text-[#31470B] hover:underline transition-colors">
+                    {label}
+                  </a>
                 </li>
               ))}
             </ol>
@@ -83,7 +85,7 @@ export default function PrivacidadPage() {
           <div className="space-y-8">
 
             {/* 01 */}
-            <Section number="01" title="Información que recopilamos">
+            <Section id="informacion" number="01" title="Información que recopilamos">
               <SubHeading>Información que nos proporcionas</SubHeading>
               <ul className="space-y-2">
                 <Li>Nombre y dirección de correo electrónico (si te suscribes a nuestra newsletter o envías un formulario de contacto).</Li>
@@ -113,7 +115,7 @@ export default function PrivacidadPage() {
             </Section>
 
             {/* 02 */}
-            <Section number="02" title="Cookies y tecnología de rastreo">
+            <Section id="cookies" number="02" title="Cookies y tecnología de rastreo">
               <p>
                 Utilizamos cookies y tecnologías similares para operar y mejorar este sitio, analizar
                 el tráfico y rastrear transacciones de afiliados. A continuación detallamos los tipos
@@ -178,7 +180,7 @@ export default function PrivacidadPage() {
             </Section>
 
             {/* 03 */}
-            <Section number="03" title="CJ Affiliate — Divulgación de relación de afiliado">
+            <Section id="afiliados" number="03" title="Programas de afiliados">
               {/* Caja destacada FTC */}
               <div className="rounded-lg border-l-4 border-[#586E26] bg-[#F9FBF4] p-4">
                 <p className="text-sm leading-relaxed text-[#0B0B0B]">
@@ -237,7 +239,7 @@ export default function PrivacidadPage() {
             </Section>
 
             {/* 04 */}
-            <Section number="04" title="Cómo usamos tu información">
+            <Section id="uso" number="04" title="Cómo usamos tu información">
               <ul className="space-y-2">
                 <Li>Operar, mantener y mejorar este sitio web y sus funcionalidades de búsqueda y comparación.</Li>
                 <Li>Rastrear y atribuir transacciones de afiliados correctamente.</Li>
@@ -253,7 +255,7 @@ export default function PrivacidadPage() {
             </Section>
 
             {/* 05 */}
-            <Section number="05" title="Bases legales para el procesamiento (GDPR)">
+            <Section id="gdpr" number="05" title="Bases legales para el procesamiento (GDPR)">
               <p>
                 Si te encuentras en el Espacio Económico Europeo (EEE), procesamos tu información
                 bajo las siguientes bases legales conforme al Reglamento General de Protección de
@@ -321,7 +323,7 @@ export default function PrivacidadPage() {
             </Section>
 
             {/* 06 */}
-            <Section number="06" title="Compartir información con terceros">
+            <Section id="terceros" number="06" title="Compartir información con terceros">
               <p>
                 Compartimos información con terceros de confianza únicamente en los siguientes casos:
               </p>
@@ -363,7 +365,7 @@ export default function PrivacidadPage() {
             </Section>
 
             {/* 07 */}
-            <Section number="07" title="Tus derechos como usuario">
+            <Section id="derechos" number="07" title="Tus derechos como usuario">
               <p>
                 Dependiendo de tu ubicación, puedes tener los siguientes derechos sobre tus datos
                 personales:
@@ -399,7 +401,7 @@ export default function PrivacidadPage() {
             </Section>
 
             {/* 08 */}
-            <Section number="08" title="Usuarios de California — CCPA">
+            <Section id="ccpa" number="08" title="Usuarios de California — CCPA">
               <p>
                 Si eres residente de California, la{' '}
                 <strong className="text-[#0B0B0B]">
@@ -435,7 +437,7 @@ export default function PrivacidadPage() {
             </Section>
 
             {/* 09 */}
-            <Section number="09" title="Seguridad de los datos">
+            <Section id="seguridad" number="09" title="Seguridad de los datos">
               <p>
                 Implementamos medidas técnicas y organizativas razonables para proteger tu
                 información personal contra acceso no autorizado, pérdida, destrucción o divulgación
@@ -455,7 +457,7 @@ export default function PrivacidadPage() {
             </Section>
 
             {/* 10 */}
-            <Section number="10" title="Retención de datos">
+            <Section id="retencion" number="10" title="Retención de datos">
               <p>
                 Conservamos tu información personal únicamente durante el tiempo necesario para
                 cumplir los fines descritos en esta política o según lo exija la ley:
@@ -474,7 +476,7 @@ export default function PrivacidadPage() {
             </Section>
 
             {/* 11 */}
-            <Section number="11" title="Menores de edad">
+            <Section id="menores" number="11" title="Menores de edad">
               <p>
                 Este sitio web no está dirigido a personas menores de 13 años (o de 16 años en el
                 EEE). No recopilamos intencionalmente información personal de menores. Si eres
@@ -485,7 +487,7 @@ export default function PrivacidadPage() {
             </Section>
 
             {/* 12 */}
-            <Section number="12" title="Cambios a esta política">
+            <Section id="cambios" number="12" title="Cambios a esta política">
               <p>
                 Podemos actualizar esta Política de Privacidad periódicamente para reflejar cambios
                 en nuestras prácticas o en la legislación aplicable. Cuando lo hagamos,
@@ -499,7 +501,7 @@ export default function PrivacidadPage() {
             </Section>
 
             {/* 13 */}
-            <Section number="13" title="Contacto">
+            <Section id="contacto" number="13" title="Contacto">
               <p>
                 Si tienes preguntas, comentarios o solicitudes relacionadas con esta Política de
                 Privacidad o el tratamiento de tus datos personales, puedes contactarnos a través de:
@@ -570,13 +572,15 @@ function Section({
   number,
   title,
   children,
+  id,
 }: {
   number: string
   title: string
   children: React.ReactNode
+  id?: string
 }) {
   return (
-    <div>
+    <div id={id}>
       <h2 className="mb-3 flex items-baseline gap-2 text-base font-bold text-[#0B0B0B]">
         <span className="text-xs font-bold text-[#586E26]">{number}</span>
         {title}

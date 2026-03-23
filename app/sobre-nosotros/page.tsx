@@ -131,7 +131,7 @@ export default function SobreNosotrosPage() {
             <div className="space-y-5 text-muted-foreground leading-relaxed">
               <p>
                 BiuBan empezó como un proyecto personal. La pregunta era simple:
-                <strong className="text-foreground"> ¿por qué no existe un Google para precios de ropa en México?</strong>
+                <strong className="text-foreground"> ¿por qué no existe un comparador masivo de precios de moda en México?</strong>
               </p>
               <p>
                 En otros países ya existen comparadores de precios de moda bien hechos. En México, no.

@@ -221,11 +221,13 @@ export function FiltersSidebar({
   priceRange,
   facets,
   basePath = '/buscar',
+  sizeContext,
 }: {
   className?: string
   priceRange?: PriceRange
   facets?: SearchFacets
   basePath?: string
+  sizeContext?: 'calzado' | 'ropa' | 'accesorios'
 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -303,7 +305,11 @@ export function FiltersSidebar({
   const step = range <= 500 ? 10 : range <= 2000 ? 50 : range <= 10000 ? 100 : 500
 
   // ── Opciones filtradas por facetas ────────────────────────────────────────
-  const visibleGeneros   = GENEROS.filter(g => hasFacetGenero(facets, g.value))
+  const hasKids = facets?.generos.includes('kids') ?? true
+  const visibleGeneros = GENEROS.filter(g => {
+    if (g.value === 'nino' || g.value === 'nina') return hasKids || hasFacetGenero(facets, g.value)
+    return hasFacetGenero(facets, g.value)
+  })
   const visibleColores   = COLORES.filter(c => hasFacetColor(facets, c.value))
   const filterTallas     = (arr: string[]) => arr.filter(t => hasFacetTalla(facets, t))
   // Grupos de categoría: si AL MENOS UN item del grupo tiene datos en facetas,
@@ -320,19 +326,22 @@ export function FiltersSidebar({
   const visibleTallasRopaM   = filterTallas(TALLAS_ROPA_M)
   const visibleTallasNum     = filterTallas(TALLAS_NUMERICAS)
   const visibleTallasKid     = filterTallas(TALLAS_ROPA_KID)
-  const hasAnyRopa = visibleTallasRopaH.length > 0 || visibleTallasRopaM.length > 0 ||
-    visibleTallasNum.length > 0 || visibleTallasKid.length > 0
+  const hasAnyRopa = (visibleTallasRopaH.length > 0 || visibleTallasRopaM.length > 0 ||
+    visibleTallasNum.length > 0 || visibleTallasKid.length > 0) &&
+    sizeContext !== 'calzado' && sizeContext !== 'accesorios'
 
   // Talla calzado (agrupadas por género)
   const visibleTenisH   = filterTallas(TALLAS_TENIS_H)
   const visibleTenisM   = filterTallas(TALLAS_TENIS_M)
   const visibleTenisKid = filterTallas(TALLAS_TENIS_KID)
-  const hasAnyCalzado = visibleTenisH.length > 0 || visibleTenisM.length > 0 || visibleTenisKid.length > 0
+  const hasAnyCalzado = (visibleTenisH.length > 0 || visibleTenisM.length > 0 || visibleTenisKid.length > 0) &&
+    sizeContext !== 'ropa' && sizeContext !== 'accesorios'
 
   // Talla pantalón
   const visibleCintura = filterTallas(TALLAS_CINTURA)
   const visibleLargo   = filterTallas(TALLAS_LARGO)
-  const hasAnyPantalon = visibleCintura.length > 0 || visibleLargo.length > 0
+  const hasAnyPantalon = (visibleCintura.length > 0 || visibleLargo.length > 0) &&
+    sizeContext !== 'calzado' && sizeContext !== 'accesorios'
 
   // Badge contadores
   const allRopaTallas   = [...TALLAS_ROPA_H, ...TALLAS_ROPA_M, ...TALLAS_NUMERICAS, ...TALLAS_ROPA_KID]

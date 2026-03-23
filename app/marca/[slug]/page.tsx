@@ -13,6 +13,7 @@ import { MobileFilters } from '@/components/MobileFilters'
 import { SortBar } from '@/components/SortBar'
 import { ProductCard } from '@/components/ProductCard'
 import { Pagination } from '@/components/Pagination'
+import { SearchBar } from '@/components/SearchBar'
 import {
   searchProductsFromDB,
   getPriceRange,
@@ -34,6 +35,7 @@ async function resolveBrand(slug: string): Promise<string | null> {
 interface BrandPageProps {
   params: Promise<{ slug: string }>
   searchParams: Promise<{
+    q?:         string
     color?:     string
     talla?:     string
     tienda?:    string
@@ -80,6 +82,7 @@ async function BrandResults({
   const page = Math.max(1, parseInt(sp.pagina || '1'))
 
   const allProducts = await searchProductsFromDB({
+    query:     sp.q,
     marca:     brandName,
     tienda:    sp.tienda,
     color:     sp.color,
@@ -151,14 +154,17 @@ export default async function MarcaPage({ params, searchParams }: BrandPageProps
       <main className="flex min-h-0 flex-1 flex-col">
         {/* Cabecera de marca */}
         <div className="shrink-0 border-b border-[#E5E5E5] bg-white px-4 py-3 sm:px-6 lg:px-8">
-          <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
-            <div>
+          <div className="mx-auto flex max-w-7xl items-center gap-4">
+            <div className="shrink-0">
               <div className="flex items-center gap-2 text-xs text-[#6B6B6B]">
                 <Link href="/marcas" className="hover:text-[#0B0B0B]">Marcas</Link>
                 <span>/</span>
                 <span className="text-[#0B0B0B] font-medium">{brandName}</span>
               </div>
               <h1 className="mt-0.5 text-xl font-bold text-[#0B0B0B]">{brandName}</h1>
+            </div>
+            <div className="flex-1">
+              <SearchBar initialQuery={sp.q || ''} basePath={basePath} placeholder={`Buscar en ${brandName}...`} />
             </div>
             <Suspense fallback={null}>
               <MobileFilters priceRange={priceRange} facets={facets} basePath={basePath} />
