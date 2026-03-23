@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { ExternalLink } from 'lucide-react'
+import { useState, useCallback } from 'react'
+import { ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Product } from '@/types/product'
 import { CompareButton } from './CompareButton'
 import { ProductDetailModal } from './ProductDetailModal'
@@ -29,6 +29,110 @@ function ImageWithFallback({ src, alt, fallback }: { src: string; alt: string; f
   )
 }
 
+// Carousel de imágenes — flechas y puntos al hacer hover
+function ImageCarousel({
+  images,
+  alt,
+  fallback,
+  onOpenModal,
+}: {
+  images: string[]
+  alt: string
+  fallback: string
+  onOpenModal: () => void
+}) {
+  const [current, setCurrent] = useState(0)
+  const [hovered, setHovered] = useState(false)
+
+  const prev = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    setCurrent(i => (i - 1 + images.length) % images.length)
+  }, [images.length])
+
+  const next = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    setCurrent(i => (i + 1) % images.length)
+  }, [images.length])
+
+  const goTo = useCallback((e: React.MouseEvent, idx: number) => {
+    e.stopPropagation()
+    setCurrent(idx)
+  }, [])
+
+  if (images.length === 0) {
+    return (
+      <button
+        onClick={onOpenModal}
+        className="relative aspect-square w-full overflow-hidden bg-[#F5F5F5] text-left"
+        aria-label={`Ver detalles de ${alt}`}
+      >
+        <div className="flex h-full w-full items-center justify-center">
+          <span className="text-4xl font-bold text-[#D0D0D0]">{fallback}</span>
+        </div>
+      </button>
+    )
+  }
+
+  return (
+    <div
+      className="relative aspect-square w-full overflow-hidden bg-[#F5F5F5]"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Imagen actual */}
+      <button
+        onClick={onOpenModal}
+        className="absolute inset-0 text-left w-full h-full"
+        aria-label={`Ver detalles de ${alt}`}
+      >
+        <ImageWithFallback
+          src={images[current]}
+          alt={`${alt} - imagen ${current + 1}`}
+          fallback={fallback}
+        />
+      </button>
+
+      {/* Flechas — solo si hay más de 1 imagen y está en hover */}
+      {images.length > 1 && hovered && (
+        <>
+          <button
+            onClick={prev}
+            className="absolute left-1.5 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/85 p-1 shadow-md transition hover:bg-white"
+            aria-label="Imagen anterior"
+          >
+            <ChevronLeft className="h-4 w-4 text-[#0B0B0B]" />
+          </button>
+          <button
+            onClick={next}
+            className="absolute right-1.5 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/85 p-1 shadow-md transition hover:bg-white"
+            aria-label="Imagen siguiente"
+          >
+            <ChevronRight className="h-4 w-4 text-[#0B0B0B]" />
+          </button>
+        </>
+      )}
+
+      {/* Puntos indicadores */}
+      {images.length > 1 && (
+        <div className="absolute bottom-2 left-0 right-0 z-20 flex justify-center gap-1 pointer-events-none">
+          {images.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={e => goTo(e, idx)}
+              className={`h-1.5 rounded-full transition-all pointer-events-auto ${
+                idx === current
+                  ? 'w-4 bg-white shadow'
+                  : 'w-1.5 bg-white/55'
+              }`}
+              aria-label={`Ir a imagen ${idx + 1}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 interface ProductCardProps {
   product: Product
 }
@@ -36,6 +140,15 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const [modalOpen, setModalOpen] = useState(false)
   const hasDiscount = !!product.descuento && product.descuento > 0
+
+  // Lista completa de imágenes (principal + adicionales, sin duplicados)
+  const allImages: string[] = []
+  if (product.imagen) allImages.push(product.imagen)
+  if (product.imagenesAdicionales?.length) {
+    for (const img of product.imagenesAdicionales) {
+      if (img && !allImages.includes(img)) allImages.push(img)
+    }
+  }
 
   return (
     <>
@@ -71,26 +184,13 @@ export function ProductCard({ product }: ProductCardProps) {
           <CompareButton product={product} />
         </div>
 
-        {/* Image — click opens modal */}
-        <button
-          onClick={() => setModalOpen(true)}
-          className="relative aspect-square w-full overflow-hidden bg-[#F5F5F5] text-left"
-          aria-label={`Ver detalles de ${product.nombre}`}
-        >
-          {product.imagen ? (
-            <ImageWithFallback
-              src={product.imagen}
-              alt={product.nombre}
-              fallback={product.nombre.charAt(0).toUpperCase()}
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <span className="text-4xl font-bold text-[#D0D0D0]">
-                {product.nombre.charAt(0).toUpperCase()}
-              </span>
-            </div>
-          )}
-        </button>
+        {/* Carousel de imágenes */}
+        <ImageCarousel
+          images={allImages}
+          alt={product.nombre}
+          fallback={product.nombre.charAt(0).toUpperCase()}
+          onOpenModal={() => setModalOpen(true)}
+        />
 
         <div className="flex flex-1 flex-col p-3 sm:p-4">
           <div className="mb-2 flex items-center justify-between">

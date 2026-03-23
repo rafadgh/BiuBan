@@ -417,29 +417,38 @@ function productMatchesTalla(product: Product, tallas: string[]): boolean {
 }
 
 // Verifica si un producto coincide con el género dado
+// Canonicaliza un término de filtro de género al valor que guarda la DB
+function canonicalGender(g: string): string {
+  const n = norm(g)
+  if (['hombre', 'hombres', 'masculino', 'masculina', 'male', 'men', 'man', 'mens'].includes(n)) return 'hombre'
+  if (['mujer', 'mujeres', 'femenino', 'femenina', 'female', 'women', 'woman', 'womens', 'dama', 'damas'].includes(n)) return 'mujer'
+  if (['nino', 'niño', 'ninos', 'niños', 'boy', 'boys', 'kids', 'kid', 'child', 'children', 'infantil', 'junior'].includes(n)) return 'nino'
+  if (['nina', 'niña', 'ninas', 'niñas', 'girl', 'girls'].includes(n)) return 'nina'
+  if (n === 'unisex') return 'unisex'
+  return n
+}
+
 function productMatchesGenero(product: Product, generos: string[]): boolean {
   if (generos.length === 0) return true
 
-  const genderMap: Record<string, string[]> = {
-    hombre:  ['hombre', 'male', 'men', 'man', 'masculino', 'masculina', 'mens', "men's"],
-    mujer:   ['mujer', 'female', 'women', 'woman', 'femenino', 'femenina', 'womens', "women's", 'dama', 'damas'],
-    nino:    ['nino', 'niño', 'boy', 'boys', 'kids', 'kid', 'child', 'children', 'infantil', 'junior'],
-    nina:    ['nina', 'niña', 'girl', 'girls', 'kids', 'kid', 'child', 'children', 'infantil', 'junior'],
-    unisex:  ['unisex'],
+  // Usar el campo genero de la DB directamente (más fiable que buscar en el nombre)
+  if (product.genero) {
+    const productGender = canonicalGender(product.genero)
+    return generos.some(g => canonicalGender(g) === productGender)
   }
 
-  const searchText = norm([
-    product.nombre,
-    product.genero ?? '',
-    product.descripcion ?? '',
-    product.grupoEdad ?? '',
-    product.tags?.join(' ') ?? '',
-  ].join(' '))
-
+  // Fallback: buscar en nombre con word boundaries para evitar "men" dentro de "women"
+  const nameText = norm(product.nombre + ' ' + (product.descripcion ?? ''))
   return generos.some(g => {
-    const gNorm = norm(g)
-    const terms = genderMap[gNorm] ?? [gNorm]
-    return terms.some(t => searchText.includes(t))
+    const canonical = canonicalGender(g)
+    const patterns: Record<string, RegExp> = {
+      hombre:  /\b(hombre|masculino|male|man)\b/,
+      mujer:   /\b(mujer|femenina|female|woman|dama)\b/,
+      nino:    /\b(nino|niño|boy|kids|infantil)\b/,
+      nina:    /\b(nina|niña|girl|kids|infantil)\b/,
+      unisex:  /\bunisex\b/,
+    }
+    return (patterns[canonical] ?? new RegExp(`\\b${canonical}\\b`)).test(nameText)
   })
 }
 
@@ -669,6 +678,24 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
       q = tiendas.length === 1
         ? q.ilike('store', `%${tiendas[0]}%`)
         : q.or(tiendas.map(t2 => `store.ilike.%${t2}%`).join(','))
+    }
+    // Filtro de género directo en DB (evita traer todos y filtrar en memoria)
+    if (genero) {
+      const generos = genero.split(',').map(g => g.trim()).filter(Boolean)
+      const dbGenders = [...new Set(generos.map(g => {
+        const c = canonicalGender(g)
+        if (c === 'hombre') return 'Hombre'
+        if (c === 'mujer') return 'Mujer'
+        if (c === 'nino') return 'Nino'
+        if (c === 'nina') return 'Nina'
+        if (c === 'unisex') return 'Unisex'
+        return g
+      }))]
+      if (dbGenders.length === 1) {
+        q = q.eq('gender', dbGenders[0])
+      } else {
+        q = q.or(dbGenders.map(g => `gender.eq.${g}`).join(','))
+      }
     }
     if (precioMin) q = q.gte('price', Number(precioMin))
     if (precioMax) q = q.lte('price', Number(precioMax))
