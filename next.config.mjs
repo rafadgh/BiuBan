@@ -20,7 +20,10 @@ const nextConfig = {
       { protocol: 'https', hostname: '*.zara.com' },
       // Imágenes de prueba
       { protocol: 'https', hostname: 'loremflickr.com' },
+      { protocol: 'https', hostname: 'live.staticflickr.com' },
+      { protocol: 'https', hostname: '*.staticflickr.com' },
       { protocol: 'https', hostname: 'placehold.co' },
+      { protocol: 'https', hostname: 'picsum.photos' },
     ],
   },
 }
