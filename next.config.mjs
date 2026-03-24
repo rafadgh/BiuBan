@@ -3,6 +3,15 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Playwright y sus plugins no deben ser bundleados por Turbopack
+  serverExternalPackages: [
+    'playwright',
+    'playwright-extra',
+    'playwright-core',
+    '@playwright/browser-chromium',
+    'puppeteer-extra-plugin-stealth',
+    'puppeteer-extra',
+  ],
   images: {
     remotePatterns: [
       // Nike
