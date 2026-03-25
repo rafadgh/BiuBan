@@ -5,7 +5,7 @@
       "schedule": "0 12 * * *"
     },
     {
-      "path": "/api/adidas-sync?secret=biuban-sync-2026",
+      "path": "/api/awin-adidas-sync?secret=biuban-sync-2026",
       "schedule": "0 13 * * *"
     }
   ]
