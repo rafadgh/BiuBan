@@ -83,7 +83,6 @@ const GENEROS = [
   { value: 'mujer',  label: 'Mujer'  },
   { value: 'nino',   label: 'Niño'   },
   { value: 'nina',   label: 'Niña'   },
-  { value: 'unisex', label: 'Unisex' },
 ]
 
 // ── Tallas ropa ───────────────────────────────────────────────────────────────
@@ -313,6 +312,28 @@ export function MobileFilters({ priceRange, facets, basePath = '/buscar', sizeCo
       }`}>{t}</button>
   )
 
+  const TallaBtnGenero = ({ t, genero }: { t: string; genero: string }) => {
+    const active = currentTallas.includes(t)
+    return (
+      <button
+        onClick={() => {
+          const nextTallas = active ? currentTallas.filter(v => v !== t) : [...currentTallas, t]
+          const nextGeneros = active
+            ? currentGeneros.filter(g => g !== genero)
+            : currentGeneros.includes(genero) ? currentGeneros : [...currentGeneros, genero]
+          pushParams({
+            talla: nextTallas.join(',') || null,
+            genero: nextGeneros.join(',') || null,
+          })
+        }}
+        className={`rounded-lg border px-3 py-2 text-sm font-bold transition-colors ${
+          active
+            ? 'border-foreground bg-foreground text-background'
+            : 'border-border text-foreground/80'
+        }`}>{t}</button>
+    )
+  }
+
   return (
     <>
       <Button variant="outline" size="sm" className="flex items-center gap-2 lg:hidden" onClick={() => setIsOpen(true)}>
@@ -509,23 +530,23 @@ export function MobileFilters({ priceRange, facets, basePath = '/buscar', sizeCo
                   <div className="space-y-1">
                     {visibleTallasRopaH.length > 0 && (
                       <>
-                        <SubLabel>Hombre / Unisex</SubLabel>
-                        <div className="flex flex-wrap gap-2">{visibleTallasRopaH.map(t => <TallaBtn key={t} t={t} />)}</div>
+                        <SubLabel>Hombre</SubLabel>
+                        <div className="flex flex-wrap gap-2">{visibleTallasRopaH.map(t => <TallaBtnGenero key={t} t={t} genero="hombre" />)}</div>
                       </>
                     )}
                     {(visibleTallasRopaM.length > 0 || visibleTallasNum.length > 0) && (
                       <>
                         <SubLabel>Mujer</SubLabel>
                         <div className="flex flex-wrap gap-2">
-                          {visibleTallasRopaM.map(t => <TallaBtn key={t} t={t} />)}
-                          {visibleTallasNum.map(t => <TallaBtn key={t} t={t} />)}
+                          {visibleTallasRopaM.map(t => <TallaBtnGenero key={t} t={t} genero="mujer" />)}
+                          {visibleTallasNum.map(t => <TallaBtnGenero key={t} t={t} genero="mujer" />)}
                         </div>
                       </>
                     )}
                     {visibleTallasKid.length > 0 && (
                       <>
                         <SubLabel>Niño / Niña</SubLabel>
-                        <div className="flex flex-wrap gap-2">{visibleTallasKid.map(t => <TallaBtn key={t} t={t} />)}</div>
+                        <div className="flex flex-wrap gap-2">{visibleTallasKid.map(t => <TallaBtnGenero key={t} t={t} genero="nino" />)}</div>
                       </>
                     )}
                   </div>

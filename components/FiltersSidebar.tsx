@@ -94,7 +94,6 @@ const GENEROS = [
   { value: 'mujer',  label: 'Mujer'  },
   { value: 'nino',   label: 'Niño'   },
   { value: 'nina',   label: 'Niña'   },
-  { value: 'unisex', label: 'Unisex' },
 ]
 
 // ── Tallas ropa ───────────────────────────────────────────────────────────────
@@ -359,6 +358,29 @@ export function FiltersSidebar({
       }`}>{t}</button>
   )
 
+  // TallaBtn que también fuerza el género al seleccionar una talla de sección específica
+  const TallaBtnGenero = ({ t, genero }: { t: string; genero: string }) => {
+    const active = currentTallas.includes(t)
+    return (
+      <button
+        onClick={() => {
+          const nextTallas = active ? currentTallas.filter(v => v !== t) : [...currentTallas, t]
+          const nextGeneros = active
+            ? currentGeneros.filter(g => g !== genero)  // quita género solo si no hay otras tallas del mismo género activas
+            : currentGeneros.includes(genero) ? currentGeneros : [...currentGeneros, genero]
+          pushParams({
+            talla: nextTallas.join(',') || null,
+            genero: nextGeneros.join(',') || null,
+          })
+        }}
+        className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors ${
+          active
+            ? 'border-foreground bg-foreground text-background'
+            : 'border-border text-foreground/80 hover:border-foreground/40'
+        }`}>{t}</button>
+    )
+  }
+
   return (
     <aside className={`flex flex-col rounded-xl border border-border/50 bg-card ${className}`}>
 
@@ -589,9 +611,9 @@ export function FiltersSidebar({
             <div className="space-y-3">
               {visibleTallasRopaH.length > 0 && (
                 <div>
-                  <SubLabel>Hombre / Unisex</SubLabel>
+                  <SubLabel>Hombre</SubLabel>
                   <div className="flex flex-wrap gap-1.5">
-                    {visibleTallasRopaH.map(t => <TallaBtn key={t} t={t} />)}
+                    {visibleTallasRopaH.map(t => <TallaBtnGenero key={t} t={t} genero="hombre" />)}
                   </div>
                 </div>
               )}
@@ -599,8 +621,8 @@ export function FiltersSidebar({
                 <div>
                   <SubLabel>Mujer</SubLabel>
                   <div className="flex flex-wrap gap-1.5">
-                    {visibleTallasRopaM.map(t => <TallaBtn key={t} t={t} />)}
-                    {visibleTallasNum.map(t => <TallaBtn key={t} t={t} />)}
+                    {visibleTallasRopaM.map(t => <TallaBtnGenero key={t} t={t} genero="mujer" />)}
+                    {visibleTallasNum.map(t => <TallaBtnGenero key={t} t={t} genero="mujer" />)}
                   </div>
                 </div>
               )}
@@ -608,7 +630,7 @@ export function FiltersSidebar({
                 <div>
                   <SubLabel>Niño / Niña</SubLabel>
                   <div className="flex flex-wrap gap-1.5">
-                    {visibleTallasKid.map(t => <TallaBtn key={t} t={t} />)}
+                    {visibleTallasKid.map(t => <TallaBtnGenero key={t} t={t} genero="nino" />)}
                   </div>
                 </div>
               )}

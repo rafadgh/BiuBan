@@ -376,21 +376,27 @@ function expandMainTerms(words: string[]): string[] {
   return Array.from(all)
 }
 
-// Verifica si un producto coincide con los colores dados (busca en nombre, desc, color)
+// Verifica si un producto coincide con los colores dados
+// SOLO busca en nombre y campos de color (NO en descripcion — Adidas menciona todos los colores disponibles en la descripcion)
 function productMatchesColor(product: Product, colorWords: string[]): boolean {
   if (colorWords.length === 0) return true
 
-  const searchText = norm([
-    product.nombre,
-    product.descripcion ?? '',
-    product.color ?? '',
-    product.colorPrimario ?? '',
-    product.tags?.join(' ') ?? '',
-  ].join(' '))
+  // Separa colores compuestos "Negro/Blanco" en partes individuales para match exacto
+  const colorParts = [
+    ...(product.color ?? '').split('/').map(c => norm(c.trim())),
+    ...(product.colorPrimario ?? '').split('/').map(c => norm(c.trim())),
+  ].filter(Boolean)
+
+  const nameText = norm(product.nombre)
 
   return colorWords.every(cw => {
     const synonyms = getColorSynonyms(cw)
-    return synonyms.some(s => searchText.includes(s))
+    // Primero: match contra campos de color (exacto por parte)
+    if (colorParts.length > 0) {
+      return synonyms.some(s => colorParts.some(part => part.includes(s) || s.includes(part)))
+    }
+    // Fallback: busca en el nombre del producto (NO descripcion)
+    return synonyms.some(s => nameText.includes(s))
   })
 }
 
@@ -696,6 +702,21 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
       } else {
         q = q.or(dbGenders.map(g => `gender.eq.${g}`).join(','))
       }
+    }
+    // Color: filtrar en DB usando columna color (color_primary puede ser null)
+    if (color) {
+      const colors = color.split(',').map(c => c.trim()).filter(Boolean)
+      if (colors.length > 0) {
+        const colorConds = colors.flatMap(c => [
+          `color.ilike.%${c}%`,
+          `color_primary.ilike.%${c}%`,
+        ]).join(',')
+        q = q.or(colorConds)
+      }
+    }
+    if (talla) {
+      const tallas = talla.split(',').map(t => t.trim()).filter(Boolean)
+      if (tallas.length > 0) q = q.overlaps('sizes_available', tallas)
     }
     if (precioMin) q = q.gte('price', Number(precioMin))
     if (precioMax) q = q.lte('price', Number(precioMax))
