@@ -23,12 +23,13 @@ export const metadata: Metadata = {
   publisher: 'rafadgh',
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: '48x48', type: 'image/x-icon' },
-      { url: '/icon-light-32x32.png', media: '(prefers-color-scheme: light)' },
-      { url: '/icon-dark-32x32.png', media: '(prefers-color-scheme: dark)' },
-      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icon-light-32x32.png', sizes: '64x64', type: 'image/png', media: '(prefers-color-scheme: light)' },
+      { url: '/icon-dark-32x32.png',  sizes: '64x64', type: 'image/png', media: '(prefers-color-scheme: dark)' },
+      { url: '/logo-512.png', sizes: '512x512', type: 'image/png' },
     ],
-    apple: '/apple-icon.png',
+    apple: { url: '/apple-icon.png', sizes: '180x180' },
+    shortcut: '/favicon-32x32.png',
   },
   alternates: {
     canonical: 'https://biuban.com',
