@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { Menu, X, Search, ChevronLeft } from 'lucide-react'
@@ -32,9 +33,14 @@ export function Header() {
             </Link>
           )}
           <Link href="/" className="flex items-center">
-            <span className="text-lg font-semibold tracking-tight text-white sm:text-xl">
-              BiuBan
-            </span>
+            <Image
+              src="/BiuBan_logo.png"
+              alt="BiuBan"
+              width={100}
+              height={32}
+              className="h-7 w-auto sm:h-8 object-contain"
+              priority
+            />
           </Link>
         </div>
 

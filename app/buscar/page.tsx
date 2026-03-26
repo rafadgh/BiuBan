@@ -11,6 +11,7 @@ import { ProductCard } from '@/components/ProductCard'
 import { SearchBar } from '@/components/SearchBar'
 import { Pagination } from '@/components/Pagination'
 import { searchProductsFromDB, getPriceRange, getSearchFacets } from '@/lib/products'
+import { ProductGridSkeleton } from '@/components/ProductCardSkeleton'
 
 const PER_PAGE = 24
 
@@ -191,13 +192,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-5xl">
               <Suspense
-                fallback={
-                  <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="aspect-[3/4] animate-pulse rounded-2xl bg-[#E5E5E5]" />
-                    ))}
-                  </div>
-                }
+                fallback={<div className="mt-8"><ProductGridSkeleton count={8} /></div>}
               >
                 <SearchResults searchParams={searchParams} />
               </Suspense>
