@@ -34,12 +34,11 @@ export function Header() {
           )}
           <Link href="/" className="flex items-center">
             <Image
-              src="/BiuBan_logo.png"
+              src="/BiuBan_logo_transparent.png"
               alt="BiuBan"
               width={110}
               height={36}
               className="h-7 w-auto sm:h-8 object-contain"
-              style={{ filter: 'brightness(0) invert(1)' }}
               priority
             />
           </Link>

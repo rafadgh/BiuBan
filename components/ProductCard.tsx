@@ -153,10 +153,10 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <>
       <article
-        className={`group relative flex flex-col overflow-hidden rounded-2xl border bg-white transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 ${
+        className={`group relative flex flex-col overflow-hidden rounded-2xl border bg-white transition-all duration-300 hover:shadow-md ${
           product.mejorOpcion
             ? 'border-[#31470B] ring-1 ring-[#31470B]/20'
-            : 'border-[#E8E8E8] hover:border-[#586E26]'
+            : 'border-[#E5E5E5] hover:border-[#586E26]'
         }`}
       >
         {product.mejorOpcion && (
@@ -232,7 +232,7 @@ export function ProductCard({ product }: ProductCardProps) {
             href={addUtmParams(product.url)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#0B0B0B] py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#31470B] active:scale-[0.98]"
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#0B0B0B] py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1A1A1A]"
             onClick={e => e.stopPropagation()}
           >
             Ver vendedor
