@@ -16,7 +16,7 @@ export function HeroSection() {
           alt=""
           width={900}
           height={900}
-          className="w-[420px] sm:w-[580px] lg:w-[780px] opacity-[0.055] mix-blend-multiply dark:mix-blend-screen dark:opacity-[0.04]"
+          className="w-[420px] sm:w-[580px] lg:w-[780px] opacity-[0.18]"
           priority
         />
       </div>
