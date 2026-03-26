@@ -1213,19 +1213,28 @@ export interface BrandInfo {
 }
 
 export async function getBrandsFromDB(): Promise<BrandInfo[]> {
-  // Una sola request con limit alto — sin loop de paginación
-  const { data, error } = await supabase
-    .from('products')
-    .select('brand')
-    .eq('available', true)
-    .limit(10000)
-
-  if (error) { console.error('[BiuBan] getBrandsFromDB:', error.message); return [] }
-
+  // Paginar para obtener TODOS los productos (Supabase limita a 1000 por request)
+  const PAGE = 1000
   const counts: Record<string, number> = {}
-  for (const row of (data ?? [])) {
-    const b = String((row as Record<string, unknown>).brand ?? '').trim()
-    if (b) counts[b] = (counts[b] ?? 0) + 1
+  let offset = 0
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('products')
+      .select('brand')
+      .eq('available', true)
+      .range(offset, offset + PAGE - 1)
+
+    if (error) { console.error('[BiuBan] getBrandsFromDB:', error.message); break }
+    if (!data || data.length === 0) break
+
+    for (const row of data) {
+      const b = String((row as Record<string, unknown>).brand ?? '').trim()
+      if (b) counts[b] = (counts[b] ?? 0) + 1
+    }
+
+    if (data.length < PAGE) break
+    offset += PAGE
   }
 
   return Object.entries(counts)

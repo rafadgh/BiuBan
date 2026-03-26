@@ -360,7 +360,7 @@ export function FiltersSidebar({
 
   // TallaBtn que también fuerza el género al seleccionar una talla de sección específica
   const TallaBtnGenero = ({ t, genero }: { t: string; genero: string }) => {
-    const active = currentTallas.includes(t)
+    const active = currentTallas.includes(t) && currentGeneros.includes(genero)
     return (
       <button
         onClick={() => {

@@ -313,7 +313,7 @@ export function MobileFilters({ priceRange, facets, basePath = '/buscar', sizeCo
   )
 
   const TallaBtnGenero = ({ t, genero }: { t: string; genero: string }) => {
-    const active = currentTallas.includes(t)
+    const active = currentTallas.includes(t) && currentGeneros.includes(genero)
     return (
       <button
         onClick={() => {
