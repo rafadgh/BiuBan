@@ -36,9 +36,10 @@ export function Header() {
             <Image
               src="/BiuBan_logo.png"
               alt="BiuBan"
-              width={100}
-              height={32}
+              width={110}
+              height={36}
               className="h-7 w-auto sm:h-8 object-contain"
+              style={{ filter: 'brightness(0) invert(1)' }}
               priority
             />
           </Link>
