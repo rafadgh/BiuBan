@@ -87,7 +87,7 @@ async function paginateAll(buildQ: () => any): Promise<Record<string, unknown>[]
   let offset = 0
   while (true) {
     const { data, error } = await buildQ().range(offset, offset + DB_PAGE_SIZE - 1)
-    if (error) { console.error('[BiuBan] paginateAll:', error.message); break }
+    if (error) { throw new Error(`[BiuBan] Supabase error: ${error.message}`) }
     if (!data || data.length === 0) break
     all.push(...(data as Record<string, unknown>[]))
     if (data.length < DB_PAGE_SIZE) break
@@ -660,7 +660,7 @@ export async function searchProductsFromDB(filters: SearchFilters): Promise<Prod
 
     } else if (queryColorWords.length > 0 || queryGenderWords.length > 0) {
       // La query es SOLO colores/género (ej: "blanco", "hombre") → traer todo y filtrar en memoria
-      // No aplicar filtro de texto en Supabase
+      // No aplicar filtro de texto en Supabase — fall-through intencional al código de abajo
     }
   }
 

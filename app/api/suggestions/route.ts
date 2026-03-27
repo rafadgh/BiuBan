@@ -78,12 +78,15 @@ export async function GET(req: NextRequest) {
 
   // ─── 1. Marcas que empiezan con la query (mayor relevancia) ────────────────
   // ─── 2. Marcas que contienen la query   ────────────────────────────────────
-  const [{ data: brandsStart }, { data: brandsContain }] = await Promise.all([
+  const [r1, r2] = await Promise.all([
     supabase.from('products').select('brand').eq('available', true)
       .ilike('brand', `${q}%`).limit(4),
     supabase.from('products').select('brand').eq('available', true)
       .ilike('brand', `%${q}%`).limit(5),
   ])
+  if (r1.error || r2.error) return NextResponse.json([])
+  const brandsStart   = r1.data
+  const brandsContain = r2.data
 
   // Deduplicar: empieza-con primero, luego contiene
   const brandList = [

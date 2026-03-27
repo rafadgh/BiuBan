@@ -69,7 +69,9 @@ export async function POST(request: NextRequest) {
   const mime      = mimeMatch ? mimeMatch[1] : 'image/jpeg'
   const base64    = mimeMatch ? image.split(',')[1] : image
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  let response: Response
+  try {
+    response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -99,6 +101,9 @@ export async function POST(request: NextRequest) {
       temperature: 0.2,
     }),
   })
+  } catch {
+    return NextResponse.json({ error: 'No se pudo conectar con el analizador de imágenes' }, { status: 503 })
+  }
 
   if (!response.ok) {
     const err = await response.text()

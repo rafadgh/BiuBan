@@ -260,8 +260,7 @@ export function FiltersSidebar({
       urlMin !== null ? Math.max(effectiveMin, Math.min(urlMin, effectiveMax)) : effectiveMin,
       urlMax !== null ? Math.max(effectiveMin, Math.min(urlMax, effectiveMax)) : effectiveMax,
     ])
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [effectiveMin, effectiveMax])
+  }, [effectiveMin, effectiveMax, urlMin, urlMax])
 
   const pushParams = useCallback((updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString())
