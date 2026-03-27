@@ -339,7 +339,7 @@ function transformProduct(
 export async function GET(req: NextRequest) {
   // Protección básica
   const secret = req.nextUrl.searchParams.get('secret')
-  if (secret !== process.env.SYNC_SECRET && process.env.NODE_ENV === 'production') {
+  if (secret !== process.env.SYNC_SECRET) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 

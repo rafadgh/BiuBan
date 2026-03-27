@@ -219,6 +219,13 @@ export async function GET(req: NextRequest) {
   }
 
   // 4. Borrar existentes e insertar nuevos
+  // Validar que el feed tiene datos suficientes antes de borrar
+  if (rows.length < 100) {
+    return NextResponse.json({
+      error: `Feed inválido o vacío: solo ${rows.length} productos válidos. Se canceló el sync para evitar borrar el catálogo.`,
+    }, { status: 422 })
+  }
+
   const { error: delError } = await supabase
     .from('products').delete().eq('store', 'Adidas')
   if (delError) {

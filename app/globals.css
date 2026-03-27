@@ -122,3 +122,12 @@
 .watermark-pulse {
   animation: watermark-pulse 2.4s ease-in-out infinite;
 }
+
+/* ── Scrollbar hide ──────────────────────────────────────────── */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

@@ -243,7 +243,7 @@ function transformProduct(
 export async function GET(req: NextRequest) {
   // Autenticación — omitir en desarrollo local
   const secret = req.nextUrl.searchParams.get('secret')
-  if (process.env.NODE_ENV === 'production' && secret !== process.env.SYNC_SECRET) {
+  if (secret !== process.env.SYNC_SECRET) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 

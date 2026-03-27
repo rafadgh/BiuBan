@@ -16,7 +16,7 @@ export function HeroSection() {
           alt=""
           width={900}
           height={900}
-          className="w-[420px] sm:w-[580px] lg:w-[780px] opacity-[0.18]"
+          className="w-[420px] sm:w-[580px] lg:w-[780px] watermark-pulse"
           priority
         />
       </div>

@@ -21,7 +21,10 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
     setMounted(true)
     try {
       const stored = localStorage.getItem('biuban-compare')
-      if (stored) setCompareList(JSON.parse(stored))
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (Array.isArray(parsed)) setCompareList(parsed)
+      }
     } catch {}
   }, [])
 

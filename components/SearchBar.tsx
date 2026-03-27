@@ -113,19 +113,24 @@ export function SearchBar({
     try {
       const reader = new FileReader()
       reader.onloadend = async () => {
-        const base64 = reader.result as string
-        const res = await fetch('/api/buscar-imagen', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: base64 }),
-        })
-        const { query: q } = await res.json()
-        if (q) {
-          setQuery(q)
-          setOpen(false)
-          router.push(`${basePath}?q=${encodeURIComponent(q)}`)
+        try {
+          const base64 = reader.result as string
+          const res = await fetch('/api/buscar-imagen', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: base64 }),
+          })
+          const { query: q } = await res.json()
+          if (q) {
+            setQuery(q)
+            setOpen(false)
+            router.push(`${basePath}?q=${encodeURIComponent(q)}`)
+          }
+        } catch {
+          // sin-op: el loader se apaga en finally
+        } finally {
+          setImgLoading(false)
         }
-        setImgLoading(false)
       }
       reader.readAsDataURL(file)
     } catch {
@@ -231,7 +236,7 @@ export function SearchBar({
               key={i}
               onMouseDown={(e) => {
                 e.preventDefault() // evita que el input pierda focus antes del click
-                setQuery(s.type !== 'busqueda' || s.sub === 'Ver todos los resultados' ? s.text : s.text)
+                setQuery(s.text)
                 navigate(s.href)
               }}
               className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${

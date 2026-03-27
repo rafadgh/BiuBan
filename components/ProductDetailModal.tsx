@@ -79,7 +79,7 @@ function ImageGallery({ images, productName, hasDiscount, discountPct }: ImageGa
   const next = useCallback(() => setCurrent(i => (i + 1) % images.length), [images.length])
 
   // Reset cuando cambia el producto
-  useEffect(() => { setCurrent(0); setImgError({}) }, [images[0]])
+  useEffect(() => { setCurrent(0); setImgError({}) }, [product.id])
 
   // Navegar con teclas dentro del modal
   useEffect(() => {

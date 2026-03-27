@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { Menu, X, Search, ChevronLeft } from 'lucide-react'
 
@@ -17,6 +17,9 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const pathname = usePathname()
   const isHome = pathname === '/'
+
+  // Cerrar menú móvil al navegar con botones del browser
+  useEffect(() => { setIsMenuOpen(false) }, [pathname])
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#1A1A1A] bg-[#0B0B0B]">
@@ -74,6 +77,8 @@ export function Header() {
         <button
           className="inline-flex items-center justify-center rounded-lg p-2 text-white transition-colors hover:text-[#778C43] md:hidden"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+          aria-expanded={isMenuOpen}
         >
           {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>

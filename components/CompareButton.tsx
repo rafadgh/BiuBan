@@ -21,11 +21,12 @@ export function CompareButton({ product }: { product: Product }) {
   return (
     <button
       onClick={handleClick}
-      title={inCompare ? 'Quitar del comparador' : 'Agregar al comparador'}
+      aria-label={inCompare ? `Quitar ${product.name} del comparador` : `Agregar ${product.name} al comparador`}
+      aria-pressed={inCompare}
       className={`flex h-7 w-7 items-center justify-center rounded-full border transition-all ${
         inCompare
           ? 'border-[#31470B] bg-[#31470B] text-white shadow-sm'
-          : 'border-[#E5E5E5] bg-white text-[#6B6B6B] opacity-0 group-hover:opacity-100 hover:border-[#31470B] hover:text-[#31470B]'
+          : 'border-[#E5E5E5] bg-white text-[#6B6B6B] opacity-0 group-hover:opacity-100 focus:opacity-100 hover:border-[#31470B] hover:text-[#31470B]'
       }`}
     >
       <Scale className="h-3.5 w-3.5" />

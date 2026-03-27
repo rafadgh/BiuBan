@@ -50,6 +50,7 @@ export function CompareBar() {
               </div>
               <button
                 onClick={() => removeFromCompare(p.id)}
+                aria-label={`Quitar ${p.nombre} del comparador`}
                 className="ml-0.5 rounded-full p-0.5 text-[#AAAAAA] hover:text-[#0B0B0B] transition-colors"
               >
                 <X className="h-3.5 w-3.5" />
@@ -61,7 +62,7 @@ export function CompareBar() {
           {Array.from({ length: 3 - compareList.length }).map((_, i) => (
             <div
               key={i}
-              className="hidden sm:flex h-[52px] w-[150px] shrink-0 items-center justify-center rounded-xl border border-dashed border-[#DDDDDD] text-[11px] text-[#BBBBBB]"
+              className="hidden sm:flex h-[52px] w-[150px] shrink-0 items-center justify-center rounded-xl border border-dashed border-[#DDDDDD] text-[11px] text-[#888888]"
             >
               + Agrega un producto
             </div>
